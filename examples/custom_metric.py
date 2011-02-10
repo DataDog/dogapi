@@ -11,6 +11,9 @@ from dogapi.event import Event
 
 # Create a client
 # host is optional here, it's a shortcut to tie event and metrics to a given host
+# you typically want to do:
+# dogapi.init(api_key=actual_api_key_as_a_string, ...)
+# We are using os.environ to let you experiment via an environment variable.
 dog = dogapi.init(api_key=os.environ.get("DATADOG_KEY"), host="test-api.datadoghq.com")
 
 # Emit points one by one, timestamp is omitted and is the time this call is made.
