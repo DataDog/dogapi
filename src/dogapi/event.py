@@ -26,7 +26,8 @@ class Event(object):
         self.json_payload = json_payload
 
 class EventService(Service):
-    def submit(self, api_key, event, scope, source_type=None):
+    def submit(self, api_key, event, scope=None, source_type=None):
+        scope = scope or Scope()
         params = {
             'api_key':          api_key,
              
