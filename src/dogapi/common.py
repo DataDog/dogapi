@@ -1,6 +1,7 @@
 import httplib
 import json
 import time
+import re
 import socket
 import os
 from contextlib import contextmanager
@@ -51,7 +52,16 @@ class Service(object):
         host = host or self.host
         self.api_key = api_key
         
-        conn = httplib.HTTPSConnection(host)
+        match = re.match('^(https?)://(.*)', host)
+        http_conn_cls = httplib.HTTPSConnection
+        
+        if match:
+            host = match.group(2)
+            if match.group(1) == 'http':
+                http_conn_cls = httplib.HTTPConnection
+        
+        conn = http_conn_cls(host)
+                
         try:
             yield conn
         finally:
