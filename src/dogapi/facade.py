@@ -58,7 +58,7 @@ class Client(object):
         else:       d = self.device
         return Scope(h, d)
     
-    def emit_point(self, metric, value, timestamp=dt.now(), host=None, device=None):
+    def emit_point(self, metric, value, timestamp=None, host=None, device=None):
         """ Emits one metric point to Datadog
             - metric:       name of the metric issued e.g. "x.datadog.perf.series_count"
             - value:        data point to be issued, as a float
@@ -66,6 +66,7 @@ class Client(object):
             - host:         name of the host to use as metric context. Optional.
             - device:       name of the device to use as metric context. Optional.
         """
+        timestamp = timestamp or dt.now()
         return self.emit_points(metric, [(timestamp, value)], host, device)
     
     def emit_points(self, metric, points, host=None, device=None):
