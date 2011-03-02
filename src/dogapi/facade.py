@@ -21,19 +21,13 @@ dog.emit_points('x.myorg.mymetric', [(dt(2010,12,30), 99.0), (dt(2010,12,31), 99
 from contextlib import contextmanager
 
 from datetime import datetime as dt
-from dogapi.common import find_datadog_host, find_api_key, find_localhost
+from dogapi.common import find_datadog_host, find_api_key, Scope
 from dogapi.metric import MetricService
 from dogapi.event import EventService, Event
 
 class Client(object):
     """Thin, flat client to Datadog APIs"""
 
-    class Scope(object):
-        """Just used locally to marshall scope to Metric/Event Services"""
-        def __init__(self, host=None, device=None):
-            self.host = host 
-            self.device = device
-    
     def __init__(self, api_key, host=None, device=None):
         """ Client c'tor - automatically detects API_Key and Datadog Server
             Use dogapi.init() instead
@@ -62,7 +56,7 @@ class Client(object):
         else:       h = self.host
         if device:  d = device
         else:       d = self.device
-        return Client.Scope(h, d)
+        return Scope(h, d)
     
     def emit_point(self, metric, value, timestamp=dt.now(), host=None, device=None):
         """ Emits one metric point to Datadog
