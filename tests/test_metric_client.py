@@ -7,20 +7,20 @@ import unittest
 # nose
 from nose.plugins.skip import SkipTest
 
-# dogclient
-from dogclient.metric import MetricService, Scope
+# dogapi
+from dogapi.metric import MetricService, Scope
 
 class TestMetricClient(unittest.TestCase):
 
     def setUp(self):
         self.api_key = "apikey_3"
-        self.host = "localhost:5000"
+        self.host = "http://localhost:5000"
             
     def test_submit_metric(self):
         # create and submit a new event
         metric_service = MetricService(self.host)
-        scope = Scope("test.dogclient.fake", "eth0")
-        metric = 'test.dogclient.metric.submit_metric'
+        scope = Scope("test.dogapi.fake", "eth0")
+        metric = 'test.dogapi.metric.submit_metric'
         points = [
             (dt.now()-delta(seconds=90), 1.0), 
             (dt.now()-delta(seconds=60), 2.0), 
