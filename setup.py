@@ -29,7 +29,7 @@ setup(
     license = "BSD",
     keywords = "datadog data",
     url = "http://datadoghq.com",
-    insall_requires=shell_reqs,
+    install_requires=shell_reqs,
     entry_points={
         'console_scripts': [
             'dog = dogshell:main',
