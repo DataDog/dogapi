@@ -6,7 +6,7 @@ import logging
 
 from common import Service
 
-API_VERSION="1.0"
+API_VERSION="v1"
 
 class SearchService(Service):
 
