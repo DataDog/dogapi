@@ -80,7 +80,15 @@ class Service(object):
                 'Content-Type': 'application/x-www-form-urlencoded'
             }
 
-            conn.request(method, url, urlencode(params), headers)
+            if method == 'GET':
+                if len(params) > 0:
+                    qs_params = [k + '=' + v for k,v in params.iteritems()]
+                    qs = '?' + '&'.join(qs_params)
+                    conn.request(method, url + qs, None, headers)
+                else:
+                    conn.request(method, url, None, headers)
+            else:
+                conn.request(method, url, urlencode(params), headers)
             response = conn.getresponse()
             response_str = response.read()
 
