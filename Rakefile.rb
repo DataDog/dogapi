@@ -13,6 +13,10 @@ task :clean_dist do
   sh "rm -f dist/*.egg"
 end
 
+task :doc do
+  sh "python setup.py build_sphinx"
+end
+
 task :build do  
   sh "python setup.py egg_info -b '_#{build_number}' bdist_egg"
 end
