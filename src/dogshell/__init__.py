@@ -1,4 +1,5 @@
 import argparse
+import sys
 from dogapi.search import SearchService
 
 def main():
@@ -23,15 +24,35 @@ def main():
 apikey = 'apikey_2'
 hosturl = 'http://localhost:5000'
 
+def report_errors(res):
+    if 'error' in res:
+        for e in res['error']:
+            print >> sys.stderr, 'ERROR: ' + e
+        return True
+    return False
+
+def report_warnings(res):
+    if 'warning' in res:
+        for e in res['warning']:
+            print >> sys.stderr, 'WARNING: ' + e
+        return True
+    return False
+
 def search_hosts(args):
     svc = SearchService(hosturl)
     res = svc.query_host(apikey, args.name)
+    report_warnings(res)
+    if report_errors(res):
+        return
     for host in res['hosts']:
         print host['name']
 
 def search_metrics(args):
     svc = SearchService(hosturl)
     res = svc.query_metric(apikey, args.name)
+    report_warnings(res)
+    if report_errors(res):
+        return
     for metric in res['metrics']:
         print metric['name']
 
