@@ -97,10 +97,11 @@ class Service(object):
             except ValueError:
                 raise ValueError('Invalid JSON response: {0}'.format(response_str))
 
-            if 'error' in response_obj:
-                pretty_params = '\n'.join(['>> ' + line for line in pformat(params).split('\n')])
-                request_str = '>> {0} {1} \n{2}'.format(method, url, pretty_params)
-                error_message = '\n'.join(['<< ' + line for line in response_obj['error'].split('\n')])
-                raise Exception('Failed request \n{0}\n\n{1}'.format(request_str, error_message))
+            if response.status == 200:
+                if 'error' in response_obj:
+                    pretty_params = '\n'.join(['>> ' + line for line in pformat(params).split('\n')])
+                    request_str = '>> {0} {1} \n{2}'.format(method, url, pretty_params)
+                    error_message = '\n'.join(['<< ' + line for line in response_obj['error'].split('\n')])
+                    raise Exception('Failed request \n{0}\n\n{1}'.format(request_str, error_message))
 
         return response_obj
