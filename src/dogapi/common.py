@@ -4,6 +4,7 @@ import time
 import re
 import socket
 import os
+import simplejson
 from contextlib import contextmanager
 from urllib import urlencode
 from pprint import pformat
@@ -105,3 +106,55 @@ class Service(object):
                     raise Exception('Failed request \n{0}\n\n{1}'.format(request_str, error_message))
 
         return response_obj
+
+class APIService(object):
+    
+    @contextmanager
+    def connect(self):
+        
+        http_conn_cls = httplib.HTTPSConnection
+        match = re.match('^(https?)://(.*)', self.api_host)
+        if match:
+            host = match.group(2)
+            if match.group(1) == 'http':
+                http_conn_cls = httplib.HTTPConnection
+        conn = http_conn_cls(host)
+                
+        try:
+            yield conn
+        finally:
+            conn.close()
+    
+    def request(self, method, url, params=None, body=None, send_json=False):
+        '''handles a request to the datadog service.
+        '''
+        
+        # handle request/response
+        with self.connect() as conn:
+            if send_json:
+                headers = {
+                    'Content-Type': 'application/json'
+                }
+                body = simplejson.dumps(body)
+            else:
+                headers = {}
+
+            if params and len(params) > 0:
+                qs_params = [k + '=' + v for k,v in params.iteritems()]
+                qs = '?' + '&'.join(qs_params)
+                conn.request(method, url + qs, body, headers)
+            else:
+                conn.request(method, url, body, headers)
+            
+            response = conn.getresponse()
+            response_str = response.read()
+
+            if response.status != 204:
+                try:
+                    response_obj = json.loads(response_str)
+                except ValueError:
+                    raise ValueError('Invalid JSON response: {0}'.format(response_str))
+
+                return response_obj
+            else:
+                return None
