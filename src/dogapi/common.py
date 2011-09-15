@@ -140,7 +140,7 @@ class APIService(object):
                 headers = {}
 
             if params and len(params) > 0:
-                qs_params = [k + '=' + v for k,v in params.iteritems()]
+                qs_params = [k + '=' + str(v) for k,v in params.iteritems()]
                 qs = '?' + '&'.join(qs_params)
                 conn.request(method, url + qs, body, headers)
             else:

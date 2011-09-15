@@ -1,4 +1,4 @@
-from v1.comment import CommentService
+from v1 import *
 
 class SimpleClient(object):
 
@@ -27,3 +27,57 @@ class SimpleClient(object):
             raise Exception("Comment API requires api and application keys")
         s = CommentService(self.api_key, self.application_key, self.datadog_host)
         return s.delete(comment_id)
+
+    #
+    # Cluster API
+
+    def all_clusters(self):
+        if self.api_key is None or self.application_key is None:
+            raise Exception("Cluster API requires api and application keys")
+        s = ClusterService(self.api_key, self.application_key, self.datadog_host)
+        return s.get_all()
+
+    def host_clusters(self, host_id):
+        if self.api_key is None or self.application_key is None:
+            raise Exception("Cluster API requires api and application keys")
+        s = ClusterService(self.api_key, self.application_key, self.datadog_host)
+        return s.get(host_id)
+
+    def add_clusters(self, host_id, *args):
+        if self.api_key is None or self.application_key is None:
+            raise Exception("Cluster API requires api and application keys")
+        s = ClusterService(self.api_key, self.application_key, self.datadog_host)
+        return s.add(host_id, args)
+    
+    def change_clusters(self, host_id, *args):
+        if self.api_key is None or self.application_key is None:
+            raise Exception("Cluster API requires api and application keys")
+        s = ClusterService(self.api_key, self.application_key, self.datadog_host)
+        return s.update(host_id, args)
+    
+    def detatch_clusters(self, host_id):
+        if self.api_key is None or self.application_key is None:
+            raise Exception("Cluster API requires api and application keys")
+        s = ClusterService(self.api_key, self.application_key, self.datadog_host)
+        return s.detatch(host_id)
+
+    #
+    # Stream API
+
+    def stream(self, start, end, priority=None, sources=None, tags=None):
+        if self.api_key is None or self.application_key is None:
+            raise Exception("Event API requires api and application keys")
+        s = EventService(self.api_key, self.application_key, self.datadog_host)
+        return s.query(start, end, priority, sources, tags)
+
+    def get_event(self, id):
+        if self.api_key is None or self.application_key is None:
+            raise Exception("Event API requires api and application keys")
+        s = EventService(self.api_key, self.application_key, self.datadog_host)
+        return s.get(id)
+
+    def event(self, title, text, date_happened=None, handle=None, priority=None, related_event_id=None, tags=None):
+        if self.api_key is None or self.application_key is None:
+            raise Exception("Event API requires api and application keys")
+        s = EventService(self.api_key, self.application_key, self.datadog_host)
+        return s.post(title, text, date_happened, handle, priority, related_event_id, tags)
