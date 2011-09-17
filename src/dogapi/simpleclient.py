@@ -87,30 +87,45 @@ class SimpleClient(object):
 
     def dashboards(self):
         if self.api_key is None or self.application_key is None:
-            raise Exception("Event API requires api and application keys")
+            raise Exception("Dash API requires api and application keys")
         s = DashService(self.api_key, self.application_key, self.datadog_host)
         return s.get_all()
 
     def dashboard(self, dash_id):
         if self.api_key is None or self.application_key is None:
-            raise Exception("Event API requires api and application keys")
+            raise Exception("Dash API requires api and application keys")
         s = DashService(self.api_key, self.application_key, self.datadog_host)
         return s.get(dash_id)
 
     def create_dashboard(self, title, description, graphs):
         if self.api_key is None or self.application_key is None:
-            raise Exception("Event API requires api and application keys")
+            raise Exception("Dash API requires api and application keys")
         s = DashService(self.api_key, self.application_key, self.datadog_host)
         return s.create(title, description, graphs)
 
     def update_dashboard(self, dash_id, title, description, graphs):
         if self.api_key is None or self.application_key is None:
-            raise Exception("Event API requires api and application keys")
+            raise Exception("Dash API requires api and application keys")
         s = DashService(self.api_key, self.application_key, self.datadog_host)
         return s.update(dash_id, title, description, graphs)
 
     def delete_dashboard(self, dash_id):
         if self.api_key is None or self.application_key is None:
-            raise Exception("Event API requires api and application keys")
+            raise Exception("Dash API requires api and application keys")
         s = DashService(self.api_key, self.application_key, self.datadog_host)
         return s.delete(dash_id)
+
+    #
+    # Search API
+
+    def search_host(self, name):
+        if self.api_key is None or self.application_key is None:
+            raise Exception("Search API requires api and application keys")
+        s = SearchService(self.api_key, self.application_key, self.datadog_host)
+        return s.query_host(name)
+
+    def search_metric(self, name):
+        if self.api_key is None or self.application_key is None:
+            raise Exception("Search API requires api and application keys")
+        s = SearchService(self.api_key, self.application_key, self.datadog_host)
+        return s.query_metric(name)
