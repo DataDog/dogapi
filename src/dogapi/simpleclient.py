@@ -1,3 +1,5 @@
+import time, datetime
+
 from v1 import *
 
 class SimpleClient(object):
@@ -7,8 +9,22 @@ class SimpleClient(object):
         self.application_key = None
         self.datadog_host = 'https://app.datadoghq.com'
 
-    def metric(self, name, value):
-        pass
+    #
+    # Metric API
+
+    def metric(self, name, value, host=None, device=None):
+        if self.api_key is None or self.application_key is None:
+            raise Exception("Metric API requires api and application keys")
+        s = MetricService(self.api_key, self.application_key, self.datadog_host)
+        now = int(time.mktime(datetime.datetime.now().timetuple()))
+        return s.post(name, [[value, now]], host=host, device=device)
+
+    def metrics(self, name, values, host=None, device=None):
+        if self.api_key is None or self.application_key is None:
+            raise Exception("Metric API requires api and application keys")
+        s = MetricService(self.api_key, self.application_key, self.datadog_host)
+        now = int(time.mktime(datetime.datetime.now().timetuple()))
+        return s.post(name, values, host=host, device=device)
 
     #
     # Comment API
