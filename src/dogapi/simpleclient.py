@@ -3,6 +3,9 @@ import time, datetime
 from v1 import *
 
 class SimpleClient(object):
+    """
+    A high-level client for interacting with the Datadog API.
+    """
 
     def __init__(self):
         self.api_key = None
@@ -13,6 +16,24 @@ class SimpleClient(object):
     # Metric API
 
     def metric(self, name, value, host=None, device=None):
+        """
+        Submit a single data point to the metric API.
+        
+        :param name: name of the metric (e.g. ``"system.load.1"``)
+        :type name: string
+
+        :param value: data point value
+        :type value: numeric
+
+        :param host: optional host to scope the metric (e.g. ``"hostA.example.com"``)
+        :type host: string
+        
+        :param device: optional device to scope the metric (e.g. ``"eth0"``)
+        :type device: string
+
+        :returns: I forget.
+        :rtype: dict
+        """
         if self.api_key is None or self.application_key is None:
             raise Exception("Metric API requires api and application keys")
         s = MetricService(self.api_key, self.application_key, self.datadog_host)
@@ -20,6 +41,24 @@ class SimpleClient(object):
         return s.post(name, [[value, now]], host=host, device=device)
 
     def metrics(self, name, values, host=None, device=None):
+        """
+        Submit a series of data points to the metric API.
+        
+        :param name: name of the metric (e.g. ``"system.load.1"``)
+        :type name: string
+
+        :param values: data series (see blah for examples)
+        :type values: dict
+
+        :param host: optional host to scope the metric (e.g. ``"hostA.example.com"``)
+        :type host: string
+        
+        :param device: optional device to scope the metric (e.g. ``"eth0"``)
+        :type device: string
+
+        :returns: I forget.
+        :rtype: dict
+        """
         if self.api_key is None or self.application_key is None:
             raise Exception("Metric API requires api and application keys")
         s = MetricService(self.api_key, self.application_key, self.datadog_host)
