@@ -31,14 +31,15 @@ class SimpleClient(object):
         :param device: optional device to scope the metric (e.g. ``"eth0"``)
         :type device: string
 
-        :returns: I forget.
-        :rtype: dict
+        :raises: Exception on failure
         """
         if self.api_key is None or self.application_key is None:
             raise Exception("Metric API requires api and application keys")
         s = MetricService(self.api_key, self.application_key, self.datadog_host)
         now = int(time.mktime(datetime.datetime.now().timetuple()))
-        return s.post(name, [[value, now]], host=host, device=device)
+        r = s.post(name, [[value, now]], host=host, device=device)
+        if r.has_key('errors'):
+            raise Exception(r['errors'])
 
     def metrics(self, name, values, host=None, device=None):
         """
@@ -47,8 +48,8 @@ class SimpleClient(object):
         :param name: name of the metric (e.g. ``"system.load.1"``)
         :type name: string
 
-        :param values: data series (see blah for examples)
-        :type values: dict
+        :param values: data series. list of (POSIX timestamp, intever value) tuples. (e.g. ``[(1317652676, 15), (1317652706, 18), ...]``)
+        :type values: list
 
         :param host: optional host to scope the metric (e.g. ``"hostA.example.com"``)
         :type host: string
@@ -56,32 +57,67 @@ class SimpleClient(object):
         :param device: optional device to scope the metric (e.g. ``"eth0"``)
         :type device: string
 
-        :returns: I forget.
-        :rtype: dict
+        :raises: Exception on failure
         """
         if self.api_key is None or self.application_key is None:
             raise Exception("Metric API requires api and application keys")
         s = MetricService(self.api_key, self.application_key, self.datadog_host)
         now = int(time.mktime(datetime.datetime.now().timetuple()))
-        return s.post(name, values, host=host, device=device)
+        r = s.post(name, values, host=host, device=device)
+        if r.has_key('errors'):
+            raise Exception(r['errors'])
 
     #
     # Comment API
 
     def comment(self, handle, message, comment_id=None, related_event_id=None):
+        """
+        Post or edit a comment.
+
+        :param handle: user handle to post the comment as
+        :type handle: string
+
+        :param message: comment message
+        :type message: string
+
+        :param comment_id: if set, comment will be updated instead of creating a new comment
+        :type comment_id: integer
+
+        :param related_event_id: if set, comment will be posted as a reply to the specified comment or event
+        :type related_event_id: integer
+
+        :return: comment id
+        :rtype: integer
+
+        :raises:  Exception on failure
+        """
         if self.api_key is None or self.application_key is None:
             raise Exception("Comment API requires api and application keys")
         s = CommentService(self.api_key, self.application_key, self.datadog_host)
         if comment_id is None:
-            return s.post(handle, message, related_event_id)
+            r = s.post(handle, message, related_event_id)
         else:
-            return s.edit(comment_id, handle, message, related_event_id)
+            r = s.edit(comment_id, handle, message, related_event_id)
+        if r.has_key('errors'):
+            raise Exception(r['errors'])
+        return r['comment']['id']
 
     def delete_comment(self, comment_id):
+        """
+        Delete a comment.
+
+
+        :param comment_id: comment to delete
+        :type comment_id: integer
+
+        :raises: Exception on error
+        """
         if self.api_key is None or self.application_key is None:
             raise Exception("Comment API requires api and application keys")
         s = CommentService(self.api_key, self.application_key, self.datadog_host)
-        return s.delete(comment_id)
+        r = s.delete(comment_id)
+        if r.has_key('errors'):
+            raise Exception(r['errors'])
 
     #
     # Cluster API

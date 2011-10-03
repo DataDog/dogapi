@@ -145,7 +145,7 @@ class APIService(object):
                 conn.request(method, url + qs, body, headers)
             else:
                 conn.request(method, url, body, headers)
-            
+
             response = conn.getresponse()
             response_str = response.read()
 
@@ -155,6 +155,6 @@ class APIService(object):
                 except ValueError:
                     raise ValueError('Invalid JSON response: {0}'.format(response_str))
 
-                return response_obj
+                return response_obj or {}
             else:
-                return None
+                return {}
