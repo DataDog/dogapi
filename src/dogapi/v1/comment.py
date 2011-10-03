@@ -9,11 +9,15 @@ from dogapi.common import APIService
 API_VERSION="v1"
 
 class CommentService(APIService):
+    """
+    Post, edit, and delete comments.
 
-    def __init__(self, api_key, application_key, api_host):
-        self.api_key = api_key
-        self.application_key = application_key
-        self.api_host = api_host
+    :param api_key: your org's API key
+    :type api_key: string
+
+    :param application_key: your application key
+    :type application_key: string
+    """
 
     def post(self, handle, message, related_event_id=None):
 
