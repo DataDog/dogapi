@@ -5,9 +5,7 @@
 
 Contents:
 
-.. autoclass:: ClusterService
 .. autoclass:: CommentService
-.. autoclass:: DashService
-.. autoclass:: EventService
+   :members:
 .. autoclass:: MetricService
-.. autoclass:: SearchService
+   :members:

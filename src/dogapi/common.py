@@ -108,6 +108,11 @@ class Service(object):
         return response_obj
 
 class APIService(object):
+
+    def __init__(self, api_key, application_key):
+        self.api_key = api_key
+        self.application_key = application_key
+        self.api_host = os.environ.get("DATADOG_HOST", "https://app.datadoghq.com/")
     
     @contextmanager
     def connect(self):
