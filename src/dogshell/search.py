@@ -3,10 +3,9 @@ from dogapi.v1 import SearchService
 from dogshell.common import report_errors, report_warnings, CommandLineClient
 
 class SearchClient(CommandLineClient):
-
-    def __init__(self, apikey, appkey):
-        self.apikey = apikey
-        self.appkey = appkey
+    
+    def __init__(self, config):
+        self.config = config
 
     def setup_parser(self, subparsers):
         parser_search = subparsers.add_parser('search', help='search datadog')

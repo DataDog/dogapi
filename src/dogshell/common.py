@@ -1,3 +1,6 @@
+import ConfigParser
+from UserDict import IterableUserDict
+
 def report_errors(res):
     if 'error' in res:
         for e in res['error']:
@@ -14,3 +17,11 @@ def report_warnings(res):
 
 class CommandLineClient(object):
     pass
+
+class DogshellConfig(IterableUserDict):
+
+    def load(self, config_file):
+        config = ConfigParser.ConfigParser()
+        config.read(config_file)
+        self['apikey'] = config.get('Connection', 'apikey')
+        self['appkey'] = config.get('Connection', 'appkey')

@@ -7,9 +7,8 @@ from dogshell.common import report_errors, report_warnings, CommandLineClient
 
 class MetricClient(CommandLineClient):
 
-    def __init__(self, apikey, appkey):
-        self.apikey = apikey
-        self.appkey = appkey
+    def __init__(self, config):
+        self.config = config
 
     def setup_parser(self, subparsers):
         parser = subparsers.add_parser('metric', help='post metric series data point')
@@ -21,7 +20,7 @@ class MetricClient(CommandLineClient):
         parser.set_defaults(func=self.post_metric)
 
     def post_metric(self, args):
-        svc = MetricService(self.apikey, self.appkey)
+        svc = MetricService(self.config['apikey'], self.config['appkey'])
         now = datetime.datetime.now()
         now = time.mktime(now.timetuple())
         if args.localhostname:

@@ -1,9 +1,10 @@
 import argparse
-import ConfigParser
 import os
 import sys
 
 from dogapi.search import SearchService
+
+from dogshell.common import DogshellConfig
 
 from dogshell.comment import CommentClient
 from dogshell.search import SearchClient
@@ -13,26 +14,26 @@ def main():
 
     parser = argparse.ArgumentParser(description='Interact with the Datadog API',
             formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--config', help='location of your dogrc file (default ~/.dogrc)',
+            default=os.path.expanduser("~/.dogrc"))
 
-    config = ConfigParser.ConfigParser()
-    config.read(os.path.expanduser("~/.dogrc"))
-    apikey = config.get('Connection', 'apikey')
-    appkey = config.get('Connection', 'appkey')
+    config = DogshellConfig()
 
     # Set up subparsers for each service
 
     subparsers = parser.add_subparsers(title='Modes')
 
-    cc = CommentClient(apikey, appkey)
+    cc = CommentClient(config)
     cc.setup_parser(subparsers)
 
-    sc = SearchClient(apikey, appkey)
+    sc = SearchClient(config)
     sc.setup_parser(subparsers)
 
-    mc = MetricClient(apikey, appkey)
+    mc = MetricClient(config)
     mc.setup_parser(subparsers)
 
     args = parser.parse_args()
+    config.load(args.config)
     args.func(args)
 
 if __name__=='__main__':
