@@ -12,6 +12,9 @@ setup(
     license = "BSD",
     keywords = "datadog data",
     url = "http://datadoghq.com",
+    install_requires= [
+        "sphinx-1.0.7"
+    ],
 )
 
 shell_reqs = ["dogapi==0.1.0"]
