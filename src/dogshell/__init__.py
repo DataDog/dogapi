@@ -7,6 +7,7 @@ from dogapi.search import SearchService
 
 from dogshell.comment import CommentClient
 from dogshell.search import SearchClient
+from dogshell.metric import MetricClient
 
 def main():
 
@@ -25,8 +26,11 @@ def main():
     cc = CommentClient(apikey, appkey)
     cc.setup_parser(subparsers)
 
-    cc = SearchClient(apikey, appkey)
-    cc.setup_parser(subparsers)
+    sc = SearchClient(apikey, appkey)
+    sc.setup_parser(subparsers)
+
+    mc = MetricClient(apikey, appkey)
+    mc.setup_parser(subparsers)
 
     args = parser.parse_args()
     args.func(args)
