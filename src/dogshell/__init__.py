@@ -16,6 +16,10 @@ def main():
             formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--config', help='location of your dogrc file (default ~/.dogrc)',
             default=os.path.expanduser("~/.dogrc"))
+    parser.add_argument('--pretty', help='pretty-print output (suitable for human consumption, less useful for scripting)',
+            dest='format', action='store_const', const='pretty')
+    parser.add_argument('--raw', help='raw JSON as returned by the HTTP service',
+            dest='format', action='store_const', const='raw')
 
     config = DogshellConfig()
 
@@ -23,18 +27,19 @@ def main():
 
     subparsers = parser.add_subparsers(title='Modes')
 
-    cc = CommentClient(config)
-    cc.setup_parser(subparsers)
-
-    sc = SearchClient(config)
-    sc.setup_parser(subparsers)
-
-    mc = MetricClient(config)
-    mc.setup_parser(subparsers)
+    CommentClient(config).setup_parser(subparsers)
+    SearchClient(config).setup_parser(subparsers)
+    MetricClient(config).setup_parser(subparsers)
 
     args = parser.parse_args()
     config.load(args.config)
-    args.func(args)
+
+    if args.format == 'raw':
+        args.r_func(args)
+    elif args.format == 'pretty':
+        args.p_func(args)
+    else:
+        args.l_func(args)
 
 if __name__=='__main__':
     main()

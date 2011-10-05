@@ -17,9 +17,11 @@ class MetricClient(CommandLineClient):
         parser.add_argument('--host', help='scopes your metric to a specific host', default=None)
         parser.add_argument('--device', help='scopes your metric to a specific device', default=None)
         parser.add_argument('--localhostname', help='same as --host=`hostname` (overrides --host)', action='store_true')
-        parser.set_defaults(func=self.post_metric)
+        parser.set_defaults(r_func=self.r_post_metric)
+        parser.set_defaults(p_func=self.r_post_metric)
+        parser.set_defaults(l_func=self.r_post_metric)
 
-    def post_metric(self, args):
+    def _post_metric(self, args):
         svc = MetricService(self.config['apikey'], self.config['appkey'])
         now = datetime.datetime.now()
         now = time.mktime(now.timetuple())
@@ -27,7 +29,10 @@ class MetricClient(CommandLineClient):
             host = socket.gethostname()
         else:
             host = args.host
-        res = svc.post(args.name, [(now, args.value)], host=host, device=args.device)
+        return svc.post(args.name, [(now, args.value)], host=host, device=args.device)
+
+    def r_post_metric(self, args):
+        res = self._post_metric(args)
         report_warnings(res)
         if report_errors(res):
             return
