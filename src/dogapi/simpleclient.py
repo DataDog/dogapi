@@ -35,7 +35,7 @@ class SimpleClient(object):
         """
         if self.api_key is None or self.application_key is None:
             raise Exception("Metric API requires api and application keys")
-        s = MetricService(self.api_key, self.application_key, self.datadog_host)
+        s = MetricService(self.api_key, self.application_key)
         now = int(time.mktime(datetime.datetime.now().timetuple()))
         r = s.post(name, [[value, now]], host=host, device=device)
         if r.has_key('errors'):
@@ -61,7 +61,7 @@ class SimpleClient(object):
         """
         if self.api_key is None or self.application_key is None:
             raise Exception("Metric API requires api and application keys")
-        s = MetricService(self.api_key, self.application_key, self.datadog_host)
+        s = MetricService(self.api_key, self.application_key)
         now = int(time.mktime(datetime.datetime.now().timetuple()))
         r = s.post(name, values, host=host, device=device)
         if r.has_key('errors'):
@@ -93,7 +93,7 @@ class SimpleClient(object):
         """
         if self.api_key is None or self.application_key is None:
             raise Exception("Comment API requires api and application keys")
-        s = CommentService(self.api_key, self.application_key, self.datadog_host)
+        s = CommentService(self.api_key, self.application_key)
         if comment_id is None:
             r = s.post(handle, message, related_event_id)
         else:
@@ -114,7 +114,7 @@ class SimpleClient(object):
         """
         if self.api_key is None or self.application_key is None:
             raise Exception("Comment API requires api and application keys")
-        s = CommentService(self.api_key, self.application_key, self.datadog_host)
+        s = CommentService(self.api_key, self.application_key)
         r = s.delete(comment_id)
         if r.has_key('errors'):
             raise Exception(r['errors'])
