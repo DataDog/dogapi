@@ -31,7 +31,13 @@ class SearchClient(CommandLineClient):
         report_warnings(res)
         if report_errors(res):
             return
-        print 'url\t' + res['url']
+        for facet, results in res['results'].items():
+            for idx, result in enumerate(results):
+                if idx == 0:
+                    print '\n'
+                    print "%s\t%s" % (facet, result)
+                else:
+                    print "%s\t%s" % (' '*len(facet), result)
 
     def l_search(self, args):
         res = self._search(args.query)
