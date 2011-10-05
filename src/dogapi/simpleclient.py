@@ -209,14 +209,8 @@ class SimpleClient(object):
     #
     # Search API
 
-    def search_host(self, name):
+    def search(self, query):
         if self.api_key is None or self.application_key is None:
             raise Exception("Search API requires api and application keys")
-        s = SearchService(self.api_key, self.application_key, self.datadog_host)
-        return s.query_host(name)
-
-    def search_metric(self, name):
-        if self.api_key is None or self.application_key is None:
-            raise Exception("Search API requires api and application keys")
-        s = SearchService(self.api_key, self.application_key, self.datadog_host)
-        return s.query_metric(name)
+        s = SearchService(self.api_key, self.application_key)
+        return s.query(query)
