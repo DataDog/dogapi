@@ -1,4 +1,5 @@
 import ConfigParser
+import sys
 from UserDict import IterableUserDict
 
 def report_errors(res):

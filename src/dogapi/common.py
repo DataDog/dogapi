@@ -112,11 +112,11 @@ class APIService(object):
     def __init__(self, api_key, application_key):
         self.api_key = api_key
         self.application_key = application_key
-        self.api_host = os.environ.get("DATADOG_HOST", "https://app.datadoghq.com/")
-    
+        self.api_host = os.environ.get("DATADOG_HOST", "https://app.datadoghq.com")
+
     @contextmanager
     def connect(self):
-        
+
         http_conn_cls = httplib.HTTPSConnection
         match = re.match('^(https?)://(.*)', self.api_host)
         if match:
@@ -124,16 +124,16 @@ class APIService(object):
             if match.group(1) == 'http':
                 http_conn_cls = httplib.HTTPConnection
         conn = http_conn_cls(host)
-                
+
         try:
             yield conn
         finally:
             conn.close()
-    
+
     def request(self, method, url, params=None, body=None, send_json=False):
         '''handles a request to the datadog service.
         '''
-        
+
         # handle request/response
         with self.connect() as conn:
             if send_json:

@@ -11,20 +11,6 @@ API_VERSION="v1"
 
 class DashService(APIService):
 
-    def __init__(self, api_key, application_key, api_host):
-        self.api_key = api_key
-        self.application_key = application_key
-        self.api_host = api_host
-
-    def get_all(self):
-
-        params = {
-            'api_key':         self.api_key,
-            'application_key': self.application_key,
-        }
-
-        return self.request('GET', '/api/' + API_VERSION + '/dashboards', params, None)
-
     def get(self, dash_id):
 
         params = {
