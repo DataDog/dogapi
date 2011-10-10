@@ -139,13 +139,13 @@ class SimpleClient(object):
             raise Exception("Cluster API requires api and application keys")
         s = ClusterService(self.api_key, self.application_key, self.datadog_host)
         return s.add(host_id, args)
-    
+
     def change_clusters(self, host_id, *args):
         if self.api_key is None or self.application_key is None:
             raise Exception("Cluster API requires api and application keys")
         s = ClusterService(self.api_key, self.application_key, self.datadog_host)
         return s.update(host_id, args)
-    
+
     def detatch_clusters(self, host_id):
         if self.api_key is None or self.application_key is None:
             raise Exception("Cluster API requires api and application keys")
@@ -180,26 +180,37 @@ class SimpleClient(object):
         if self.api_key is None or self.application_key is None:
             raise Exception("Dash API requires api and application keys")
         s = DashService(self.api_key, self.application_key)
-        return s.get(dash_id)
+        r = s.get(dash_id)
+        if r.has_key('errors'):
+            raise Exception(r['errors'])
+        print r
+        return r['dash']
 
     def create_dashboard(self, title, description, graphs):
         if self.api_key is None or self.application_key is None:
             raise Exception("Dash API requires api and application keys")
         s = DashService(self.api_key, self.application_key)
-        d = s.create(title, description, graphs)
-        return d['dash']['id']
+        r = s.create(title, description, graphs)
+        if r.has_key('errors'):
+            raise Exception(r['errors'])
+        return r['dash']['id']
 
     def update_dashboard(self, dash_id, title, description, graphs):
         if self.api_key is None or self.application_key is None:
             raise Exception("Dash API requires api and application keys")
         s = DashService(self.api_key, self.application_key)
-        return s.update(dash_id, title, description, graphs)
+        r = s.update(dash_id, title, description, graphs)
+        if r.has_key('errors'):
+            raise Exception(r['errors'])
+        return r['dash']['id']
 
     def delete_dashboard(self, dash_id):
         if self.api_key is None or self.application_key is None:
             raise Exception("Dash API requires api and application keys")
         s = DashService(self.api_key, self.application_key)
-        return s.delete(dash_id)
+        r = s.delete(dash_id)
+        if r.has_key('errors'):
+            raise Exception(r['errors'])
 
     #
     # Search API
