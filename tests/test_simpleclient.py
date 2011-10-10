@@ -18,31 +18,35 @@ class TestSimpleClient(unittest.TestCase):
         dog.application_key = '8d798d3c3bef16028b017fc6ff2631836d264c5c'
 
     def test_clusters(self):
+        # post a metric to make sure the test host context exists
+        hostname = 'test.cluster.host'
+        dog.metric('test.cluster.metric', 1, host=hostname)
+
         dog.all_clusters()
 
-        dog.detatch_clusters(8)
-        assert len(dog.host_clusters(8)) == 0
+        dog.detatch_clusters(hostname)
+        assert len(dog.host_clusters(hostname)) == 0
 
-        dog.add_clusters(8, 'test.cluster.1', 'test.cluster.2')
-        new_clusters = dog.host_clusters(8)
+        dog.add_clusters(hostname, 'test.cluster.1', 'test.cluster.2')
+        new_clusters = dog.host_clusters(hostname)
         assert len(new_clusters) == 2
         assert 'test.cluster.1' in new_clusters
         assert 'test.cluster.2' in new_clusters
 
-        dog.add_clusters(8, 'test.cluster.3')
-        new_clusters = dog.host_clusters(8)
+        dog.add_clusters(hostname, 'test.cluster.3')
+        new_clusters = dog.host_clusters(hostname)
         assert len(new_clusters) == 3
         assert 'test.cluster.1' in new_clusters
         assert 'test.cluster.2' in new_clusters
         assert 'test.cluster.3' in new_clusters
 
-        dog.change_clusters(8, 'test.cluster.4')
-        new_clusters = dog.host_clusters(8)
+        dog.change_clusters(hostname, 'test.cluster.4')
+        new_clusters = dog.host_clusters(hostname)
         assert len(new_clusters) == 1
         assert 'test.cluster.4' in new_clusters
 
-        dog.detatch_clusters(8)
-        assert len(dog.host_clusters(8)) == 0
+        dog.detatch_clusters(hostname)
+        assert len(dog.host_clusters(hostname)) == 0
 
     def test_events(self):
         now = datetime.datetime.now()
@@ -182,4 +186,3 @@ class TestSimpleClient(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-        
