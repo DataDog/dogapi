@@ -36,8 +36,8 @@ class SimpleClient(object):
         if self.api_key is None or self.application_key is None:
             raise Exception("Metric API requires api and application keys")
         s = MetricService(self.api_key, self.application_key)
-        now = int(time.mktime(datetime.datetime.now().timetuple()))
-        r = s.post(name, [[value, now]], host=host, device=device)
+        now = time.mktime(datetime.datetime.now().timetuple())
+        r = s.post(name, [[now, value]], host=host, device=device)
         if r.has_key('errors'):
             raise Exception(r['errors'])
 
@@ -62,8 +62,10 @@ class SimpleClient(object):
         if self.api_key is None or self.application_key is None:
             raise Exception("Metric API requires api and application keys")
         s = MetricService(self.api_key, self.application_key)
-        now = int(time.mktime(datetime.datetime.now().timetuple()))
-        r = s.post(name, values, host=host, device=device)
+        if device:
+            r = s.post(name, values, host=host, device=device)
+        else:
+            r = s.post(name, values, host=host)
         if r.has_key('errors'):
             raise Exception(r['errors'])
 
@@ -125,32 +127,44 @@ class SimpleClient(object):
     def all_clusters(self):
         if self.api_key is None or self.application_key is None:
             raise Exception("Cluster API requires api and application keys")
-        s = ClusterService(self.api_key, self.application_key, self.datadog_host)
-        return s.get_all()
+        s = ClusterService(self.api_key, self.application_key)
+        r = s.get_all()
+        if r.has_key('errors'):
+            raise Exception(r['errors'])
+        return r['clusters']
 
     def host_clusters(self, host_id):
         if self.api_key is None or self.application_key is None:
             raise Exception("Cluster API requires api and application keys")
-        s = ClusterService(self.api_key, self.application_key, self.datadog_host)
-        return s.get(host_id)
+        s = ClusterService(self.api_key, self.application_key)
+        r = s.get(host_id)
+        if r.has_key('errors'):
+            raise Exception(r['errors'])
+        return r['clusters']
 
     def add_clusters(self, host_id, *args):
         if self.api_key is None or self.application_key is None:
             raise Exception("Cluster API requires api and application keys")
-        s = ClusterService(self.api_key, self.application_key, self.datadog_host)
-        return s.add(host_id, args)
+        s = ClusterService(self.api_key, self.application_key)
+        r = s.add(host_id, args)
+        if r.has_key('errors'):
+            raise Exception(r['errors'])
 
     def change_clusters(self, host_id, *args):
         if self.api_key is None or self.application_key is None:
             raise Exception("Cluster API requires api and application keys")
-        s = ClusterService(self.api_key, self.application_key, self.datadog_host)
-        return s.update(host_id, args)
+        s = ClusterService(self.api_key, self.application_key)
+        r = s.update(host_id, args)
+        if r.has_key('errors'):
+            raise Exception(r['errors'])
 
     def detatch_clusters(self, host_id):
         if self.api_key is None or self.application_key is None:
             raise Exception("Cluster API requires api and application keys")
-        s = ClusterService(self.api_key, self.application_key, self.datadog_host)
-        return s.detatch(host_id)
+        s = ClusterService(self.api_key, self.application_key)
+        r = s.detatch(host_id)
+        if r.has_key('errors'):
+            raise Exception(r['errors'])
 
     #
     # Stream API
@@ -227,4 +241,7 @@ class SimpleClient(object):
         if self.api_key is None or self.application_key is None:
             raise Exception("Search API requires api and application keys")
         s = SearchService(self.api_key, self.application_key)
-        return s.query(query)
+        r = s.query(query)
+        if r.has_key('errors'):
+            raise Exception(r['errors'])
+        return r['results']
