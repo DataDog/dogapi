@@ -10,11 +10,6 @@ API_VERSION="v1"
 
 class EventService(APIService):
 
-    def __init__(self, api_key, application_key, api_host):
-        self.api_key = api_key
-        self.application_key = application_key
-        self.api_host = api_host
-
     def query(self, start, end, priority=None, sources=None, tags=None):
 
         params = {

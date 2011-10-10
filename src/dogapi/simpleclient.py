@@ -158,20 +158,29 @@ class SimpleClient(object):
     def stream(self, start, end, priority=None, sources=None, tags=None):
         if self.api_key is None or self.application_key is None:
             raise Exception("Event API requires api and application keys")
-        s = EventService(self.api_key, self.application_key, self.datadog_host)
-        return s.query(start, end, priority, sources, tags)
+        s = EventService(self.api_key, self.application_key)
+        r = s.query(start, end, priority, sources, tags)
+        if r.has_key('errors'):
+            raise Exception(r['errors'])
+        return r['events']
 
     def get_event(self, id):
         if self.api_key is None or self.application_key is None:
             raise Exception("Event API requires api and application keys")
-        s = EventService(self.api_key, self.application_key, self.datadog_host)
-        return s.get(id)
+        s = EventService(self.api_key, self.application_key)
+        r = s.get(id)
+        if r.has_key('errors'):
+            raise Exception(r['errors'])
+        return r['event']
 
     def event(self, title, text, date_happened=None, handle=None, priority=None, related_event_id=None, tags=None):
         if self.api_key is None or self.application_key is None:
             raise Exception("Event API requires api and application keys")
-        s = EventService(self.api_key, self.application_key, self.datadog_host)
-        return s.post(title, text, date_happened, handle, priority, related_event_id, tags)
+        s = EventService(self.api_key, self.application_key)
+        r = s.post(title, text, date_happened, handle, priority, related_event_id, tags)
+        if r.has_key('errors'):
+            raise Exception(r['errors'])
+        return r['event']['id']
 
     #
     # Dash API
@@ -183,7 +192,6 @@ class SimpleClient(object):
         r = s.get(dash_id)
         if r.has_key('errors'):
             raise Exception(r['errors'])
-        print r
         return r['dash']
 
     def create_dashboard(self, title, description, graphs):
