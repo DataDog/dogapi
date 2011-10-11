@@ -2,6 +2,7 @@
 import random, math
 import datetime
 import unittest
+import os
 
 # nose
 from nose.plugins.skip import SkipTest
@@ -14,8 +15,8 @@ import datetime, time
 class TestSimpleClient(unittest.TestCase):
 
     def setUp(self):
-        dog.api_key = "apikey_3"
-        dog.application_key = '8d798d3c3bef16028b017fc6ff2631836d264c5c'
+        dog.api_key = os.environ.get('DATADOG_API_KEY')
+        dog.application_key = os.environ.get('DATADOG_APP_KEY')
         dog.swallow = False
 
     def test_clusters(self):
