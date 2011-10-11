@@ -1,6 +1,7 @@
 import time, datetime
 from socket import timeout
 import sys
+from decorator import decorator
 
 from dogapi.common import SharedCounter
 
@@ -19,20 +20,15 @@ class SimpleClient(object):
         self.timeout_counter = SharedCounter()
         self.swallow = True
 
-    def _swallow_exceptions(f):
-        """
-        Decorated functions will capture all exceptions raised and
-        print them to stderr as long as self.swallow is True.
-        """
-        def _foo_wrap(self, *args, **kwargs):
-            if self.swallow is True:
-                try:
-                    return f(self, *args, **kwargs)
-                except Exception, e:
-                    self._report_error(str(e))
-            else:
+    @decorator
+    def _swallow_exceptions(f, self, *args, **kwargs):
+        if self.swallow is True:
+            try:
                 return f(self, *args, **kwargs)
-        return _foo_wrap
+            except Exception, e:
+                self._report_error(str(e))
+        else:
+            return f(self, *args, **kwargs)
 
     def _report_error(self, message):
         if self.swallow:
