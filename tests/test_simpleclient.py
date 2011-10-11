@@ -185,5 +185,23 @@ class TestSimpleClient(unittest.TestCase):
 
         dog.metrics('matt.metric', matt_series, host="matt.metric.host")
 
+    def test_swallow_exceptions(self):
+        comment_id = dog.comment('fabian', 'test exception swallowing')
+        dog.delete_comment(comment_id)
+
+        # doesn't raise an exception when swallow is True
+        dog.swallow = True
+        dog.get_event(comment_id)
+
+        # raises an exception when swallow is False
+        dog.swallow = False
+        try:
+            dog.get_event(comment_id)
+        except:
+            pass
+        else:
+            assert False
+
+
 if __name__ == '__main__':
     unittest.main()
