@@ -2,8 +2,6 @@ import argparse
 import os
 import sys
 
-from dogapi.search import SearchService
-
 from dogshell.common import DogshellConfig
 
 from dogshell.comment import CommentClient
