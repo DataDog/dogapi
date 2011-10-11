@@ -107,12 +107,19 @@ class Service(object):
 
         return response_obj
 
+class SharedCounter(object):
+    def __init__(self):
+        self.counter = 0
+
 class APIService(object):
 
-    def __init__(self, api_key, application_key):
+    def __init__(self, api_key, application_key, timeout=2, max_timeouts=3, timeout_counter=SharedCounter()):
         self.api_key = api_key
         self.application_key = application_key
         self.api_host = os.environ.get("DATADOG_HOST", "https://app.datadoghq.com")
+        self.timeout = timeout
+        self.max_timeouts = max_timeouts
+        self.timeout_counter = timeout_counter
 
     @contextmanager
     def connect(self):
@@ -123,7 +130,7 @@ class APIService(object):
             host = match.group(2)
             if match.group(1) == 'http':
                 http_conn_cls = httplib.HTTPConnection
-        conn = http_conn_cls(host)
+        conn = http_conn_cls(host, timeout=self.timeout)
 
         try:
             yield conn
@@ -134,32 +141,36 @@ class APIService(object):
         '''handles a request to the datadog service.
         '''
 
-        # handle request/response
-        with self.connect() as conn:
-            if send_json:
-                headers = {
-                    'Content-Type': 'application/json'
-                }
-                body = simplejson.dumps(body)
-            else:
-                headers = {}
+        try:
+            # handle request/response
+            with self.connect() as conn:
+                if send_json:
+                    headers = {
+                        'Content-Type': 'application/json'
+                    }
+                    body = simplejson.dumps(body)
+                else:
+                    headers = {}
 
-            if params and len(params) > 0:
-                qs_params = [k + '=' + str(v) for k,v in params.iteritems()]
-                qs = '?' + '&'.join(qs_params)
-                conn.request(method, url + qs, body, headers)
-            else:
-                conn.request(method, url, body, headers)
+                if params and len(params) > 0:
+                    qs_params = [k + '=' + str(v) for k,v in params.iteritems()]
+                    qs = '?' + '&'.join(qs_params)
+                    conn.request(method, url + qs, body, headers)
+                else:
+                    conn.request(method, url, body, headers)
 
-            response = conn.getresponse()
-            response_str = response.read()
+                response = conn.getresponse()
+                response_str = response.read()
 
-            if response.status != 204:
-                try:
-                    response_obj = json.loads(response_str)
-                except ValueError:
-                    raise ValueError('Invalid JSON response: {0}'.format(response_str))
+                if response.status != 204:
+                    try:
+                        response_obj = json.loads(response_str)
+                    except ValueError:
+                        raise ValueError('Invalid JSON response: {0}'.format(response_str))
 
-                return response_obj or {}
-            else:
-                return {}
+                    return response_obj or {}
+                else:
+                    return {}
+        except socket.timeout, e:
+            self.timeout_counter.counter += 1
+            return {'errors': 'Client timeout'}
