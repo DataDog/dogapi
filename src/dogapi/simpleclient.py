@@ -1,5 +1,6 @@
 import time, datetime
 from socket import timeout
+import sys
 
 from dogapi.common import SharedCounter
 
@@ -16,16 +17,37 @@ class SimpleClient(object):
         self.datadog_host = 'https://app.datadoghq.com'
         self.max_timeouts = 3
         self.timeout_counter = SharedCounter()
+        self.swallow = True
 
+    def _swallow_exceptions(f):
+        """
+        Decorated functions will capture all exceptions raised and
+        print them to stderr as long as self.swallow is True.
+        """
+        def _foo_wrap(self, *args, **kwargs):
+            if self.swallow is True:
+                try:
+                    return f(self, *args, **kwargs)
+                except Exception, e:
+                    self._report_error(str(e))
+            else:
+                return f(self, *args, **kwargs)
+        return _foo_wrap
 
+    def _report_error(self, message):
+        if self.swallow:
+            print >> sys.stderr, message
+        else:
+            raise Exception(message)
 
     #
     # Metric API
 
+    @_swallow_exceptions
     def metric(self, name, value, host=None, device=None):
         """
         Submit a single data point to the metric API.
-        
+
         :param name: name of the metric (e.g. ``"system.load.1"``)
         :type name: string
 
@@ -34,7 +56,7 @@ class SimpleClient(object):
 
         :param host: optional host to scope the metric (e.g. ``"hostA.example.com"``)
         :type host: string
-        
+
         :param device: optional device to scope the metric (e.g. ``"eth0"``)
         :type device: string
 
@@ -43,17 +65,18 @@ class SimpleClient(object):
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
-            raise Exception("Metric API requires api and application keys")
+            self._report_error("Metric API requires api and application keys")
         s = MetricService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
         now = time.mktime(datetime.datetime.now().timetuple())
         r = s.post(name, [[now, value]], host=host, device=device)
         if r.has_key('errors'):
-            raise Exception(r['errors'])
+            self._report_error(r['errors'])
 
+    @_swallow_exceptions
     def metrics(self, name, values, host=None, device=None):
         """
         Submit a series of data points to the metric API.
-        
+
         :param name: name of the metric (e.g. ``"system.load.1"``)
         :type name: string
 
@@ -62,7 +85,7 @@ class SimpleClient(object):
 
         :param host: optional host to scope the metric (e.g. ``"hostA.example.com"``)
         :type host: string
-        
+
         :param device: optional device to scope the metric (e.g. ``"eth0"``)
         :type device: string
 
@@ -71,18 +94,19 @@ class SimpleClient(object):
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
-            raise Exception("Metric API requires api and application keys")
+            self._report_error("Metric API requires api and application keys")
         s = MetricService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
         if device:
             r = s.post(name, values, host=host, device=device)
         else:
             r = s.post(name, values, host=host)
         if r.has_key('errors'):
-            raise Exception(r['errors'])
+            self._report_error(r['errors'])
 
     #
     # Comment API
 
+    @_swallow_exceptions
     def comment(self, handle, message, comment_id=None, related_event_id=None):
         """
         Post or edit a comment.
@@ -107,16 +131,17 @@ class SimpleClient(object):
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
-            raise Exception("Comment API requires api and application keys")
+            self._report_error("Comment API requires api and application keys")
         s = CommentService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
         if comment_id is None:
             r = s.post(handle, message, related_event_id)
         else:
             r = s.edit(comment_id, handle, message, related_event_id)
         if r.has_key('errors'):
-            raise Exception(r['errors'])
+            self._report_error(r['errors'])
         return r['comment']['id']
 
+    @_swallow_exceptions
     def delete_comment(self, comment_id):
         """
         Delete a comment.
@@ -130,159 +155,172 @@ class SimpleClient(object):
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
-            raise Exception("Comment API requires api and application keys")
+            self._report_error("Comment API requires api and application keys")
         s = CommentService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
         r = s.delete(comment_id)
         if r.has_key('errors'):
-            raise Exception(r['errors'])
+            self._report_error(r['errors'])
 
     #
     # Cluster API
 
+    @_swallow_exceptions
     def all_clusters(self):
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
-            raise Exception("Cluster API requires api and application keys")
+            self._report_error("Cluster API requires api and application keys")
         s = ClusterService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
         r = s.get_all()
         if r.has_key('errors'):
-            raise Exception(r['errors'])
+            self._report_error(r['errors'])
         return r['clusters']
 
+    @_swallow_exceptions
     def host_clusters(self, host_id):
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
-            raise Exception("Cluster API requires api and application keys")
+            self._report_error("Cluster API requires api and application keys")
         s = ClusterService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
         r = s.get(host_id)
         if r.has_key('errors'):
-            raise Exception(r['errors'])
+            self._report_error(r['errors'])
         return r['clusters']
 
+    @_swallow_exceptions
     def add_clusters(self, host_id, *args):
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
-            raise Exception("Cluster API requires api and application keys")
+            self._report_error("Cluster API requires api and application keys")
         s = ClusterService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
         r = s.add(host_id, args)
         if r.has_key('errors'):
-            raise Exception(r['errors'])
+            self._report_error(r['errors'])
 
+    @_swallow_exceptions
     def change_clusters(self, host_id, *args):
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
-            raise Exception("Cluster API requires api and application keys")
+            self._report_error("Cluster API requires api and application keys")
         s = ClusterService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
         r = s.update(host_id, args)
         if r.has_key('errors'):
-            raise Exception(r['errors'])
+            self._report_error(r['errors'])
 
+    @_swallow_exceptions
     def detatch_clusters(self, host_id):
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
-            raise Exception("Cluster API requires api and application keys")
+            self._report_error("Cluster API requires api and application keys")
         s = ClusterService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
         r = s.detatch(host_id)
         if r.has_key('errors'):
-            raise Exception(r['errors'])
+            self._report_error(r['errors'])
 
     #
     # Stream API
 
+    @_swallow_exceptions
     def stream(self, start, end, priority=None, sources=None, tags=None):
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
-            raise Exception("Event API requires api and application keys")
+            self._report_error("Event API requires api and application keys")
         s = EventService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
         r = s.query(start, end, priority, sources, tags)
         if r.has_key('errors'):
-            raise Exception(r['errors'])
+            self._report_error(r['errors'])
         return r['events']
 
+    @_swallow_exceptions
     def get_event(self, id):
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
-            raise Exception("Event API requires api and application keys")
+            self._report_error("Event API requires api and application keys")
         s = EventService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
         r = s.get(id)
         if r.has_key('errors'):
-            raise Exception(r['errors'])
+            self._report_error(r['errors'])
         return r['event']
 
+    @_swallow_exceptions
     def event(self, title, text, date_happened=None, handle=None, priority=None, related_event_id=None, tags=None):
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
-            raise Exception("Event API requires api and application keys")
+            self._report_error("Event API requires api and application keys")
         s = EventService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
         r = s.post(title, text, date_happened, handle, priority, related_event_id, tags)
         if r.has_key('errors'):
-            raise Exception(r['errors'])
+            self._report_error(r['errors'])
         return r['event']['id']
 
     #
     # Dash API
 
+    @_swallow_exceptions
     def dashboard(self, dash_id):
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
-            raise Exception("Dash API requires api and application keys")
+            self._report_error("Dash API requires api and application keys")
         s = DashService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
         r = s.get(dash_id)
         if r.has_key('errors'):
-            raise Exception(r['errors'])
+            self._report_error(r['errors'])
         return r['dash']
 
+    @_swallow_exceptions
     def create_dashboard(self, title, description, graphs):
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
-            raise Exception("Dash API requires api and application keys")
+            self._report_error("Dash API requires api and application keys")
         s = DashService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
         r = s.create(title, description, graphs)
         if r.has_key('errors'):
-            raise Exception(r['errors'])
+            self._report_error(r['errors'])
         return r['dash']['id']
 
+    @_swallow_exceptions
     def update_dashboard(self, dash_id, title, description, graphs):
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
-            raise Exception("Dash API requires api and application keys")
+            self._report_error("Dash API requires api and application keys")
         s = DashService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
         r = s.update(dash_id, title, description, graphs)
         if r.has_key('errors'):
-            raise Exception(r['errors'])
+            self._report_error(r['errors'])
         return r['dash']['id']
 
+    @_swallow_exceptions
     def delete_dashboard(self, dash_id):
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
-            raise Exception("Dash API requires api and application keys")
+            self._report_error("Dash API requires api and application keys")
         s = DashService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
         r = s.delete(dash_id)
         if r.has_key('errors'):
-            raise Exception(r['errors'])
+            self._report_error(r['errors'])
 
     #
     # Search API
 
+    @_swallow_exceptions
     def search(self, query):
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
-            raise Exception("Search API requires api and application keys")
+            self._report_error("Search API requires api and application keys")
         s = SearchService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
         r = s.query(query)
         if r.has_key('errors'):
-            raise Exception(r['errors'])
+            self._report_error(r['errors'])
         return r['results']
