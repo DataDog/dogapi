@@ -26,15 +26,13 @@ class CommentClient(CommandLineClient):
     def r_comment(self, args):
         res = self._comment(args.handle, args.comment)
         report_warnings(res)
-        if report_errors(res):
-            return
+        report_errors(res)
         print res
 
     def p_comment(self, args):
         res = self._comment(args.handle, args.comment)
         report_warnings(res)
-        if report_errors(res):
-            return
+        report_errors(res)
         message = res['comment']['message']
         lines = message.split('\n')
         message = '\n'.join(['    ' + line for line in lines])
@@ -47,8 +45,7 @@ class CommentClient(CommandLineClient):
     def l_comment(self, args):
         res = self._comment(args.handle, args.comment)
         report_warnings(res)
-        if report_errors(res):
-            return
+        report_errors(res)
         print 'id\t\t' + str(res['comment']['id'])
         print 'url\t\t' + res['comment']['url']
         print 'resource\t' + res['comment']['resource']

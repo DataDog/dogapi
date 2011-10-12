@@ -22,15 +22,13 @@ class SearchClient(CommandLineClient):
     def r_search(self, args):
         res = self._search(args.query)
         report_warnings(res)
-        if report_errors(res):
-            return
+        report_errors(res)
         print res
 
     def p_search(self, args):
         res = self._search(args.query)
         report_warnings(res)
-        if report_errors(res):
-            return
+        report_errors(res)
         for facet, results in res['results'].items():
             for idx, result in enumerate(results):
                 if idx == 0:
@@ -42,8 +40,7 @@ class SearchClient(CommandLineClient):
     def l_search(self, args):
         res = self._search(args.query)
         report_warnings(res)
-        if report_errors(res):
-            return
+        report_errors(res)
         for facet, results in res['results'].items():
             for result in results:
                 print "%s\t%s" % (facet, result)

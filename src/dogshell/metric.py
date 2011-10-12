@@ -34,5 +34,4 @@ class MetricClient(CommandLineClient):
     def r_post_metric(self, args):
         res = self._post_metric(args)
         report_warnings(res)
-        if report_errors(res):
-            return
+        report_errors(res)

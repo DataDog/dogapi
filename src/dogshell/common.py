@@ -6,7 +6,7 @@ def report_errors(res):
     if 'errors' in res:
         for e in res['errors']:
             print >> sys.stderr, 'ERROR: ' + e
-        return True
+        sys.exit(1)
     return False
 
 def report_warnings(res):
