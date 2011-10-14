@@ -1,7 +1,3 @@
-"""
-Full client-side comment client
-See facade.py for a simpler wrapper
-"""
 import logging
 import simplejson
 
@@ -18,6 +14,12 @@ class MetricService(APIService):
 
     :param application_key: your application key
     :type application_key: string
+
+    :param timeout: time, in seconds, to wait for a response from datadog before timing out
+    :type timeout: integer
+
+    :param timeout_counter: shared counter that can be used to track timeouts across services. useful for short-circuiting if a systemic problem is causing lots of timeouts.
+    :type timeout_counter: :class:`~dogapi.common.SharedCounter`
     """
 
     def post(self, name, points, mtype="gauge", host=None, device=None):

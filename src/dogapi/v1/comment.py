@@ -20,7 +20,21 @@ class CommentService(APIService):
     """
 
     def post(self, handle, message, related_event_id=None):
+        """
+        Post a comment.
 
+        :param handle: user handle to post the comment as
+        :type handle: string
+
+        :param message: comment message
+        :type message: string
+
+        :param related_event_id: if set, comment will be posted as a reply to the specified comment or event
+        :type related_event_id: integer
+
+        :return: the newly created comment
+        :rtype: decoded JSON
+        """
         params = {
             'api_key':         self.api_key,
             'application_key': self.application_key,
@@ -36,7 +50,24 @@ class CommentService(APIService):
         return self.request('POST', '/api/' + API_VERSION + '/comments', params, body, send_json=True)
 
     def edit(self, comment_id, handle, message, related_event_id=None):
+        """
+        Update an existing comment.
 
+        :param comment_id: comment to update
+        :type comment_id: integer
+
+        :param handle: user handle to post the comment as
+        :type handle: string
+
+        :param message: comment message
+        :type message: string
+
+        :param related_event_id: if set, comment will be posted as a reply to the specified comment or event
+        :type related_event_id: integer
+
+        :return: the updated comment
+        :rtype: decoded JSON
+        """
         params = {
             'api_key':         self.api_key,
             'application_key': self.application_key,
@@ -54,7 +85,12 @@ class CommentService(APIService):
         return self.request('PUT', '/api/' + API_VERSION + '/comments/' + str(comment_id), params, body, send_json=True)
 
     def delete(self, comment_id):
+        """
+        Delete a comment.
 
+        :param comment_id: comment to delete
+        :type comment_id: integer
+        """
         params = {
             'api_key':         self.api_key,
             'application_key': self.application_key,

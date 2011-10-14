@@ -10,4 +10,26 @@ Contents:
     An instantiated, ready-to-use :class:`~dogapi.SimpleClient`.
 
 .. autoclass:: SimpleClient
-   :members:
+
+   .. automethod:: metric
+   .. automethod:: metrics
+
+   .. automethod:: comment
+   .. automethod:: delete_comment
+
+   .. automethod:: stream
+   .. automethod:: get_event
+   .. automethod:: event
+
+   .. automethod:: all_clusters
+   .. automethod:: host_clusters
+   .. automethod:: add_clusters
+   .. automethod:: change_clusters
+   .. automethod:: detatch_clusters
+
+   .. automethod:: dashboard
+   .. automethod:: create_dashboard
+   .. automethod:: update_dashboard
+   .. automethod:: delete_dashboard
+
+   .. automethod:: search

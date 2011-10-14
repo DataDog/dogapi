@@ -13,7 +13,7 @@ setup(
     keywords = "datadog data",
     url = "http://datadoghq.com",
     install_requires= [
-        "sphinx==1.0.7"
+        "sphinx==1.1.0"
     ],
 )
 

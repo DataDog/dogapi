@@ -142,7 +142,6 @@ class SimpleClient(object):
         """
         Delete a comment.
 
-
         :param comment_id: comment to delete
         :type comment_id: integer
 
@@ -162,6 +161,12 @@ class SimpleClient(object):
 
     @_swallow_exceptions
     def all_clusters(self):
+        """
+        Get a list of clusters for your org and their member hosts.
+
+        :return: [ { 'cluster1': [ 'host1', 'host2', ... ] }, ... ]
+        :rtype: list
+        """
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
@@ -174,6 +179,15 @@ class SimpleClient(object):
 
     @_swallow_exceptions
     def host_clusters(self, host_id):
+        """
+        Get a list of clusters for the specified host by name or id.
+
+        :param host_id: id or name of the host
+        :type host_id: integer or string
+
+        :return: clusters the host belongs to
+        :rtype: list
+        """
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
@@ -186,6 +200,15 @@ class SimpleClient(object):
 
     @_swallow_exceptions
     def add_clusters(self, host_id, *args):
+        """add_clusters(host_id, cluster1, [cluster2, [...]])
+        Add a host to one or more clusters.
+
+        :param host_id: id or name of the host
+        :type host_id: integer or string
+
+        :param clusterN: cluster name
+        :type clusterN: string
+        """
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
@@ -197,6 +220,15 @@ class SimpleClient(object):
 
     @_swallow_exceptions
     def change_clusters(self, host_id, *args):
+        """change_clusters(host_id, cluster1, [cluster2, [...]])
+        Remove a host from all existing clusters and add it to one or more new clusters.
+
+        :param host_id: id or name of the host
+        :type host_id: integer or string
+
+        :param clusterN: cluster name
+        :type clusterN: string
+        """
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
@@ -208,6 +240,12 @@ class SimpleClient(object):
 
     @_swallow_exceptions
     def detatch_clusters(self, host_id):
+        """
+        Remove a host from all clusters.
+
+        :param host_id: id or name of the host
+        :type host_id: integer or string
+        """
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
@@ -222,6 +260,29 @@ class SimpleClient(object):
 
     @_swallow_exceptions
     def stream(self, start, end, priority=None, sources=None, tags=None):
+        """
+        Get an event stream, optionally filtered.
+
+        :param start: start date for the stream query (POSIX timestamp)
+        :type start: integer
+
+        :param end: end date for the stream query (POSIX timestamp)
+        :type end: integer
+
+        :param priority: show only events of the given priority ("low" or "normal")
+        :type priority: string
+
+        :param sources: show only events for the give sources (see
+                        https://github.com/DataDog/dogapi/wiki/Event
+                        for an up-to-date list of available sources)
+        :type sources: list of strings
+
+        :param tags: show only events for the given tags
+        :type tags: list of strings
+
+        :return: list of events (see https://github.com/DataDog/dogapi/wiki/Event for structure)
+        :rtype: decoded JSON
+        """
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
@@ -234,6 +295,15 @@ class SimpleClient(object):
 
     @_swallow_exceptions
     def get_event(self, id):
+        """
+        Get details for an individual event.
+
+        :param id: numeric event id
+        :type id: integer
+
+        :return: event details (see https://github.com/DataDog/dogapi/wiki/Event for structure)
+        :rtype: decoded JSON
+        """
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
@@ -246,6 +316,33 @@ class SimpleClient(object):
 
     @_swallow_exceptions
     def event(self, title, text, date_happened=None, handle=None, priority=None, related_event_id=None, tags=None):
+        """
+        Post an event.
+
+        :param title: title for the new event
+        :type title: string
+
+        :param text: event message
+        :type text: string
+
+        :param date_happened: when the event occurred. if unset defaults to the current time. (POSIX timestamp)
+        :type date_happened: integer
+
+        :param handle: user to post the event as. defaults to owner of the application key used to submit.
+        :type handle: string
+
+        :param priority: priority to post the event as. ("normal" or "low", defaults to "normal")
+        :type priority: string
+
+        :param related_event_id: post event as a child of the given event
+        :type related_event_id: id
+
+        :param tags: tags to post the event with
+        :type tags: list of strings
+
+        :return: new event id
+        :rtype: integer
+        """
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
@@ -261,6 +358,15 @@ class SimpleClient(object):
 
     @_swallow_exceptions
     def dashboard(self, dash_id):
+        """
+        Get a dashboard definition.
+
+        :param dash_id: id of the dash to get
+        :type dash_id: integer
+
+        :return: dashboard definition (see https://github.com/DataDog/dogapi/wiki/Dashboard for details)
+        :rtype: decoded JSON
+        """
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
@@ -273,6 +379,21 @@ class SimpleClient(object):
 
     @_swallow_exceptions
     def create_dashboard(self, title, description, graphs):
+        """
+        Create a new dashboard.
+
+        :param title: tile for the new dashboard
+        :type title: string
+
+        :param description: description of the new dashboard
+        :type description: string
+
+        :param graphs: list of graph objects for the dashboard (same format as contained in the dashboard object returned by :meth:`~dogapi.SimpleClient.dashboard`)
+        :type graphs: decoded JSON
+
+        :return: new dashboard's id
+        :rtype: integer
+        """
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
@@ -285,6 +406,24 @@ class SimpleClient(object):
 
     @_swallow_exceptions
     def update_dashboard(self, dash_id, title, description, graphs):
+        """
+        Update an existing dashboard.
+
+        :param dash_id: dash to update
+        :type dash_id: integer
+
+        :param title: new tile for the dashboard
+        :type title: string
+
+        :param description: new description for the dashboard
+        :type description: string
+
+        :param graphs: list of graph objects for the dashboard (same format as contained in the dashboard object returned by :meth:`~dogapi.SimpleClient.dashboard`). replaces existing graphs.
+        :type graphs: decoded JSON
+
+        :return: dashboard's id
+        :rtype: integer
+        """
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
@@ -297,6 +436,12 @@ class SimpleClient(object):
 
     @_swallow_exceptions
     def delete_dashboard(self, dash_id):
+        """
+        Delete a dashboard.
+
+        :param dash_id: dash to delete
+        :type dash_id: integer
+        """
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
@@ -311,6 +456,15 @@ class SimpleClient(object):
 
     @_swallow_exceptions
     def search(self, query):
+        """
+        Search datadog for hosts and metrics by name.
+
+        :param query: search query can either be faceted to limit the results (e.g. ``"host:foo"``, or ``"metric:bar"``) or un-faceted, which will return results of all types (e.g. ``"baz"``)
+        :type query: string
+
+        :return: a dictionary maping each queried facet to a list of name strings
+        :rtype: dictionary
+        """
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
