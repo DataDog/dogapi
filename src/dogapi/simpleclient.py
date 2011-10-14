@@ -15,7 +15,6 @@ class SimpleClient(object):
     def __init__(self):
         self.api_key = None
         self.application_key = None
-        self.datadog_host = 'https://app.datadoghq.com'
         self.max_timeouts = 3
         self.timeout_counter = SharedCounter()
         self.swallow = True
