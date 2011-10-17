@@ -32,12 +32,7 @@ def main():
     args = parser.parse_args()
     config.load(args.config)
 
-    if args.format == 'raw':
-        args.r_func(args)
-    elif args.format == 'pretty':
-        args.p_func(args)
-    else:
-        args.l_func(args)
+    args.func(args)
 
 if __name__=='__main__':
     main()
