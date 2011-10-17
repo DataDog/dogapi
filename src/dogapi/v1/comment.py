@@ -17,6 +17,12 @@ class CommentService(APIService):
 
     :param application_key: your application key
     :type application_key: string
+
+    :param timeout: seconds before timing out a request
+    :type timeout: integer
+
+    :param timeout_counter: shared timeout counter
+    :type timeout_counter: :class:`dogapi.common.SharedCounter`
     """
 
     def post(self, handle, message, related_event_id=None):

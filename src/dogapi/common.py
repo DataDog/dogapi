@@ -108,17 +108,17 @@ class Service(object):
         return response_obj
 
 class SharedCounter(object):
+    # FIXME: this should be threadsafe, duh
     def __init__(self):
         self.counter = 0
 
 class APIService(object):
 
-    def __init__(self, api_key, application_key, timeout=2, max_timeouts=3, timeout_counter=None):
+    def __init__(self, api_key, application_key, timeout=2, timeout_counter=None):
         self.api_key = api_key
         self.application_key = application_key
         self.api_host = os.environ.get("DATADOG_HOST", "https://app.datadoghq.com")
         self.timeout = timeout
-        self.max_timeouts = max_timeouts
         if timeout_counter == None:
             timeout_counter = SharedCounter()
         self.timeout_counter = timeout_counter

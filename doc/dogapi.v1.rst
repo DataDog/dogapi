@@ -10,9 +10,15 @@ https://github.com/DataDog/dogapi/wiki
 They return the Python object that results from deserializing the HTTP API's
 JSON response. In the case of a blank body, they return an empty dict.
 
-Contents:
-
+.. autoclass:: ClusterService
+   :members:
 .. autoclass:: CommentService
    :members:
+.. autoclass:: DashService
+   :members:
+.. autoclass:: EventService
+   :members:
 .. autoclass:: MetricService
+   :members:
+.. autoclass:: SearchService
    :members:

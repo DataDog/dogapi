@@ -3,8 +3,6 @@
 
 .. py:module:: dogapi
 
-Contents:
-
 .. data:: dog
 
     An instantiated, ready-to-use :class:`~dogapi.SimpleClient`.
