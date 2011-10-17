@@ -10,6 +10,10 @@ from v1 import *
 class SimpleClient(object):
     """
     A high-level client for interacting with the Datadog API.
+
+    By default, service calls to the simple client silently swallow any exceptions
+    before they escape from the library. To disable this behavior, simply set the
+    `swallow` attribute of your :class:`~dogapi.SimpleClient` instance to `False`.
     """
 
     def __init__(self):

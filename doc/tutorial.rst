@@ -12,9 +12,8 @@ with the simple client.
     >>> from dogapi import dog
     >>> dog.api_key = 'your_orgs_api_key'
     >>> dog.application_key = 'your_application_key'
-    >>> resp = dog.comment('matt', 'hello dogapi')
-    >>> print resp
-    {u'comment': {u'message': u'hello dogapi', u'handle': u'matt', u'id': 1395}}
+    >>> dog.comment('matt', 'hello dogapi')
+    1234
 
 
 The simple client is available as an already instantiated, ready-to-go client
@@ -34,8 +33,21 @@ we're ready to roll. (Some API commands only require reporting
 permissions. That means they only need an API key. For them, you can
 just omit the application key.)
 
-Last, we post a comment from user "matt" with the message "hello dogapi". We
-capture the response, which is simply the decoded JSON of the underlying HTTP
-response. Here, with a successful action, it's mostly just the information we
-submitted reflected back at us, but with the addition of a unique id that we can
-use to reference the comment in the future (for example, to edit or delete it).
+Last, we post a comment from user "matt" with the message "hello dogapi". If
+the commnet is posted successfully, the result is the unique ID of the comment,
+which can be used to modify or delete the comment later.
+
+Defensive by design
+===================
+
+The simple client is designed defensively, to be safe by default. The simple
+client is built with aggressive default timeouts, and is designed to suppress
+exceptions rather than letting them escape from the library and potentially
+interfere with surrounding code. This tradeoff comes at a cost. With default
+settings, the simple client can fail silently, and will assume Datadog is down
+(and stop sending requests) if too many timeouts occur. This allows you to
+experiment with the client with confidence, but may ultimately be less than ideal.
+
+When you're ready to get your hands dirty, you can disable the defensive defaults
+and start handling exceptions and timeouts programmatically. See full
+documentation for the :class:`~dogapi.SimpleClient` for details.
