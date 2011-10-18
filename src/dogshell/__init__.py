@@ -9,6 +9,7 @@ from dogshell.search import SearchClient
 from dogshell.metric import MetricClient
 from dogshell.cluster import ClusterClient
 from dogshell.event import EventClient
+from dogshell.dashboard import DashClient
 
 def main():
 
@@ -32,6 +33,7 @@ def main():
     MetricClient(config).setup_parser(subparsers)
     ClusterClient(config).setup_parser(subparsers)
     EventClient(config).setup_parser(subparsers)
+    DashClient(config).setup_parser(subparsers)
 
     args = parser.parse_args()
     config.load(args.config)
