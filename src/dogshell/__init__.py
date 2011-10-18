@@ -7,6 +7,7 @@ from dogshell.common import DogshellConfig
 from dogshell.comment import CommentClient
 from dogshell.search import SearchClient
 from dogshell.metric import MetricClient
+from dogshell.cluster import ClusterClient
 
 def main():
 
@@ -28,6 +29,7 @@ def main():
     CommentClient(config).setup_parser(subparsers)
     SearchClient(config).setup_parser(subparsers)
     MetricClient(config).setup_parser(subparsers)
+    ClusterClient(config).setup_parser(subparsers)
 
     args = parser.parse_args()
     config.load(args.config)
