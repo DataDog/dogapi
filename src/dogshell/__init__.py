@@ -8,6 +8,7 @@ from dogshell.comment import CommentClient
 from dogshell.search import SearchClient
 from dogshell.metric import MetricClient
 from dogshell.cluster import ClusterClient
+from dogshell.event import EventClient
 
 def main():
 
@@ -30,6 +31,7 @@ def main():
     SearchClient(config).setup_parser(subparsers)
     MetricClient(config).setup_parser(subparsers)
     ClusterClient(config).setup_parser(subparsers)
+    EventClient(config).setup_parser(subparsers)
 
     args = parser.parse_args()
     config.load(args.config)
