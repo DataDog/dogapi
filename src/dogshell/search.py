@@ -8,40 +8,29 @@ class SearchClient(CommandLineClient):
         self.config = config
 
     def setup_parser(self, subparsers):
-        parser_search = subparsers.add_parser('search', help='search datadog')
-        parser_search.add_argument('query', help='string to search for. accepts faceted or un-faceted queries. see https://github.com/DataDog/dogapi/wiki/Search for the latest on the query language.')
-        parser_search.set_defaults(r_func=self.r_search)
-        parser_search.set_defaults(p_func=self.p_search)
-        parser_search.set_defaults(l_func=self.l_search)
+        parser = subparsers.add_parser('search', help='search datadog')
+        verb_parsers = parser.add_subparsers(title='Verbs')
 
-    def _search(self, query):
+        query_parser = verb_parsers.add_parser('query', help='Search datadog.')
+        query_parser.add_argument('query', help='optionally faceted search query')
+        query_parser.set_defaults(func=self._query)
+
+    def _query(self, args):
         svc = SearchService(self.config['apikey'], self.config['appkey'])
-        res = svc.query(query)
-        return res
-
-    def r_search(self, args):
-        res = self._search(args.query)
+        res = svc.query(args.query)
         report_warnings(res)
         report_errors(res)
-        print res
-
-    def p_search(self, args):
-        res = self._search(args.query)
-        report_warnings(res)
-        report_errors(res)
-        for facet, results in res['results'].items():
-            for idx, result in enumerate(results):
-                if idx == 0:
-                    print '\n'
+        if format == 'pretty':
+            for facet, results in res['results'].items():
+                for idx, result in enumerate(results):
+                    if idx == 0:
+                        print '\n'
+                        print "%s\t%s" % (facet, result)
+                    else:
+                        print "%s\t%s" % (' '*len(facet), result)
+        elif format == 'raw':
+            print res
+        else:
+            for facet, results in res['results'].items():
+                for result in results:
                     print "%s\t%s" % (facet, result)
-                else:
-                    print "%s\t%s" % (' '*len(facet), result)
-
-    def l_search(self, args):
-        res = self._search(args.query)
-        report_warnings(res)
-        report_errors(res)
-        for facet, results in res['results'].items():
-            for result in results:
-                print "%s\t%s" % (facet, result)
-
