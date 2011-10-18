@@ -63,8 +63,8 @@ class SimpleClient(object):
         """
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
-        if self.api_key is None or self.application_key is None:
-            self._report_error("Metric API requires api and application keys")
+        if self.api_key is None:
+            self._report_error("Metric API requires an api key")
         s = MetricService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
         now = time.mktime(datetime.datetime.now().timetuple())
         r = s.post(name, [[now, value]], host=host, device=device)
@@ -92,8 +92,8 @@ class SimpleClient(object):
         """
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
-        if self.api_key is None or self.application_key is None:
-            self._report_error("Metric API requires api and application keys")
+        if self.api_key is None:
+            self._report_error("Metric API requires an api key")
         s = MetricService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
         if device:
             r = s.post(name, values, host=host, device=device)
