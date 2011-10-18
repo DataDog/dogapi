@@ -4,6 +4,7 @@ import time
 import re
 import socket
 import os
+import simplejson
 from contextlib import contextmanager
 from urllib import urlencode
 from pprint import pformat
@@ -80,7 +81,15 @@ class Service(object):
                 'Content-Type': 'application/x-www-form-urlencoded'
             }
 
-            conn.request(method, url, urlencode(params), headers)
+            if method == 'GET':
+                if len(params) > 0:
+                    qs_params = [k + '=' + v for k,v in params.iteritems()]
+                    qs = '?' + '&'.join(qs_params)
+                    conn.request(method, url + qs, None, headers)
+                else:
+                    conn.request(method, url, None, headers)
+            else:
+                conn.request(method, url, urlencode(params), headers)
             response = conn.getresponse()
             response_str = response.read()
 
@@ -89,10 +98,81 @@ class Service(object):
             except ValueError:
                 raise ValueError('Invalid JSON response: {0}'.format(response_str))
 
-            if 'error' in response_obj:
-                pretty_params = '\n'.join(['>> ' + line for line in pformat(params).split('\n')])
-                request_str = '>> {0} {1} \n{2}'.format(method, url, pretty_params)
-                error_message = '\n'.join(['<< ' + line for line in response_obj['error'].split('\n')])
-                raise Exception('Failed request \n{0}\n\n{1}'.format(request_str, error_message))
+            if response.status == 200:
+                if 'error' in response_obj:
+                    pretty_params = '\n'.join(['>> ' + line for line in pformat(params).split('\n')])
+                    request_str = '>> {0} {1} \n{2}'.format(method, url, pretty_params)
+                    error_message = '\n'.join(['<< ' + line for line in response_obj['error'].split('\n')])
+                    raise Exception('Failed request \n{0}\n\n{1}'.format(request_str, error_message))
 
         return response_obj
+
+class SharedCounter(object):
+    # FIXME: this should be threadsafe, duh
+    def __init__(self):
+        self.counter = 0
+
+class APIService(object):
+
+    def __init__(self, api_key, application_key, timeout=2, timeout_counter=None):
+        self.api_key = api_key
+        self.application_key = application_key
+        self.api_host = os.environ.get("DATADOG_HOST", "https://app.datadoghq.com")
+        self.timeout = timeout
+        if timeout_counter == None:
+            timeout_counter = SharedCounter()
+        self.timeout_counter = timeout_counter
+
+    @contextmanager
+    def connect(self):
+
+        http_conn_cls = httplib.HTTPSConnection
+        match = re.match('^(https?)://(.*)', self.api_host)
+        if match:
+            host = match.group(2)
+            if match.group(1) == 'http':
+                http_conn_cls = httplib.HTTPConnection
+        conn = http_conn_cls(host, timeout=self.timeout)
+
+        try:
+            yield conn
+        finally:
+            conn.close()
+
+    def request(self, method, url, params=None, body=None, send_json=False):
+        '''handles a request to the datadog service.
+        '''
+
+        try:
+            # handle request/response
+            with self.connect() as conn:
+                if send_json:
+                    headers = {
+                        'Content-Type': 'application/json'
+                    }
+                    body = simplejson.dumps(body)
+                else:
+                    headers = {}
+
+                if params and len(params) > 0:
+                    qs_params = [k + '=' + str(v) for k,v in params.iteritems()]
+                    qs = '?' + '&'.join(qs_params)
+                    conn.request(method, url + qs, body, headers)
+                else:
+                    conn.request(method, url, body, headers)
+
+                response = conn.getresponse()
+                response_str = response.read()
+
+                if response.status != 204:
+                    try:
+                        response_obj = json.loads(response_str)
+                    except ValueError:
+                        raise ValueError('Invalid JSON response: {0}'.format(response_str))
+
+                    return response_obj or {}
+                else:
+                    return {}
+        except socket.timeout, e:
+            self.timeout_counter.counter += 1
+            return {'errors': 'Client timeout'}

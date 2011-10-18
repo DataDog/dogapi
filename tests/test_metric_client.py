@@ -16,6 +16,8 @@ class TestMetricClient(unittest.TestCase):
         self.api_key = "apikey_3"
         self.host = "http://localhost:5000"
             
+    # deprecated - matt
+    @SkipTest
     def test_submit_metric(self):
         # create and submit a new event
         metric_service = MetricService(self.host)

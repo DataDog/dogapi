@@ -14,7 +14,8 @@ class TestEventClient(unittest.TestCase):
 
     def setUp(self):
         self.api_key = "apikey_3"
-            
+
+    @SkipTest
     def test_submit_event(self, scope=None, source_type=None):
         # create and submit a new event
         event_service = EventService("http://localhost:5000")
@@ -24,6 +25,7 @@ class TestEventClient(unittest.TestCase):
         res = event_service.submit(self.api_key, event, scope=scope, source_type=source_type)
         assert res['id'] is not None
 
+    @SkipTest
     def test_submit_scoped_event(self): 
         self.test_submit_event(Scope("scoped-testhost", "testdevice"))
 
