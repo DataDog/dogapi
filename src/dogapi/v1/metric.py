@@ -62,3 +62,44 @@ class MetricService(APIService):
         }
 
         return self.request('POST', '/api/' + API_VERSION + '/series', params, body, send_json=True)
+        
+    def post_batch(self, values, mtype="gauge", host=None, device=None):
+        """
+        Submit a series of metrics each with a series of points
+        
+        :param values A dictionary of names to a list values, in the form of {name: [(POSIX timestamp, integer value), ...], name2: [(POSIX timestamp, integer value), ...]}
+        :type values: dict
+        
+        :param host: optional host to scope the metric (e.g. ``"hostA.example.com"``)
+        :type host: string
+
+        :param mtype: metric type. for now, only ``"gauge"`` is accepted
+        :type mtype: string
+
+        :param host: optional host to scope the metric (e.g. ``"hostA.example.com"``)
+        :type host: string
+        
+        :param device: optional device to scope the metric (e.g. ``"eth0"``)
+        :type device: string
+
+        :returns: empty dict on success. errors and warnings are reported as for the HTTP API (see the `HTTP API Documentation <https://github.com/DataDog/dogapi/wiki/Errors-and-Warnings>`_)
+        :rtype: dict
+        """
+        
+        params = {
+            'api_key':         self.api_key,
+            'application_key': self.application_key,
+        }
+
+        body = { "series": [
+            {
+            'metric': name,
+            'points': [[int(x[0]), int(x[1])] for x in points],
+            'type': mtype,
+            'host': host,
+            'device': device,
+            } for name, points in values.items()
+            ]
+        }
+        
+        return self.request('POST', '/api/' + API_VERSION + '/series', params, body, send_json=True)

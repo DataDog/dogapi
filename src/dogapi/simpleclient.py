@@ -101,6 +101,32 @@ class SimpleClient(object):
             r = s.post(name, values, host=host)
         if r.has_key('errors'):
             self._report_error(r['errors'])
+            
+    @_swallow_exceptions
+    def batch_metrics(self, values, host=None, device=None):
+        """
+        Submit a series of metrics with 1 or more data points to the metric API
+        
+        :param values A dictionary of names to a list values, in the form of {name: [(POSIX timestamp, integer value), ...], name2: [(POSIX timestamp, integer value), ...]}
+        :type values: dict
+        
+        :param host: optional host to scope the metric (e.g. ``"hostA.example.com"``)
+        :type host: string
+
+        :param device: optional device to scope the metric (e.g. ``"eth0"``)
+        :type device: string
+
+        :raises: Exception on failure
+        """
+        if self.timeout_counter.counter >= self.max_timeouts:
+            return None
+        if self.api_key is None:
+            self._report_error("Metric API requires an api key")
+        s = MetricService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
+        if device:
+            r = s.post_batch(values, host=host, device=device)
+        else:
+            r = s.post_batch(values, host=host)
 
     #
     # Comment API
