@@ -1,5 +1,6 @@
 import httplib
 import json
+import logging
 import time
 import re
 import socket
@@ -8,6 +9,8 @@ import simplejson
 from contextlib import contextmanager
 from urllib import urlencode
 from pprint import pformat
+
+http_log = logging.getLogger('dogapi.http')
 
 def dt2epoch(d):
     return time.mktime(d.timetuple())
@@ -153,16 +156,20 @@ class APIService(object):
                     body = simplejson.dumps(body)
                 else:
                     headers = {}
-
+                
+                qs = ''
                 if params and len(params) > 0:
                     qs_params = [k + '=' + str(v) for k,v in params.iteritems()]
                     qs = '?' + '&'.join(qs_params)
                     conn.request(method, url + qs, body, headers)
                 else:
                     conn.request(method, url, body, headers)
-
+                
+                start_time = time.time()
                 response = conn.getresponse()
                 response_str = response.read()
+                response_time = time.time() - start_time
+                http_log.debug("%s %s %s %sms" % (response.status, method, url + qs, round(response_time * 1000., 4)))
 
                 if response.status != 204:
                     try:
