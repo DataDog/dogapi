@@ -81,7 +81,7 @@ class DashClient(CommandLineClient):
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
-            print res
+            print simplejson.dumps(res, sort_keys=True, indent=2)
         elif format == 'raw':
             print res
         else:
