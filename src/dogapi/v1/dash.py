@@ -44,6 +44,22 @@ class DashService(APIService):
 
         return self.request('GET', '/api/' + API_VERSION + '/dash/' + str(dash_id), params, None)
 
+    def get_all(self):
+        """
+        Get a summary (id, title, resource, description) of all dashboards for an Org.
+
+        :return: list of dashboard titles and resource URLs
+        :rtype: decoded JSON (list of dicts)
+        """
+
+        params = {
+            'api_key':         self.api_key,
+            'application_key': self.application_key,
+        }
+
+        return self.request('GET', '/api/' + API_VERSION + '/dash', params, None)
+
+
     def create(self, title, description, graphs):
         """
         Create a new dashboard.

@@ -31,6 +31,9 @@ class DashClient(CommandLineClient):
         show_parser.add_argument('dashboard_id', help='dashboard to show')
         show_parser.set_defaults(func=self._show)
 
+        show_all_parser = verb_parsers.add_parser('show_all', help='Show a list of dashboards.')
+        show_all_parser.set_defaults(func=self._show_all)
+
         delete_parser = verb_parsers.add_parser('delete', help='Delete dashboards.')
         delete_parser.add_argument('dashboard_id', help='dashboard to delete')
         delete_parser.set_defaults(func=self._delete)
@@ -78,6 +81,19 @@ class DashClient(CommandLineClient):
         format = args.format
         svc = DashService(self.config['apikey'], self.config['appkey'])
         res = svc.get(args.dashboard_id)
+        report_warnings(res)
+        report_errors(res)
+        if format == 'pretty':
+            print simplejson.dumps(res, sort_keys=True, indent=2)
+        elif format == 'raw':
+            print res
+        else:
+            print res
+
+    def _show_all(self, args):
+        format = args.format
+        svc = DashService(self.config['apikey'], self.config['appkey'])
+        res = svc.get_all()
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
