@@ -59,7 +59,12 @@ class DashClient(CommandLineClient):
         delete_parser.set_defaults(func=self._delete)
 
 
-    def _write_dash_to_file(self, dash_id, filename):
+    def _write_dash_to_file(self, dash_id, filename, format='raw'):
+        if format == 'pretty':
+            print "Downloading dashboard {0} to file {1}".format(dash_id, filename)
+        else:
+            print "{0} {1}".format(dash_id, filename)
+
         svc = DashService(self.config['apikey'], self.config['appkey'])
         with open(filename, "wb") as f:
             res = svc.get(dash_id)
@@ -73,7 +78,7 @@ class DashClient(CommandLineClient):
             simplejson.dump(dash_obj, f, indent=2)
 
     def _pull(self, args):
-        self._write_dash_to_file(args.dashboard_id, args.filename)
+        self._write_dash_to_file(args.dashboard_id, args.filename, args.format)
 
     def _pull_all(self, args):
         
@@ -101,10 +106,10 @@ class DashClient(CommandLineClient):
             used_filenames.add(filename)
 
             self._write_dash_to_file(dash_summary['id'], 
-                                     os.path.join(args.pull_dir, filename + ".json"))
-        
+                                     os.path.join(args.pull_dir, filename + ".json"),
+                                     format)
         if format == 'pretty':
-            print("Downloaded {0} dashboards to {1}"
+            print("\n### Total: {0} dashboards to {1} ###"
                   .format(len(used_filenames), os.path.realpath(args.pull_dir)))
 
     def _new_file(self, args):
@@ -115,9 +120,8 @@ class DashClient(CommandLineClient):
         report_warnings(res)
         report_errors(res)
         
-        self._write_dash_to_file(res['dash']['id'], args.filename)
+        self._write_dash_to_file(res['dash']['id'], args.filename, format)
 
-        # Er... look into what these actually do
         if format == 'pretty':
             print res
         elif format == 'raw':
