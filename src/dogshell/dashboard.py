@@ -37,10 +37,14 @@ class DashClient(CommandLineClient):
         show_all_parser = verb_parsers.add_parser('show_all', help='Show a list of all dashboards.')
         show_all_parser.set_defaults(func=self._show_all)
 
-        # Pull and pull-all
-        pull_parser = verb_parsers.add_parser('pull_all', help='Pull all dashboards into files in a directory')
-        pull_parser.add_argument('pull_dir', help='directory to pull dashboards into')
-        pull_parser.set_defaults(func=self._pull_all)
+        pull_parser = verb_parsers.add_parser('pull', help='Pull a dashboard on the server into a local file')
+        pull_parser.add_argument('dashboard_id', help='ID of dashboard to pull')
+        pull_parser.add_argument('filename', help='file to pull dashboard into') # , type=argparse.FileType('wb'))
+        pull_parser.set_defaults(func=self._pull)
+
+        pull_all_parser = verb_parsers.add_parser('pull_all', help='Pull all dashboards into files in a directory')
+        pull_all_parser.add_argument('pull_dir', help='directory to pull dashboards into')
+        pull_all_parser.set_defaults(func=self._pull_all)
 
         push_parser = verb_parsers.add_parser('push', help='Push updates to dashboards from local files to the server')
         push_parser.add_argument('file', help='dashboard files to push to the server', nargs='+', type=argparse.FileType('r'))
@@ -67,6 +71,9 @@ class DashClient(CommandLineClient):
             del dash_obj["resource"]
             del dash_obj["url"]
             simplejson.dump(dash_obj, f, indent=2)
+
+    def _pull(self, args):
+        self._write_dash_to_file(args.dashboard_id, args.filename)
 
     def _pull_all(self, args):
         
@@ -122,9 +129,6 @@ class DashClient(CommandLineClient):
         svc = DashService(self.config['apikey'], self.config['appkey'])
         for f in args.file:
             dash_obj = simplejson.load(f)
-            print dash_obj
-            
-            
             res = svc.update(dash_obj["id"], dash_obj["title"], 
                              dash_obj["description"], dash_obj["graphs"])
             report_warnings(res)
