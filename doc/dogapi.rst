@@ -19,11 +19,11 @@
    .. automethod:: get_event
    .. automethod:: event
 
-   .. automethod:: all_clusters
-   .. automethod:: host_clusters
-   .. automethod:: add_clusters
-   .. automethod:: change_clusters
-   .. automethod:: detatch_clusters
+   .. automethod:: all_tags
+   .. automethod:: host_tags
+   .. automethod:: add_tags
+   .. automethod:: change_tags
+   .. automethod:: detatch_tags
 
    .. automethod:: dashboard
    .. automethod:: create_dashboard

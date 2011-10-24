@@ -1,5 +1,5 @@
 """
-Full client-side cluster client
+Full client-side tag client
 See facade.py for a simpler wrapper
 """
 import logging
@@ -8,9 +8,9 @@ from dogapi.common import APIService
 
 API_VERSION="v1"
 
-class ClusterService(APIService):
+class TagService(APIService):
     """
-    Add and remove hosts from clusters.
+    Tag and untag hosts
 
     :param api_key: your org's API key
     :type api_key: string
@@ -27,9 +27,9 @@ class ClusterService(APIService):
 
     def get_all(self):
         """
-        Get a list of clusters for your org and their member hosts.
+        Get a list of tags for your org and their member hosts.
 
-        :return: cluster list
+        :return: tag list
         :rtype: decoded JSON
         """
 
@@ -38,16 +38,16 @@ class ClusterService(APIService):
             'application_key': self.application_key,
         }
 
-        return self.request('GET', '/api/' + API_VERSION + '/clusters/hosts', params)
+        return self.request('GET', '/api/' + API_VERSION + '/tags/hosts', params)
 
     def get(self, host_id):
         """
-        Get a list of clusters for the specified host by name or id.
+        Get a list of tags for the specified host by name or id.
 
         :param host_id: id or name of the host
         :type host_id: integer or string
 
-        :return: clusters the host belongs to
+        :return: tags the host belongs to
         :rtype: decoded JSON
         """
 
@@ -56,17 +56,17 @@ class ClusterService(APIService):
             'application_key': self.application_key,
         }
 
-        return self.request('GET', '/api/' + API_VERSION + '/clusters/hosts/' + str(host_id), params)
+        return self.request('GET', '/api/' + API_VERSION + '/tags/hosts/' + str(host_id), params)
 
-    def add(self, host_id, clusters):
+    def add(self, host_id, tags):
         """
-        Add a host to one or more clusters.
+        Add one or more tags to a host.
 
         :param host_id: id or name of the host
         :type host_id: integer or string
 
-        :param clusters: cluster names
-        :type clusters: list
+        :param tags: tag names
+        :type tags: list
         """
 
         params = {
@@ -75,20 +75,20 @@ class ClusterService(APIService):
         }
 
         body = {
-            'clusters': clusters,
+            'tags': tags,
         }
 
-        return self.request('POST', '/api/' + API_VERSION + '/clusters/hosts/' + str(host_id), params, body, send_json=True)
+        return self.request('POST', '/api/' + API_VERSION + '/tags/hosts/' + str(host_id), params, body, send_json=True)
 
-    def update(self, host_id, clusters):
+    def update(self, host_id, tags):
         """
-        Remove a host from all existing clusters and add it to one or more new clusters.
+        Replace all of a hosts tags with a new set.
 
         :param host_id: id or name of the host
         :type host_id: integer or string
 
-        :param clusters: cluster names
-        :type clusters: list
+        :param tags: tags names
+        :type tags: list
         """
 
         params = {
@@ -97,14 +97,14 @@ class ClusterService(APIService):
         }
 
         body = {
-            'clusters': clusters,
+            'tags': tags,
         }
 
-        return self.request('PUT', '/api/' + API_VERSION + '/clusters/hosts/' + str(host_id), params, body, send_json=True)
+        return self.request('PUT', '/api/' + API_VERSION + '/tags/hosts/' + str(host_id), params, body, send_json=True)
 
     def detatch(self, host_id):
         """
-        Remove a host from all clusters.
+        Remove all tags from a host.
 
         :param host_id: id or name of the host
         :type host_id: integer or string
@@ -115,4 +115,4 @@ class ClusterService(APIService):
             'application_key': self.application_key,
         }
 
-        return self.request('DELETE', '/api/' + API_VERSION + '/clusters/hosts/' + str(host_id), params)
+        return self.request('DELETE', '/api/' + API_VERSION + '/tags/hosts/' + str(host_id), params)
