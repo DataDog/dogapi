@@ -59,24 +59,6 @@ class DashClient(CommandLineClient):
         delete_parser.set_defaults(func=self._delete)
 
 
-    def _write_dash_to_file(self, dash_id, filename, format='raw'):
-        if format == 'pretty':
-            print "Downloading dashboard {0} to file {1}".format(dash_id, filename)
-        else:
-            print "{0} {1}".format(dash_id, filename)
-
-        svc = DashService(self.config['apikey'], self.config['appkey'])
-        with open(filename, "wb") as f:
-            res = svc.get(dash_id)
-            dash_obj = res["dash"]
-            report_warnings(res)
-            report_errors(res)
-
-            # Deleting these because they don't match the REST API and could confuse
-            del dash_obj["resource"]
-            del dash_obj["url"]
-            simplejson.dump(dash_obj, f, indent=2)
-
     def _pull(self, args):
         self._write_dash_to_file(args.dashboard_id, args.filename, args.format)
 
@@ -129,14 +111,40 @@ class DashClient(CommandLineClient):
         else:
             print res
 
+    def _write_dash_to_file(self, dash_id, filename, format='raw'):
+        with open(filename, "wb") as f:
+            svc = DashService(self.config['apikey'], self.config['appkey'])
+            res = svc.get(dash_id)
+            report_warnings(res)
+            report_errors(res)
+
+            dash_obj = res["dash"]
+
+            # Deleting these because they don't match the REST API and could confuse
+            del dash_obj["resource"]
+            del dash_obj["url"]
+            simplejson.dump(dash_obj, f, indent=2)
+
+            if format == 'pretty':
+                print "Downloaded dashboard {0} to file {1}".format(dash_id, filename)
+            else:
+                print "{0} {1}".format(dash_id, filename)
+
     def _push(self, args):
         svc = DashService(self.config['apikey'], self.config['appkey'])
         for f in args.file:
-            dash_obj = simplejson.load(f)
+            try:
+                dash_obj = simplejson.load(f)
+            except simplejson.decoder.JSONDecodeError as err:
+                raise Exception("Could not parse {0}: {1}".format(f.name, err))
+            
             res = svc.update(dash_obj["id"], dash_obj["title"], 
                              dash_obj["description"], dash_obj["graphs"])
             report_warnings(res)
             report_errors(res)
+
+            if args.format == 'pretty':
+                print "Uploaded file {0} (dashboard {1})".format(f.name, dash_obj["id"])
         
     def _post(self, args):
         format = args.format
