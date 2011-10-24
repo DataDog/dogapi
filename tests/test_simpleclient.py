@@ -19,36 +19,36 @@ class TestSimpleClient(unittest.TestCase):
         dog.application_key = os.environ.get('DATADOG_APP_KEY')
         dog.swallow = False
 
-    def test_clusters(self):
+    def test_tags(self):
         # post a metric to make sure the test host context exists
-        hostname = 'test.cluster.host'
-        dog.metric('test.cluster.metric', 1, host=hostname)
+        hostname = 'test.tag.host'
+        dog.metric('test.tag.metric', 1, host=hostname)
 
-        dog.all_clusters()
+        dog.all_tags()
 
-        dog.detatch_clusters(hostname)
-        assert len(dog.host_clusters(hostname)) == 0
+        dog.detatch_tags(hostname)
+        assert len(dog.host_tags(hostname)) == 0
 
-        dog.add_clusters(hostname, 'test.cluster.1', 'test.cluster.2')
-        new_clusters = dog.host_clusters(hostname)
-        assert len(new_clusters) == 2
-        assert 'test.cluster.1' in new_clusters
-        assert 'test.cluster.2' in new_clusters
+        dog.add_tags(hostname, 'test.tag.1', 'test.tag.2')
+        new_tags = dog.host_tags(hostname)
+        assert len(new_tags) == 2
+        assert 'test.tag.1' in new_tags
+        assert 'test.tag.2' in new_tags
 
-        dog.add_clusters(hostname, 'test.cluster.3')
-        new_clusters = dog.host_clusters(hostname)
-        assert len(new_clusters) == 3
-        assert 'test.cluster.1' in new_clusters
-        assert 'test.cluster.2' in new_clusters
-        assert 'test.cluster.3' in new_clusters
+        dog.add_tags(hostname, 'test.tag.3')
+        new_tags = dog.host_tags(hostname)
+        assert len(new_tags) == 3
+        assert 'test.tag.1' in new_tags
+        assert 'test.tag.2' in new_tags
+        assert 'test.tag.3' in new_tags
 
-        dog.change_clusters(hostname, 'test.cluster.4')
-        new_clusters = dog.host_clusters(hostname)
-        assert len(new_clusters) == 1
-        assert 'test.cluster.4' in new_clusters
+        dog.change_tags(hostname, 'test.tag.4')
+        new_tags = dog.host_tags(hostname)
+        assert len(new_tags) == 1
+        assert 'test.tag.4' in new_tags
 
-        dog.detatch_clusters(hostname)
-        assert len(dog.host_clusters(hostname)) == 0
+        dog.detatch_tags(hostname)
+        assert len(dog.host_tags(hostname)) == 0
 
     def test_events(self):
         now = datetime.datetime.now()

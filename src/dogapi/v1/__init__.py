@@ -1,5 +1,5 @@
 from comment import CommentService
-from cluster import ClusterService
+from tag     import TagService
 from event   import EventService
 from dash    import DashService
 from search  import SearchService

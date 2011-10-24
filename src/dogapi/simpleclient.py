@@ -186,91 +186,91 @@ class SimpleClient(object):
             self._report_error(r['errors'])
 
     #
-    # Cluster API
+    # Tag API
 
     @_swallow_exceptions
-    def all_clusters(self):
+    def all_tags(self):
         """
-        Get a list of clusters for your org and their member hosts.
+        Get a list of tags for your org and their member hosts.
 
-        :return: [ { 'cluster1': [ 'host1', 'host2', ... ] }, ... ]
+        :return: [ { 'tag1': [ 'host1', 'host2', ... ] }, ... ]
         :rtype: list
         """
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
-            self._report_error("Cluster API requires api and application keys")
-        s = ClusterService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
+            self._report_error("Tag API requires api and application keys")
+        s = TagService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
         r = s.get_all()
         if r.has_key('errors'):
             self._report_error(r['errors'])
-        return r['clusters']
+        return r['tags']
 
     @_swallow_exceptions
-    def host_clusters(self, host_id):
+    def host_tags(self, host_id):
         """
-        Get a list of clusters for the specified host by name or id.
+        Get a list of tags for the specified host by name or id.
 
         :param host_id: id or name of the host
         :type host_id: integer or string
 
-        :return: clusters the host belongs to
+        :return: tags for the host
         :rtype: list
         """
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
-            self._report_error("Cluster API requires api and application keys")
-        s = ClusterService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
+            self._report_error("Tag API requires api and application keys")
+        s = TagService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
         r = s.get(host_id)
         if r.has_key('errors'):
             self._report_error(r['errors'])
-        return r['clusters']
+        return r['tags']
 
     @_swallow_exceptions
-    def add_clusters(self, host_id, *args):
-        """add_clusters(host_id, cluster1, [cluster2, [...]])
-        Add a host to one or more clusters.
+    def add_tags(self, host_id, *args):
+        """add_tags(host_id, tag1, [tag2, [...]])
+        Add one or more tags to a host.
 
         :param host_id: id or name of the host
         :type host_id: integer or string
 
-        :param clusterN: cluster name
-        :type clusterN: string
+        :param tagN: tag name
+        :type tagN: string
         """
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
-            self._report_error("Cluster API requires api and application keys")
-        s = ClusterService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
+            self._report_error("Tag API requires api and application keys")
+        s = TagService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
         r = s.add(host_id, args)
         if r.has_key('errors'):
             self._report_error(r['errors'])
 
     @_swallow_exceptions
-    def change_clusters(self, host_id, *args):
-        """change_clusters(host_id, cluster1, [cluster2, [...]])
-        Remove a host from all existing clusters and add it to one or more new clusters.
+    def change_tags(self, host_id, *args):
+        """change_tags(host_id, tag1, [tag2, [...]])
+        Replace a host's tags with one or more new tags.
 
         :param host_id: id or name of the host
         :type host_id: integer or string
 
-        :param clusterN: cluster name
-        :type clusterN: string
+        :param tagN: tag name
+        :type tagN: string
         """
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
-            self._report_error("Cluster API requires api and application keys")
-        s = ClusterService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
+            self._report_error("Tag API requires api and application keys")
+        s = TagService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
         r = s.update(host_id, args)
         if r.has_key('errors'):
             self._report_error(r['errors'])
 
     @_swallow_exceptions
-    def detatch_clusters(self, host_id):
+    def detatch_tags(self, host_id):
         """
-        Remove a host from all clusters.
+        Remove all tags from a host.
 
         :param host_id: id or name of the host
         :type host_id: integer or string
@@ -278,8 +278,8 @@ class SimpleClient(object):
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
         if self.api_key is None or self.application_key is None:
-            self._report_error("Cluster API requires api and application keys")
-        s = ClusterService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
+            self._report_error("Tag API requires api and application keys")
+        s = TagService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
         r = s.detatch(host_id)
         if r.has_key('errors'):
             self._report_error(r['errors'])

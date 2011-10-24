@@ -7,7 +7,7 @@ from dogshell.common import DogshellConfig
 from dogshell.comment import CommentClient
 from dogshell.search import SearchClient
 from dogshell.metric import MetricClient
-from dogshell.cluster import ClusterClient
+from dogshell.tag import TagClient
 from dogshell.event import EventClient
 from dogshell.dashboard import DashClient
 
@@ -31,7 +31,7 @@ def main():
     CommentClient(config).setup_parser(subparsers)
     SearchClient(config).setup_parser(subparsers)
     MetricClient(config).setup_parser(subparsers)
-    ClusterClient(config).setup_parser(subparsers)
+    TagClient(config).setup_parser(subparsers)
     EventClient(config).setup_parser(subparsers)
     DashClient(config).setup_parser(subparsers)
 
