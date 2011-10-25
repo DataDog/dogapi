@@ -171,7 +171,7 @@ class APIService(object):
                 response_time = time.time() - start_time
                 http_log.debug("%s %s %s %sms" % (response.status, method, url + qs, round(response_time * 1000., 4)))
 
-                if response.status != 204:
+                if response.status != 204 and response_str != '' and response_str != 'null':
                     try:
                         response_obj = json.loads(response_str)
                     except ValueError:
