@@ -8,6 +8,8 @@ from dogapi.v1 import DashService
 
 from dogshell.common import report_errors, report_warnings, CommandLineClient
 
+TIMEOUT=10
+
 class DashClient(CommandLineClient):
 
     def __init__(self, config):
@@ -72,7 +74,7 @@ class DashClient(CommandLineClient):
             return no_punct.replace(" ", "_").replace("-", "_").strip("_")
 
         format = args.format
-        svc = DashService(self.config['apikey'], self.config['appkey'])
+        svc = DashService(self.config['apikey'], self.config['appkey'], timeout=TIMEOUT)
         res = svc.get_all()
         report_warnings(res)
         report_errors(res)
@@ -96,7 +98,7 @@ class DashClient(CommandLineClient):
 
     def _new_file(self, args):
         format = args.format
-        svc = DashService(self.config['apikey'], self.config['appkey'])
+        svc = DashService(self.config['apikey'], self.config['appkey'], timeout=TIMEOUT)
         res = svc.create(args.filename, 
                          "Description for {0}".format(args.filename), [])
         report_warnings(res)
@@ -113,7 +115,7 @@ class DashClient(CommandLineClient):
 
     def _write_dash_to_file(self, dash_id, filename, format='raw'):
         with open(filename, "wb") as f:
-            svc = DashService(self.config['apikey'], self.config['appkey'])
+            svc = DashService(self.config['apikey'], self.config['appkey'], timeout=5)
             res = svc.get(dash_id)
             report_warnings(res)
             report_errors(res)
@@ -131,7 +133,7 @@ class DashClient(CommandLineClient):
                 print "{0} {1}".format(dash_id, filename)
 
     def _push(self, args):
-        svc = DashService(self.config['apikey'], self.config['appkey'])
+        svc = DashService(self.config['apikey'], self.config['appkey'], timeout=TIMEOUT)
         for f in args.file:
             try:
                 dash_obj = simplejson.load(f)
@@ -154,7 +156,7 @@ class DashClient(CommandLineClient):
             graphs = simplejson.loads(graphs)
         except:
             raise Exception('bad json parameter')
-        svc = DashService(self.config['apikey'], self.config['appkey'])
+        svc = DashService(self.config['apikey'], self.config['appkey'], timeout=TIMEOUT)
         res = svc.create(args.title, args.description, graphs)
         report_warnings(res)
         report_errors(res)
@@ -173,7 +175,7 @@ class DashClient(CommandLineClient):
             graphs = simplejson.loads(graphs)
         except:
             raise Exception('bad json parameter')
-        svc = DashService(self.config['apikey'], self.config['appkey'])
+        svc = DashService(self.config['apikey'], self.config['appkey'], timeout=TIMEOUT)
         res = svc.update(args.dashboard_id, args.title, args.description, graphs)
         report_warnings(res)
         report_errors(res)
@@ -186,7 +188,7 @@ class DashClient(CommandLineClient):
 
     def _show(self, args):
         format = args.format
-        svc = DashService(self.config['apikey'], self.config['appkey'])
+        svc = DashService(self.config['apikey'], self.config['appkey'], timeout=TIMEOUT)
         res = svc.get(args.dashboard_id)
         report_warnings(res)
         report_errors(res)
@@ -199,7 +201,7 @@ class DashClient(CommandLineClient):
 
     def _show_all(self, args):
         format = args.format
-        svc = DashService(self.config['apikey'], self.config['appkey'])
+        svc = DashService(self.config['apikey'], self.config['appkey'], timeout=TIMEOUT)
         res = svc.get_all()
         report_warnings(res)
         report_errors(res)
@@ -212,7 +214,7 @@ class DashClient(CommandLineClient):
 
     def _delete(self, args):
         format = args.format
-        svc = DashService(self.config['apikey'], self.config['appkey'])
+        svc = DashService(self.config['apikey'], self.config['appkey'], timeout=TIMEOUT)
         res = svc.delete(args.dashboard_id)
         report_warnings(res)
         report_errors(res)
