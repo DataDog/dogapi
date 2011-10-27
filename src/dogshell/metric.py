@@ -1,6 +1,8 @@
 import time, datetime
 import socket
 
+import simplejson
+
 from dogapi.v1 import MetricService
 
 from dogshell.common import report_errors, report_warnings, CommandLineClient

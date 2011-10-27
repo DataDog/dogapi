@@ -1,9 +1,9 @@
 import os.path
-import simplejson
 import sys
 import webbrowser
 
 import argparse
+import simplejson
 
 from dogapi.v1 import DashService
 
@@ -111,11 +111,9 @@ class DashClient(CommandLineClient):
         self._write_dash_to_file(res['dash']['id'], args.filename, format)
 
         if format == 'pretty':
-            print res
-        elif format == 'raw':
-            print res
+            print self._pretty_json(res)
         else:
-            print res
+            print simplejson.dumps(res)
 
     def _write_dash_to_file(self, dash_id, filename, format='raw'):
         with open(filename, "wb") as f:
@@ -167,7 +165,7 @@ class DashClient(CommandLineClient):
         if format == 'pretty':
             print self._pretty_json(res)
         else:
-            print res
+            print simplejson.dumps(res)
 
     def _update(self, args):
         format = args.format

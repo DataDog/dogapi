@@ -1,3 +1,5 @@
+import simplejson
+
 from dogapi.v1 import SearchService
 
 from dogshell.common import report_errors, report_warnings, CommandLineClient
@@ -29,7 +31,7 @@ class SearchClient(CommandLineClient):
                     else:
                         print "%s\t%s" % (' '*len(facet), result)
         elif format == 'raw':
-            print res
+            print simplejson.dumps(res)
         else:
             for facet, results in res['results'].items():
                 for result in results:
