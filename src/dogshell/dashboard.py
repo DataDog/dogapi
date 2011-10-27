@@ -65,7 +65,6 @@ class DashClient(CommandLineClient):
         delete_parser.add_argument('dashboard_id', help='dashboard to delete')
         delete_parser.set_defaults(func=self._delete)
 
-
     def _pull(self, args):
         self._write_dash_to_file(args.dashboard_id, args.filename, args.format)
 
@@ -215,7 +214,11 @@ class DashClient(CommandLineClient):
         elif format == 'raw':
             print res
         else:
-            print res
+            for d in res["dashes"]:
+                print "\t".join([(d["id"]), 
+                                 (d["resource"]),
+                                 (d["title"]),
+                                 self._escape(d["description"])])
 
     def _delete(self, args):
         format = args.format
@@ -235,4 +238,7 @@ class DashClient(CommandLineClient):
         dash_id = simplejson.load(args.file)['id']
         url = svc.api_host + "/dash/dash/{0}".format(dash_id)
         webbrowser.open(url)
+
+    def _escape(self, s):
+        return s.replace("\r", "\\r").replace("\n", "\\n").replace("\t", "\\t")
 
