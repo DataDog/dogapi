@@ -1,6 +1,7 @@
 import os.path
 import simplejson
 import sys
+import webbrowser
 
 import argparse
 
@@ -55,6 +56,10 @@ class DashClient(CommandLineClient):
         new_file_parser = verb_parsers.add_parser('new_file', help='Create a new dashboard and put its contents in a file')
         new_file_parser.add_argument('filename', help='name of file to create with empty dashboard')
         new_file_parser.set_defaults(func=self._new_file)
+
+        web_view_parser = verb_parsers.add_parser('web_view', help='View the dashboard in a web browser')
+        web_view_parser.add_argument('file', help='dashboard file', type=argparse.FileType('r'))
+        web_view_parser.set_defaults(func=self._web_view)
 
         delete_parser = verb_parsers.add_parser('delete', help='Delete dashboards.')
         delete_parser.add_argument('dashboard_id', help='dashboard to delete')
@@ -224,3 +229,10 @@ class DashClient(CommandLineClient):
             print res
         else:
             print res
+
+    def _web_view(self, args):
+        svc = DashService(self.config['apikey'], self.config['appkey'], timeout=TIMEOUT)
+        dash_id = simplejson.load(args.file)['id']
+        url = svc.api_host + "/dash/dash/{0}".format(dash_id)
+        webbrowser.open(url)
+
