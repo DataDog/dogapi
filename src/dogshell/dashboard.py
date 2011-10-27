@@ -165,9 +165,7 @@ class DashClient(CommandLineClient):
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
-            print res
-        elif format == 'raw':
-            print res
+            print self._pretty_json(res)
         else:
             print res
 
@@ -184,11 +182,9 @@ class DashClient(CommandLineClient):
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
-            print res
-        elif format == 'raw':
-            print res
+            print self._pretty_json(res)
         else:
-            print res
+            print simplejson.dumps(res)
 
     def _show(self, args):
         format = args.format
@@ -197,11 +193,9 @@ class DashClient(CommandLineClient):
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
-            print simplejson.dumps(res, sort_keys=True, indent=2)
-        elif format == 'raw':
-            print res
+            print self._pretty_json(res)
         else:
-            print res
+            print simplejson.dumps(res)
 
     def _show_all(self, args):
         format = args.format
@@ -210,9 +204,9 @@ class DashClient(CommandLineClient):
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
-            print simplejson.dumps(res, sort_keys=True, indent=2)
+            print self._pretty_json(res)
         elif format == 'raw':
-            print res
+            print simplejson.dumps(res)
         else:
             for d in res["dashes"]:
                 print "\t".join([(d["id"]), 
@@ -227,11 +221,9 @@ class DashClient(CommandLineClient):
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
-            print res
-        elif format == 'raw':
-            print res
+            print self._pretty_json(res)
         else:
-            print res
+            print simplejson.dumps(res)
 
     def _web_view(self, args):
         svc = DashService(self.config['apikey'], self.config['appkey'], timeout=TIMEOUT)
@@ -241,4 +233,7 @@ class DashClient(CommandLineClient):
 
     def _escape(self, s):
         return s.replace("\r", "\\r").replace("\n", "\\n").replace("\t", "\\t")
+
+    def _pretty_json(self, obj):
+        return simplejson.dumps(obj, sort_keys=True, indent=2)
 
