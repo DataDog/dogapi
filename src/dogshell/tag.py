@@ -35,7 +35,7 @@ class TagClient(CommandLineClient):
 
     def _add(self, args):
         format = args.format
-        svc = TagService(self.config['apikey'], self.config['appkey'])
+        svc = TagService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
         res = svc.add(args.host, args.tag)
         report_warnings(res)
         report_errors(res)
@@ -51,7 +51,7 @@ class TagClient(CommandLineClient):
 
     def _replace(self, args):
         format = args.format
-        svc = TagService(self.config['apikey'], self.config['appkey'])
+        svc = TagService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
         res = svc.update(args.host, args.tag)
         report_warnings(res)
         report_errors(res)
@@ -67,7 +67,7 @@ class TagClient(CommandLineClient):
 
     def _show(self, args):
         format = args.format
-        svc = TagService(self.config['apikey'], self.config['appkey'])
+        svc = TagService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
         if args.host == 'all':
             res = svc.get_all()
         else:
@@ -99,7 +99,7 @@ class TagClient(CommandLineClient):
 
     def _detatch(self, args):
         format = args.format
-        svc = TagService(self.config['apikey'], self.config['appkey'])
+        svc = TagService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
         res = svc.detatch(args.host)
         report_warnings(res)
         report_errors(res)

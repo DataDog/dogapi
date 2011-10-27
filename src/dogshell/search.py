@@ -18,7 +18,7 @@ class SearchClient(CommandLineClient):
         query_parser.set_defaults(func=self._query)
 
     def _query(self, args):
-        svc = SearchService(self.config['apikey'], self.config['appkey'])
+        svc = SearchService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
         res = svc.query(args.query)
         report_warnings(res)
         report_errors(res)

@@ -25,7 +25,7 @@ class MetricClient(CommandLineClient):
         parser.set_defaults(func=self._post)
 
     def _post(self, args):
-        svc = MetricService(self.config['apikey'], self.config['appkey'])
+        svc = MetricService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
         now = datetime.datetime.now()
         now = time.mktime(now.timetuple())
         if args.localhostname:

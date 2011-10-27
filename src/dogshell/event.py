@@ -85,7 +85,7 @@ class EventClient(CommandLineClient):
         message = args.message
         if message is None:
             message = sys.stdin.read()
-        svc = EventService(self.config['apikey'], self.config['appkey'])
+        svc = EventService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
         if args.tags is not None:
             tags = [t.strip() for t in args.tags.split(',')]
         else:
@@ -108,7 +108,7 @@ class EventClient(CommandLineClient):
 
     def _show(self, args):
         format = args.format
-        svc = EventService(self.config['apikey'], self.config['appkey'])
+        svc = EventService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
         res = svc.get(args.event_id)
         report_warnings(res)
         report_errors(res)
@@ -121,7 +121,7 @@ class EventClient(CommandLineClient):
 
     def _stream(self, args):
         format = args.format
-        svc = EventService(self.config['apikey'], self.config['appkey'])
+        svc = EventService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
         if args.sources is not None:
             sources = [s.strip() for s in args.sources.split(',')]
         else:

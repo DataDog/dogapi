@@ -182,4 +182,4 @@ class APIService(object):
                     return {}
         except socket.timeout, e:
             self.timeout_counter.counter += 1
-            return {'errors': 'Client timeout'}
+            return {'errors': ['Client timeout after %d seconds.' % self.timeout]}

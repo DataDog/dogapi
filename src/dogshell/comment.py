@@ -40,14 +40,13 @@ class CommentClient(CommandLineClient):
         delete_parser.add_argument('comment_id', help='comment to delete (by id)')
         delete_parser.set_defaults(func=self._delete)
 
-
     def _post(self, args):
         handle = args.handle
         comment = args.comment
         format = args.format
         if comment is None:
             comment = sys.stdin.read()
-        svc = CommentService(self.config['apikey'], self.config['appkey'])
+        svc = CommentService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
         res = svc.post(handle, comment)
         report_warnings(res)
         report_errors(res)
@@ -76,7 +75,7 @@ class CommentClient(CommandLineClient):
         format = args.format
         if comment is None:
             comment = sys.stdin.read()
-        svc = CommentService(self.config['apikey'], self.config['appkey'])
+        svc = CommentService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
         res = svc.edit(id, handle, comment)
         report_warnings(res)
         report_errors(res)
@@ -105,7 +104,7 @@ class CommentClient(CommandLineClient):
         format = args.format
         if comment is None:
             comment = sys.stdin.read()
-        svc = CommentService(self.config['apikey'], self.config['appkey'])
+        svc = CommentService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
         res = svc.post(handle, comment, related_event_id=id)
         report_warnings(res)
         report_errors(res)
@@ -130,7 +129,7 @@ class CommentClient(CommandLineClient):
     def _show(self, args):
         id = args.comment_id
         format = args.format
-        svc = EventService(self.config['apikey'], self.config['appkey'])
+        svc = EventService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
         res = svc.get(id)
         report_warnings(res)
         report_errors(res)
@@ -155,7 +154,7 @@ class CommentClient(CommandLineClient):
     def _delete(self, args):
         id = args.comment_id
         format = args.format
-        svc = CommentService(self.config['apikey'], self.config['appkey'])
+        svc = CommentService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
         res = svc.delete(id)
         report_warnings(res)
         report_errors(res)

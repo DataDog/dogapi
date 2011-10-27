@@ -21,6 +21,8 @@ def main():
             dest='format', action='store_const', const='pretty')
     parser.add_argument('--raw', help='raw JSON as returned by the HTTP service',
             dest='format', action='store_const', const='raw')
+    parser.add_argument('--timeout', help='time to wait in seconds before timing out an API call (default 10)',
+            default=10, type=int)
 
     config = DogshellConfig()
 

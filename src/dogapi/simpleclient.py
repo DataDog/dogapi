@@ -14,6 +14,9 @@ class SimpleClient(object):
     By default, service calls to the simple client silently swallow any exceptions
     before they escape from the library. To disable this behavior, simply set the
     `swallow` attribute of your :class:`~dogapi.SimpleClient` instance to `False`.
+
+    The default timeout is 2 seconds, but that can be changed by setting the
+    client's `timeout` attribute.
     """
 
     def __init__(self):
@@ -21,6 +24,7 @@ class SimpleClient(object):
         self.application_key = None
         self.max_timeouts = 3
         self.timeout_counter = SharedCounter()
+        self.timeout = 2
         self.swallow = True
 
     @decorator
@@ -65,7 +69,7 @@ class SimpleClient(object):
             return None
         if self.api_key is None:
             self._report_error("Metric API requires an api key")
-        s = MetricService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
+        s = MetricService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
         now = time.mktime(datetime.datetime.now().timetuple())
         r = s.post(name, [[now, value]], host=host, device=device)
         if r.has_key('errors'):
@@ -94,7 +98,7 @@ class SimpleClient(object):
             return None
         if self.api_key is None:
             self._report_error("Metric API requires an api key")
-        s = MetricService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
+        s = MetricService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
         if device:
             r = s.post(name, values, host=host, device=device)
         else:
@@ -122,7 +126,7 @@ class SimpleClient(object):
             return None
         if self.api_key is None:
             self._report_error("Metric API requires an api key")
-        s = MetricService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
+        s = MetricService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
         if device:
             r = s.post_batch(values, host=host, device=device)
         else:
@@ -157,7 +161,7 @@ class SimpleClient(object):
             return None
         if self.api_key is None or self.application_key is None:
             self._report_error("Comment API requires api and application keys")
-        s = CommentService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
+        s = CommentService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
         if comment_id is None:
             r = s.post(handle, message, related_event_id)
         else:
@@ -180,7 +184,7 @@ class SimpleClient(object):
             return None
         if self.api_key is None or self.application_key is None:
             self._report_error("Comment API requires api and application keys")
-        s = CommentService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
+        s = CommentService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
         r = s.delete(comment_id)
         if r.has_key('errors'):
             self._report_error(r['errors'])
@@ -200,7 +204,7 @@ class SimpleClient(object):
             return None
         if self.api_key is None or self.application_key is None:
             self._report_error("Tag API requires api and application keys")
-        s = TagService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
+        s = TagService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
         r = s.get_all()
         if r.has_key('errors'):
             self._report_error(r['errors'])
@@ -221,7 +225,7 @@ class SimpleClient(object):
             return None
         if self.api_key is None or self.application_key is None:
             self._report_error("Tag API requires api and application keys")
-        s = TagService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
+        s = TagService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
         r = s.get(host_id)
         if r.has_key('errors'):
             self._report_error(r['errors'])
@@ -242,7 +246,7 @@ class SimpleClient(object):
             return None
         if self.api_key is None or self.application_key is None:
             self._report_error("Tag API requires api and application keys")
-        s = TagService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
+        s = TagService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
         r = s.add(host_id, args)
         if r.has_key('errors'):
             self._report_error(r['errors'])
@@ -262,7 +266,7 @@ class SimpleClient(object):
             return None
         if self.api_key is None or self.application_key is None:
             self._report_error("Tag API requires api and application keys")
-        s = TagService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
+        s = TagService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
         r = s.update(host_id, args)
         if r.has_key('errors'):
             self._report_error(r['errors'])
@@ -279,7 +283,7 @@ class SimpleClient(object):
             return None
         if self.api_key is None or self.application_key is None:
             self._report_error("Tag API requires api and application keys")
-        s = TagService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
+        s = TagService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
         r = s.detatch(host_id)
         if r.has_key('errors'):
             self._report_error(r['errors'])
@@ -316,7 +320,7 @@ class SimpleClient(object):
             return None
         if self.api_key is None or self.application_key is None:
             self._report_error("Event API requires api and application keys")
-        s = EventService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
+        s = EventService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
         r = s.query(start, end, priority, sources, tags)
         if r.has_key('errors'):
             self._report_error(r['errors'])
@@ -337,7 +341,7 @@ class SimpleClient(object):
             return None
         if self.api_key is None or self.application_key is None:
             self._report_error("Event API requires api and application keys")
-        s = EventService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
+        s = EventService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
         r = s.get(id)
         if r.has_key('errors'):
             self._report_error(r['errors'])
@@ -376,7 +380,7 @@ class SimpleClient(object):
             return None
         if self.api_key is None or self.application_key is None:
             self._report_error("Event API requires api and application keys")
-        s = EventService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
+        s = EventService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
         r = s.post(title, text, date_happened, handle, priority, related_event_id, tags)
         if r.has_key('errors'):
             self._report_error(r['errors'])
@@ -400,7 +404,7 @@ class SimpleClient(object):
             return None
         if self.api_key is None or self.application_key is None:
             self._report_error("Dash API requires api and application keys")
-        s = DashService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
+        s = DashService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
         r = s.get(dash_id)
         if r.has_key('errors'):
             self._report_error(r['errors'])
@@ -427,7 +431,7 @@ class SimpleClient(object):
             return None
         if self.api_key is None or self.application_key is None:
             self._report_error("Dash API requires api and application keys")
-        s = DashService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
+        s = DashService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
         r = s.create(title, description, graphs)
         if r.has_key('errors'):
             self._report_error(r['errors'])
@@ -457,7 +461,7 @@ class SimpleClient(object):
             return None
         if self.api_key is None or self.application_key is None:
             self._report_error("Dash API requires api and application keys")
-        s = DashService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
+        s = DashService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
         r = s.update(dash_id, title, description, graphs)
         if r.has_key('errors'):
             self._report_error(r['errors'])
@@ -475,7 +479,7 @@ class SimpleClient(object):
             return None
         if self.api_key is None or self.application_key is None:
             self._report_error("Dash API requires api and application keys")
-        s = DashService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
+        s = DashService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
         r = s.delete(dash_id)
         if r.has_key('errors'):
             self._report_error(r['errors'])
@@ -498,7 +502,7 @@ class SimpleClient(object):
             return None
         if self.api_key is None or self.application_key is None:
             self._report_error("Search API requires api and application keys")
-        s = SearchService(self.api_key, self.application_key, timeout_counter=self.timeout_counter)
+        s = SearchService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
         r = s.query(query)
         if r.has_key('errors'):
             self._report_error(r['errors'])
