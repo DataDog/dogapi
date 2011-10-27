@@ -64,7 +64,7 @@ class DashClient(CommandLineClient):
         delete_parser.set_defaults(func=self._delete)
 
     def _pull(self, args):
-        self._write_dash_to_file(args.dashboard_id, args.filename, args.format)
+        self._write_dash_to_file(args.dashboard_id, args.filename, args.timeout, args.format)
 
     def _pull_all(self, args):
         
@@ -93,6 +93,7 @@ class DashClient(CommandLineClient):
 
             self._write_dash_to_file(dash_summary['id'], 
                                      os.path.join(args.pull_dir, filename + ".json"),
+                                     args.timeout,
                                      format)
         if format == 'pretty':
             print("\n### Total: {0} dashboards to {1} ###"
@@ -106,25 +107,26 @@ class DashClient(CommandLineClient):
         report_warnings(res)
         report_errors(res)
         
-        self._write_dash_to_file(res['dash']['id'], args.filename, format)
+        self._write_dash_to_file(res['dash']['id'], args.filename, args.timeout, format)
 
         if format == 'pretty':
             print self._pretty_json(res)
         else:
             print simplejson.dumps(res)
 
-    def _write_dash_to_file(self, dash_id, filename, format='raw'):
+    def _write_dash_to_file(self, dash_id, filename, timeout, format='raw'):
         with open(filename, "wb") as f:
-            svc = DashService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
+            svc = DashService(self.config['apikey'], self.config['appkey'], timeout=timeout)
             res = svc.get(dash_id)
             report_warnings(res)
             report_errors(res)
 
             dash_obj = res["dash"]
+            if "resource" in dash_obj:
+                del dash_obj["resource"]
+            if "url" in dash_obj:
+                del dash_obj["url"]
 
-            # Deleting these because they don't match the REST API and could confuse
-            del dash_obj["resource"]
-            del dash_obj["url"]
             simplejson.dump(dash_obj, f, indent=2)
 
             if format == 'pretty':
