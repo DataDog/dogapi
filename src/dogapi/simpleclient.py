@@ -378,8 +378,8 @@ class SimpleClient(object):
         """
         if self.timeout_counter.counter >= self.max_timeouts:
             return None
-        if self.api_key is None or self.application_key is None:
-            self._report_error("Event API requires api and application keys")
+        if self.api_key is None:
+            self._report_error("Event API requires api key")
         s = EventService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
         r = s.post(title, text, date_happened, handle, priority, related_event_id, tags)
         if r.has_key('errors'):
