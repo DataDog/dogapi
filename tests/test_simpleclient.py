@@ -120,7 +120,7 @@ class TestSimpleClient(unittest.TestCase):
         remote_dash = dog.dashboard(dash_id)
 
         assert 'api dash' == remote_dash['title']
-        assert graph['definition']['requests'] == remote_dash['graphs'][0]['requests']
+        assert graph['definition']['requests'] == remote_dash['graphs'][0]['definition']['requests']
 
         graph = {
                 "title": "updated test metric graph",
@@ -135,7 +135,9 @@ class TestSimpleClient(unittest.TestCase):
         remote_dash = dog.dashboard(dash_id)
 
         assert 'updated api dash' == remote_dash['title']
-        assert graph['definition']['requests'] == remote_dash['graphs'][0]['requests']
+
+        p = graph['definition']['requests']
+        assert graph['definition']['requests'] == remote_dash['graphs'][0]['definition']['requests']
 
         dog.delete_dashboard(dash_id)
 
