@@ -139,7 +139,8 @@ class DashClient(CommandLineClient):
         for f in args.file:
             try:
                 dash_obj = simplejson.load(f)
-            except simplejson.decoder.JSONDecodeError as err:
+            except ValueError as err:
+            # except simplejson.decoder.JSONDecodeError as err: # only works in simplejson 2.2.x
                 raise Exception("Could not parse {0}: {1}".format(f.name, err))
             
             res = svc.update(dash_obj["id"], dash_obj["title"], 
