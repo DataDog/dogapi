@@ -26,7 +26,7 @@ class TestSimpleClient(unittest.TestCase):
 
         dog.all_tags()
 
-        dog.detatch_tags(hostname)
+        dog.detach_tags(hostname)
         assert len(dog.host_tags(hostname)) == 0
 
         dog.add_tags(hostname, 'test.tag.1', 'test.tag.2')
@@ -47,7 +47,7 @@ class TestSimpleClient(unittest.TestCase):
         assert len(new_tags) == 1
         assert 'test.tag.4' in new_tags
 
-        dog.detatch_tags(hostname)
+        dog.detach_tags(hostname)
         assert len(dog.host_tags(hostname)) == 0
 
     def test_events(self):

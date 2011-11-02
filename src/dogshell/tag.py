@@ -29,9 +29,9 @@ class TagClient(CommandLineClient):
         show_parser.add_argument('host', help='host to show (or "all" to show all tags)')
         show_parser.set_defaults(func=self._show)
 
-        detatch_parser = verb_parsers.add_parser('detatch', help='Remove a host from all tags.', description='Hosts can be specified by name or id.')
-        detatch_parser.add_argument('host', help='host to detatch')
-        detatch_parser.set_defaults(func=self._detatch)
+        detach_parser = verb_parsers.add_parser('detach', help='Remove a host from all tags.', description='Hosts can be specified by name or id.')
+        detach_parser.add_argument('host', help='host to detach')
+        detach_parser.set_defaults(func=self._detach)
 
     def _add(self, args):
         format = args.format
@@ -97,10 +97,10 @@ class TagClient(CommandLineClient):
                 for tag in res['tags']:
                     print tag
 
-    def _detatch(self, args):
+    def _detach(self, args):
         format = args.format
         svc = TagService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
-        res = svc.detatch(args.host)
+        res = svc.detach(args.host)
         report_warnings(res)
         report_errors(res)
         if format == 'raw':

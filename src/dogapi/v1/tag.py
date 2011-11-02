@@ -102,7 +102,7 @@ class TagService(APIService):
 
         return self.request('PUT', '/api/' + API_VERSION + '/tags/hosts/' + str(host_id), params, body, send_json=True)
 
-    def detatch(self, host_id):
+    def detach(self, host_id):
         """
         Remove all tags from a host.
 

@@ -23,7 +23,7 @@
    .. automethod:: host_tags
    .. automethod:: add_tags
    .. automethod:: change_tags
-   .. automethod:: detatch_tags
+   .. automethod:: detach_tags
 
    .. automethod:: dashboard
    .. automethod:: create_dashboard

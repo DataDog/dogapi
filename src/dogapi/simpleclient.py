@@ -272,7 +272,7 @@ class SimpleClient(object):
             self._report_error(r['errors'])
 
     @_swallow_exceptions
-    def detatch_tags(self, host_id):
+    def detach_tags(self, host_id):
         """
         Remove all tags from a host.
 
@@ -284,7 +284,7 @@ class SimpleClient(object):
         if self.api_key is None or self.application_key is None:
             self._report_error("Tag API requires api and application keys")
         s = TagService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
-        r = s.detatch(host_id)
+        r = s.detach(host_id)
         if r.has_key('errors'):
             self._report_error(r['errors'])
 
