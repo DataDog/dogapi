@@ -16,6 +16,9 @@ class DashClient(CommandLineClient):
 
     def setup_parser(self, subparsers):
         parser = subparsers.add_parser('dashboard', help='Create, edit, and delete dashboards.')
+        parser.add_argument('--string_ids', action='store_true', dest='string_ids', 
+                            help='Represent Dashboard IDs as strings instead of ints in JSON')
+
         verb_parsers = parser.add_subparsers(title='Verbs')
 
         post_parser = verb_parsers.add_parser('post', help='Create dashboards.')
@@ -64,7 +67,7 @@ class DashClient(CommandLineClient):
         delete_parser.set_defaults(func=self._delete)
 
     def _pull(self, args):
-        self._write_dash_to_file(args.dashboard_id, args.filename, args.timeout, args.format)
+        self._write_dash_to_file(args.dashboard_id, args.filename, args.timeout, args.format, args.string_ids)
 
     def _pull_all(self, args):
         
@@ -94,7 +97,8 @@ class DashClient(CommandLineClient):
             self._write_dash_to_file(dash_summary['id'], 
                                      os.path.join(args.pull_dir, filename + ".json"),
                                      args.timeout,
-                                     format)
+                                     format,
+                                     args.string_ids)
         if format == 'pretty':
             print("\n### Total: {0} dashboards to {1} ###"
                   .format(len(used_filenames), os.path.realpath(args.pull_dir)))
@@ -107,14 +111,14 @@ class DashClient(CommandLineClient):
         report_warnings(res)
         report_errors(res)
         
-        self._write_dash_to_file(res['dash']['id'], args.filename, args.timeout, format)
+        self._write_dash_to_file(res['dash']['id'], args.filename, args.timeout, format, args.string_ids)
 
         if format == 'pretty':
             print self._pretty_json(res)
         else:
             print simplejson.dumps(res)
 
-    def _write_dash_to_file(self, dash_id, filename, timeout, format='raw'):
+    def _write_dash_to_file(self, dash_id, filename, timeout, format='raw', string_ids=False):
         with open(filename, "wb") as f:
             svc = DashService(self.config['apikey'], self.config['appkey'], timeout=timeout)
             res = svc.get(dash_id)
@@ -126,6 +130,9 @@ class DashClient(CommandLineClient):
                 del dash_obj["resource"]
             if "url" in dash_obj:
                 del dash_obj["url"]
+
+            if string_ids:
+                dash_obj["id"] = str(dash_obj["id"])
 
             simplejson.dump(dash_obj, f, indent=2)
 
@@ -143,6 +150,9 @@ class DashClient(CommandLineClient):
             # except simplejson.decoder.JSONDecodeError as err: # only works in simplejson 2.2.x
                 raise Exception("Could not parse {0}: {1}".format(f.name, err))
             
+            # Always convert to int, in case it was originally a string.
+            dash_obj["id"] = int(dash_obj["id"])
+
             res = svc.update(dash_obj["id"], dash_obj["title"], 
                              dash_obj["description"], dash_obj["graphs"])
             report_warnings(res)
@@ -191,6 +201,10 @@ class DashClient(CommandLineClient):
         res = svc.get(args.dashboard_id)
         report_warnings(res)
         report_errors(res)
+
+        if args.string_ids:
+            res["dash"]["id"] = str(res["dash"]["id"])
+
         if format == 'pretty':
             print self._pretty_json(res)
         else:
@@ -202,6 +216,11 @@ class DashClient(CommandLineClient):
         res = svc.get_all()
         report_warnings(res)
         report_errors(res)
+
+        if args.string_ids:
+            for d in res["dashes"]:
+                d["id"] = str(d["id"])
+
         if format == 'pretty':
             print self._pretty_json(res)
         elif format == 'raw':
