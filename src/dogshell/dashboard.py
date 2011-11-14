@@ -146,7 +146,7 @@ class DashClient(CommandLineClient):
         for f in args.file:
             try:
                 dash_obj = simplejson.load(f)
-            except ValueError as err:
+            except Exception as err:
             # except simplejson.decoder.JSONDecodeError as err: # only works in simplejson 2.2.x
                 raise Exception("Could not parse {0}: {1}".format(f.name, err))
             
@@ -155,6 +155,10 @@ class DashClient(CommandLineClient):
 
             res = svc.update(dash_obj["id"], dash_obj["title"], 
                              dash_obj["description"], dash_obj["graphs"])
+
+            if 'errors' in res:
+                print >> sys.stderr, 'Upload of dashboard {0} from file {1} failed.'.format(dash_obj["id"], f.name)
+
             report_warnings(res)
             report_errors(res)
 
