@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+
+#
+# Simple post-receive git hook to install on your git server
+# Make sure you have dogapi install; usually fixed by doing
+#   sudo easy_install dogapi
+#
+# Then copy this file to your repository, in .git/hooks/
+# and make it executable.
+#
+
+try:
+    import os
+    import sys 
+    from dogapi import dog 
+
+    dog.api_key = ... # FIXME put your API KEY here
+
+    print "Notifying Datadog"
+    # Extract oldrev, newrev, refs
+    args = sys.stdin.read().split()
+    assert args is not None and len(args) == 3
+
+    # Extract the log entry for the commits
+    p = os.popen("git log %s..%s" % (args[0], args[1]))
+
+    # Post to Datadog
+    dog.event("Git commit on %s" % args[2], p.read())
+    print "Datadog has been notified"
+except Exception, e:
+    # If something happens, survive
+    print "Error while notifying Datadog: %s" % e
