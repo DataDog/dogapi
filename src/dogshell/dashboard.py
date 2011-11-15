@@ -1,6 +1,8 @@
 import os.path
+import platform
 import sys
 import webbrowser
+from datetime import datetime
 
 import argparse
 import simplejson
@@ -51,6 +53,8 @@ class DashClient(CommandLineClient):
         pull_all_parser.set_defaults(func=self._pull_all)
 
         push_parser = verb_parsers.add_parser('push', help='Push updates to dashboards from local files to the server')
+        push_parser.add_argument('--append_auto_text', action='store_true', dest='append_auto_text',
+                                 help='When pushing to the server, appends filename and timestamp to the end of the dashboard description')
         push_parser.add_argument('file', help='dashboard files to push to the server', nargs='+', type=argparse.FileType('r'))
         push_parser.set_defaults(func=self._push)
 
@@ -65,6 +69,8 @@ class DashClient(CommandLineClient):
         delete_parser = verb_parsers.add_parser('delete', help='Delete dashboards.')
         delete_parser.add_argument('dashboard_id', help='dashboard to delete')
         delete_parser.set_defaults(func=self._delete)
+
+
 
     def _pull(self, args):
         self._write_dash_to_file(args.dashboard_id, args.filename, args.timeout, args.format, args.string_ids)
@@ -152,6 +158,12 @@ class DashClient(CommandLineClient):
             
             # Always convert to int, in case it was originally a string.
             dash_obj["id"] = int(dash_obj["id"])
+
+            if args.append_auto_text:
+                datetime_str = datetime.now().strftime('%x %X')
+                auto_text = ("<br/>\nUpdated at {0} from {1} ({2}) on {3}"
+                             .format(datetime_str, f.name, dash_obj["id"], platform.node()))
+                dash_obj["description"] += auto_text
 
             res = svc.update(dash_obj["id"], dash_obj["title"], 
                              dash_obj["description"], dash_obj["graphs"])
