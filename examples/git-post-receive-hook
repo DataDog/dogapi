@@ -27,6 +27,8 @@ try:
     # Post to Datadog
     dog.event("Git commit on %s" % args[2], p.read())
     print "Datadog has been notified"
+except ImportError:
+    print "Make sure the dogapi module is installed; easy_install dogapi should do the trick"
 except Exception, e:
     # If something happens, survive
     print "Error while notifying Datadog: %s" % e
