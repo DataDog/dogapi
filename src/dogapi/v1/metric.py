@@ -53,7 +53,7 @@ class MetricService(APIService):
         body = { "series": [
             {
             'metric': name,
-            'points': [[int(x[0]), int(x[1])] for x in points],
+            'points': [[x[0], x[1]] for x in points],
             'type': mtype,
             'host': host,
             'device': device,
@@ -94,7 +94,7 @@ class MetricService(APIService):
         body = { "series": [
             {
             'metric': name,
-            'points': [[int(x[0]), int(x[1])] for x in points],
+            'points': [[x[0], x[1]] for x in points],
             'type': mtype,
             'host': host,
             'device': device,
