@@ -62,10 +62,9 @@ class TestSimpleClient(unittest.TestCase):
         before_message = 'test message ' + str(before_ts)
 
         now_event_id = dog.event(now_title, now_message, now_ts)
-        time.sleep(1)
         before_event_id = dog.event(before_title, before_message, before_ts)
 
-        stream = dog.stream(before_ts, now_ts + 1)
+        stream = dog.stream(before_ts, now_ts + 2)
 
         assert stream[-1]['title'] == before_title
         assert stream[0]['title'] == now_title
@@ -91,12 +90,12 @@ class TestSimpleClient(unittest.TestCase):
         assert event['text'] == message + ' updated'
 
         reply_id = dog.comment('fabian', message + ' reply', related_event_id=comment_id)
-        stream = dog.stream(before_ts, now_ts + 1)
+        stream = dog.stream(before_ts, now_ts + 2)
 
-        # FIXME - matt - fails sporadically. timing issue?
-        #assert reply_id in [x['id'] for x in stream[0]['comments']]
+        assert reply_id in [x['id'] for x in stream[0]['comments']]
 
         dog.delete_comment(comment_id)
+        dog.delete_comment(reply_id)
         try:
             dog.get_event(comment_id)
         except:
