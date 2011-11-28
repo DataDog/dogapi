@@ -65,6 +65,8 @@ class EventClient(CommandLineClient):
         post_parser.add_argument('--priority', help='"normal" or "low". defaults to "normal"')
         post_parser.add_argument('--related_event_id', help='event to post as a child of. if unset, posts a top-level event')
         post_parser.add_argument('--tags', help='comma separated list of tags')
+        post_parser.add_argument('--host', help='related host')
+        post_parser.add_argument('--device', help='related device (e.g. eth0, /dev/sda1)')
         post_parser.add_argument('message', help='event message body. if unset, reads from stdin.', nargs="?")
         post_parser.set_defaults(func=self._post)
 
@@ -96,7 +98,9 @@ class EventClient(CommandLineClient):
                        args.handle,
                        args.priority,
                        args.related_event_id,
-                       tags)
+                       tags,
+                       args.host,
+                       args.device)
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':

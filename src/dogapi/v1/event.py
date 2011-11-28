@@ -86,7 +86,7 @@ class EventService(APIService):
 
         return self.request('GET', '/api/' + API_VERSION + '/events/' + str(id), params, None)
 
-    def post(self, title, text, date_happened=None, handle=None, priority=None, related_event_id=None, tags=None):
+    def post(self, title, text, date_happened=None, handle=None, priority=None, related_event_id=None, tags=None, host=None, device_name=None):
         """
         Post an event.
 
@@ -110,6 +110,12 @@ class EventService(APIService):
 
         :param tags: tags to post the event with
         :type tags: list of strings
+
+        :param host: host to post the event with
+        :type host: list of strings
+
+        :param device_name: device_name to post the event with
+        :type device_name: list of strings
 
         :return: posted event
         :rtype: decoded JSON
@@ -139,5 +145,11 @@ class EventService(APIService):
 
         if tags is not None:
             body['tags'] = ','.join(tags)
+
+        if host is not None:
+            body['host'] = host
+
+        if device_name is not None:
+            body['device_name'] = device_name
 
         return self.request('POST', '/api/' + API_VERSION + '/events', params, body, send_json=True)

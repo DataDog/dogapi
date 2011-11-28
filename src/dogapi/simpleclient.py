@@ -348,7 +348,7 @@ class SimpleClient(object):
         return r['event']
 
     @_swallow_exceptions
-    def event(self, title, text, date_happened=None, handle=None, priority=None, related_event_id=None, tags=None):
+    def event(self, title, text, date_happened=None, handle=None, priority=None, related_event_id=None, tags=None, host=None, device_name=None):
         """
         Post an event.
 
@@ -373,6 +373,12 @@ class SimpleClient(object):
         :param tags: tags to post the event with
         :type tags: list of strings
 
+        :param host: host to post the event with
+        :type host: list of strings
+
+        :param device_name: device_name to post the event with
+        :type device_name: list of strings
+
         :return: new event id
         :rtype: integer
         """
@@ -381,7 +387,7 @@ class SimpleClient(object):
         if self.api_key is None:
             self._report_error("Event API requires api key")
         s = EventService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
-        r = s.post(title, text, date_happened, handle, priority, related_event_id, tags)
+        r = s.post(title, text, date_happened, handle, priority, related_event_id, tags, host, device_name)
         if r.has_key('errors'):
             self._report_error(r['errors'])
         return r['event']['id']
