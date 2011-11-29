@@ -75,11 +75,17 @@ class TestSimpleClient(unittest.TestCase):
         assert now_event['text'] == now_message
         assert before_event['text'] == before_message
 
-        event_id = dog.event('test host and device', 'test host an device', host='test.host', device_name='test.device')
+        event_id = dog.event('test host and device', 'test host and device', host='test.host', device_name='test.device')
         event = dog.get_event(event_id)
 
         assert event['host'] == 'test.host'
         assert event['device_name'] == 'test.device'
+
+        event_id = dog.event('test event tags', 'test event tags', tags=['test-tag-1','test-tag-2'])
+        event = dog.get_event(event_id)
+
+        assert 'test-tag-1' in event['tags']
+        assert 'test-tag-2' in event['tags']
 
     def test_comments(self):
         now = datetime.datetime.now()
