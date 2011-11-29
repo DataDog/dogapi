@@ -1,6 +1,7 @@
 import time, datetime
 from socket import timeout
 import sys
+import types
 from decorator import decorator
 
 from dogapi.common import SharedCounter
@@ -69,6 +70,12 @@ class SimpleClient(object):
             return None
         if self.api_key is None:
             self._report_error("Metric API requires an api key")
+
+        # FIXME import typecheck more elegant than this
+        # Check type of value since .metric and .metrics can easily by confused
+        if type(value) not in (types.FloatType, types.IntType):
+            self._report_error(".metric takes a scalar value not a %s. You might want to use .metrics instead" % type(value))
+
         s = MetricService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
         now = time.mktime(datetime.datetime.now().timetuple())
         r = s.post(name, [[now, value]], host=host, device=device)
@@ -98,6 +105,11 @@ class SimpleClient(object):
             return None
         if self.api_key is None:
             self._report_error("Metric API requires an api key")
+
+        # FIXME import typecheck more elegant than this
+        if type(values) not in (types.ListType, types.TupleType):
+            self._report_error(".metrics takes a list of pairs not a %s. You might want to use .metric instead to send a scalar value" % type(values))
+            
         s = MetricService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
         if device:
             r = s.post(name, values, host=host, device=device)

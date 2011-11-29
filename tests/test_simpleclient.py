@@ -211,5 +211,17 @@ class TestSimpleClient(unittest.TestCase):
             assert False
 
 
+    def test_type_check(self):
+        try:
+            dog.metric("test.metric", [(time.time() - 3600, 1.0)])
+            self.fail()
+        except Exception, e:
+            assert e.message == ".metric takes a scalar value not a <type 'list'>. You might want to use .metrics instead", e.message
+        try:
+            dog.metrics("test.metric", 1.0)
+            self.fail()
+        except Exception, e:
+            assert e.message == ".metrics takes a list of pairs not a <type 'float'>. You might want to use .metric instead to send a scalar value", e.message
+
 if __name__ == '__main__':
     unittest.main()
