@@ -1,9 +1,6 @@
 from setuptools import setup, find_packages
 import sys
 
-setup_reqs = []
-setup_reqs.append("sphinx>=1.1.0")
-
 reqs = []
 reqs.append("simplejson>=2.0.9")
 reqs.append("decorator>=3.3.2")
@@ -22,7 +19,6 @@ setup(
     keywords = "datadog data",
     url = "http://datadoghq.com",
     install_requires = reqs,
-    setup_requires = setup_reqs,
     entry_points={
         'console_scripts': [
             'dog = dogshell:main',
