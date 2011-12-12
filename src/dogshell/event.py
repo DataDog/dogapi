@@ -10,7 +10,7 @@ from dogshell.common import report_errors, report_warnings, CommandLineClient
 
 def prettyprint_event(event):
     title = event['title'] or ''
-    handle = event.get('handle', '')
+    handle = event.get('handle', '') or ''
     date = event['date_happened']
     dt = datetime.datetime.fromtimestamp(date)
     link = event['url']
