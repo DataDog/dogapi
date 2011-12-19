@@ -1,12 +1,15 @@
-import time, datetime
-from socket import timeout
+import logging
+import socket
 import sys
+import time, datetime
 import types
 from decorator import decorator
 
-from dogapi.common import SharedCounter
+from dogapi.common import SharedCounter, TimeoutManager
 
 from v1 import *
+
+log = logging.getLogger('dogapi')
 
 class SimpleClient(object):
     """
@@ -25,6 +28,7 @@ class SimpleClient(object):
         self.application_key = None
         self.max_timeouts = 3
         self.timeout_counter = SharedCounter()
+        self.timeout_manager = TimeoutManager(10)
         self.timeout = 2
         self.swallow = True
 
@@ -40,7 +44,7 @@ class SimpleClient(object):
 
     def _report_error(self, message):
         if self.swallow:
-            print >> sys.stderr, message
+            log.error(message)
         else:
             raise Exception(message)
 
@@ -66,19 +70,27 @@ class SimpleClient(object):
 
         :raises: Exception on failure
         """
-        if self.timeout_counter.counter >= self.max_timeouts:
-            return None
+        if not self.timeout_manager.should_submit():
+            self._report_error("Too many timeouts. Won't try again for {1} seconds.".format(*self.timeout_manager.backoff_status()))
+            return
         if self.api_key is None:
             self._report_error("Metric API requires an api key")
+            return
 
         # FIXME import typecheck more elegant than this
         # Check type of value since .metric and .metrics can easily by confused
         if type(value) not in (types.FloatType, types.IntType):
             self._report_error(".metric takes a scalar value not a %s. You might want to use .metrics instead" % type(value))
+            return
 
-        s = MetricService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
+        s = MetricService(self.api_key, self.application_key, timeout=self.timeout)
         now = time.mktime(datetime.datetime.now().timetuple())
-        r = s.post(name, [[now, value]], host=host, device=device)
+        try:
+            r = s.post(name, [[now, value]], host=host, device=device)
+        except socket.timeout:
+            self.timeout_manager.report_timeout()
+            self._report_error('Client timed out after %d seconds.' % self.timeout)
+            return
         if r.has_key('errors'):
             self._report_error(r['errors'])
 
@@ -101,31 +113,39 @@ class SimpleClient(object):
 
         :raises: Exception on failure
         """
-        if self.timeout_counter.counter >= self.max_timeouts:
-            return None
+        if not self.timeout_manager.should_submit():
+            self._report_error("Too many timeouts. Won't try again for {1} seconds.".format(*self.timeout_manager.backoff_status()))
+            return
         if self.api_key is None:
             self._report_error("Metric API requires an api key")
+            return
 
         # FIXME import typecheck more elegant than this
         if type(values) not in (types.ListType, types.TupleType):
             self._report_error(".metrics takes a list of pairs not a %s. You might want to use .metric instead to send a scalar value" % type(values))
-            
+            return
+
         s = MetricService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
-        if device:
-            r = s.post(name, values, host=host, device=device)
-        else:
-            r = s.post(name, values, host=host)
+        try:
+            if device:
+                r = s.post(name, values, host=host, device=device)
+            else:
+                r = s.post(name, values, host=host)
+        except socket.timeout:
+            self.timeout_manager.report_timeout()
+            self._report_error('Client timed out after %d seconds.' % self.timeout)
+            return
         if r.has_key('errors'):
             self._report_error(r['errors'])
-            
+
     @_swallow_exceptions
     def batch_metrics(self, values, host=None, device=None):
         """
         Submit a series of metrics with 1 or more data points to the metric API
-        
+
         :param values A dictionary of names to a list values, in the form of {name: [(POSIX timestamp, integer value), ...], name2: [(POSIX timestamp, integer value), ...]}
         :type values: dict
-        
+
         :param host: optional host to scope the metric (e.g. ``"hostA.example.com"``)
         :type host: string
 
@@ -134,15 +154,22 @@ class SimpleClient(object):
 
         :raises: Exception on failure
         """
-        if self.timeout_counter.counter >= self.max_timeouts:
-            return None
+        if not self.timeout_manager.should_submit():
+            self._report_error("Too many timeouts. Won't try again for {1} seconds.".format(*self.timeout_manager.backoff_status()))
+            return
         if self.api_key is None:
             self._report_error("Metric API requires an api key")
+            return
         s = MetricService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
-        if device:
-            r = s.post_batch(values, host=host, device=device)
-        else:
-            r = s.post_batch(values, host=host)
+        try:
+            if device:
+                r = s.post_batch(values, host=host, device=device)
+            else:
+                r = s.post_batch(values, host=host)
+        except socket.timeout:
+            self.timeout_manager.report_timeout()
+            self._report_error('Client timed out after %d seconds.' % self.timeout)
+            return
 
     #
     # Comment API
@@ -169,17 +196,25 @@ class SimpleClient(object):
 
         :raises:  Exception on failure
         """
-        if self.timeout_counter.counter >= self.max_timeouts:
-            return None
+        if not self.timeout_manager.should_submit():
+            self._report_error("Too many timeouts. Won't try again for {1} seconds.".format(*self.timeout_manager.backoff_status()))
+            return
         if self.api_key is None or self.application_key is None:
             self._report_error("Comment API requires api and application keys")
+            return
         s = CommentService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
-        if comment_id is None:
-            r = s.post(handle, message, related_event_id)
-        else:
-            r = s.edit(comment_id, handle, message, related_event_id)
+        try:
+            if comment_id is None:
+                r = s.post(handle, message, related_event_id)
+            else:
+                r = s.edit(comment_id, handle, message, related_event_id)
+        except socket.timeout:
+            self.timeout_manager.report_timeout()
+            self._report_error('Client timed out after %d seconds.' % self.timeout)
+            return
         if r.has_key('errors'):
             self._report_error(r['errors'])
+            return
         return r['comment']['id']
 
     @_swallow_exceptions
@@ -192,12 +227,19 @@ class SimpleClient(object):
 
         :raises: Exception on error
         """
-        if self.timeout_counter.counter >= self.max_timeouts:
-            return None
+        if not self.timeout_manager.should_submit():
+            self._report_error("Too many timeouts. Won't try again for {1} seconds.".format(*self.timeout_manager.backoff_status()))
+            return
         if self.api_key is None or self.application_key is None:
             self._report_error("Comment API requires api and application keys")
+            return
         s = CommentService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
-        r = s.delete(comment_id)
+        try:
+            r = s.delete(comment_id)
+        except socket.timeout:
+            self.timeout_manager.report_timeout()
+            self._report_error('Client timed out after %d seconds.' % self.timeout)
+            return
         if r.has_key('errors'):
             self._report_error(r['errors'])
 
@@ -212,14 +254,22 @@ class SimpleClient(object):
         :return: [ { 'tag1': [ 'host1', 'host2', ... ] }, ... ]
         :rtype: list
         """
-        if self.timeout_counter.counter >= self.max_timeouts:
-            return None
+        if not self.timeout_manager.should_submit():
+            self._report_error("Too many timeouts. Won't try again for {1} seconds.".format(*self.timeout_manager.backoff_status()))
+            return
         if self.api_key is None or self.application_key is None:
             self._report_error("Tag API requires api and application keys")
+            return
         s = TagService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
-        r = s.get_all()
+        try:
+            r = s.get_all()
+        except socket.timeout:
+            self.timeout_manager.report_timeout()
+            self._report_error('Client timed out after %d seconds.' % self.timeout)
+            return
         if r.has_key('errors'):
             self._report_error(r['errors'])
+            return
         return r['tags']
 
     @_swallow_exceptions
@@ -233,14 +283,22 @@ class SimpleClient(object):
         :return: tags for the host
         :rtype: list
         """
-        if self.timeout_counter.counter >= self.max_timeouts:
-            return None
+        if not self.timeout_manager.should_submit():
+            self._report_error("Too many timeouts. Won't try again for {1} seconds.".format(*self.timeout_manager.backoff_status()))
+            return
         if self.api_key is None or self.application_key is None:
             self._report_error("Tag API requires api and application keys")
+            return
         s = TagService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
-        r = s.get(host_id)
+        try:
+            r = s.get(host_id)
+        except socket.timeout:
+            self.timeout_manager.report_timeout()
+            self._report_error('Client timed out after %d seconds.' % self.timeout)
+            return
         if r.has_key('errors'):
             self._report_error(r['errors'])
+            return
         return r['tags']
 
     @_swallow_exceptions
@@ -254,12 +312,19 @@ class SimpleClient(object):
         :param tagN: tag name
         :type tagN: string
         """
-        if self.timeout_counter.counter >= self.max_timeouts:
-            return None
+        if not self.timeout_manager.should_submit():
+            self._report_error("Too many timeouts. Won't try again for {1} seconds.".format(*self.timeout_manager.backoff_status()))
+            return
         if self.api_key is None or self.application_key is None:
             self._report_error("Tag API requires api and application keys")
+            return
         s = TagService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
-        r = s.add(host_id, args)
+        try:
+            r = s.add(host_id, args)
+        except socket.timeout:
+            self.timeout_manager.report_timeout()
+            self._report_error('Client timed out after %d seconds.' % self.timeout)
+            return
         if r.has_key('errors'):
             self._report_error(r['errors'])
 
@@ -274,12 +339,19 @@ class SimpleClient(object):
         :param tagN: tag name
         :type tagN: string
         """
-        if self.timeout_counter.counter >= self.max_timeouts:
-            return None
+        if not self.timeout_manager.should_submit():
+            self._report_error("Too many timeouts. Won't try again for {1} seconds.".format(*self.timeout_manager.backoff_status()))
+            return
         if self.api_key is None or self.application_key is None:
             self._report_error("Tag API requires api and application keys")
+            return
         s = TagService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
-        r = s.update(host_id, args)
+        try:
+            r = s.update(host_id, args)
+        except socket.timeout:
+            self.timeout_manager.report_timeout()
+            self._report_error('Client timed out after %d seconds.' % self.timeout)
+            return
         if r.has_key('errors'):
             self._report_error(r['errors'])
 
@@ -291,12 +363,19 @@ class SimpleClient(object):
         :param host_id: id or name of the host
         :type host_id: integer or string
         """
-        if self.timeout_counter.counter >= self.max_timeouts:
-            return None
+        if not self.timeout_manager.should_submit():
+            self._report_error("Too many timeouts. Won't try again for {1} seconds.".format(*self.timeout_manager.backoff_status()))
+            return
         if self.api_key is None or self.application_key is None:
             self._report_error("Tag API requires api and application keys")
+            return
         s = TagService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
-        r = s.detach(host_id)
+        try:
+            r = s.detach(host_id)
+        except socket.timeout:
+            self.timeout_manager.report_timeout()
+            self._report_error('Client timed out after %d seconds.' % self.timeout)
+            return
         if r.has_key('errors'):
             self._report_error(r['errors'])
 
@@ -328,14 +407,22 @@ class SimpleClient(object):
         :return: list of events (see https://github.com/DataDog/dogapi/wiki/Event for structure)
         :rtype: decoded JSON
         """
-        if self.timeout_counter.counter >= self.max_timeouts:
-            return None
+        if not self.timeout_manager.should_submit():
+            self._report_error("Too many timeouts. Won't try again for {1} seconds.".format(*self.timeout_manager.backoff_status()))
+            return
         if self.api_key is None or self.application_key is None:
             self._report_error("Event API requires api and application keys")
+            return
         s = EventService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
-        r = s.query(start, end, priority, sources, tags)
+        try:
+            r = s.query(start, end, priority, sources, tags)
+        except socket.timeout:
+            self.timeout_manager.report_timeout()
+            self._report_error('Client timed out after %d seconds.' % self.timeout)
+            return
         if r.has_key('errors'):
             self._report_error(r['errors'])
+            return
         return r['events']
 
     @_swallow_exceptions
@@ -349,14 +436,22 @@ class SimpleClient(object):
         :return: event details (see https://github.com/DataDog/dogapi/wiki/Event for structure)
         :rtype: decoded JSON
         """
-        if self.timeout_counter.counter >= self.max_timeouts:
-            return None
+        if not self.timeout_manager.should_submit():
+            self._report_error("Too many timeouts. Won't try again for {1} seconds.".format(*self.timeout_manager.backoff_status()))
+            return
         if self.api_key is None or self.application_key is None:
             self._report_error("Event API requires api and application keys")
+            return
         s = EventService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
-        r = s.get(id)
+        try:
+            r = s.get(id)
+        except socket.timeout:
+            self.timeout_manager.report_timeout()
+            self._report_error('Client timed out after %d seconds.' % self.timeout)
+            return
         if r.has_key('errors'):
             self._report_error(r['errors'])
+            return
         return r['event']
 
     @_swallow_exceptions
@@ -394,14 +489,22 @@ class SimpleClient(object):
         :return: new event id
         :rtype: integer
         """
-        if self.timeout_counter.counter >= self.max_timeouts:
-            return None
+        if not self.timeout_manager.should_submit():
+            self._report_error("Too many timeouts. Won't try again for {1} seconds.".format(*self.timeout_manager.backoff_status()))
+            return
         if self.api_key is None:
             self._report_error("Event API requires api key")
+            return
         s = EventService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
-        r = s.post(title, text, date_happened, handle, priority, related_event_id, tags, host, device_name)
+        try:
+            r = s.post(title, text, date_happened, handle, priority, related_event_id, tags, host, device_name)
+        except socket.timeout:
+            self.timeout_manager.report_timeout()
+            self._report_error('Client timed out after %d seconds.' % self.timeout)
+            return
         if r.has_key('errors'):
             self._report_error(r['errors'])
+            return
         return r['event']['id']
 
     #
@@ -418,14 +521,22 @@ class SimpleClient(object):
         :return: dashboard definition (see https://github.com/DataDog/dogapi/wiki/Dashboard for details)
         :rtype: decoded JSON
         """
-        if self.timeout_counter.counter >= self.max_timeouts:
-            return None
+        if not self.timeout_manager.should_submit():
+            self._report_error("Too many timeouts. Won't try again for {1} seconds.".format(*self.timeout_manager.backoff_status()))
+            return
         if self.api_key is None or self.application_key is None:
             self._report_error("Dash API requires api and application keys")
+            return
         s = DashService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
-        r = s.get(dash_id)
+        try:
+            r = s.get(dash_id)
+        except socket.timeout:
+            self.timeout_manager.report_timeout()
+            self._report_error('Client timed out after %d seconds.' % self.timeout)
+            return
         if r.has_key('errors'):
             self._report_error(r['errors'])
+            return
         return r['dash']
 
     @_swallow_exceptions
@@ -445,14 +556,22 @@ class SimpleClient(object):
         :return: new dashboard's id
         :rtype: integer
         """
-        if self.timeout_counter.counter >= self.max_timeouts:
-            return None
+        if not self.timeout_manager.should_submit():
+            self._report_error("Too many timeouts. Won't try again for {1} seconds.".format(*self.timeout_manager.backoff_status()))
+            return
         if self.api_key is None or self.application_key is None:
             self._report_error("Dash API requires api and application keys")
+            return
         s = DashService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
-        r = s.create(title, description, graphs)
+        try:
+            r = s.create(title, description, graphs)
+        except socket.timeout:
+            self.timeout_manager.report_timeout()
+            self._report_error('Client timed out after %d seconds.' % self.timeout)
+            return
         if r.has_key('errors'):
             self._report_error(r['errors'])
+            return
         return r['dash']['id']
 
     @_swallow_exceptions
@@ -475,14 +594,22 @@ class SimpleClient(object):
         :return: dashboard's id
         :rtype: integer
         """
-        if self.timeout_counter.counter >= self.max_timeouts:
-            return None
+        if not self.timeout_manager.should_submit():
+            self._report_error("Too many timeouts. Won't try again for {1} seconds.".format(*self.timeout_manager.backoff_status()))
+            return
         if self.api_key is None or self.application_key is None:
             self._report_error("Dash API requires api and application keys")
+            return
         s = DashService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
-        r = s.update(dash_id, title, description, graphs)
+        try:
+            r = s.update(dash_id, title, description, graphs)
+        except socket.timeout:
+            self.timeout_manager.report_timeout()
+            self._report_error('Client timed out after %d seconds.' % self.timeout)
+            return
         if r.has_key('errors'):
             self._report_error(r['errors'])
+            return
         return r['dash']['id']
 
     @_swallow_exceptions
@@ -493,12 +620,19 @@ class SimpleClient(object):
         :param dash_id: dash to delete
         :type dash_id: integer
         """
-        if self.timeout_counter.counter >= self.max_timeouts:
-            return None
+        if not self.timeout_manager.should_submit():
+            self._report_error("Too many timeouts. Won't try again for {1} seconds.".format(*self.timeout_manager.backoff_status()))
+            return
         if self.api_key is None or self.application_key is None:
             self._report_error("Dash API requires api and application keys")
+            return
         s = DashService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
-        r = s.delete(dash_id)
+        try:
+            r = s.delete(dash_id)
+        except socket.timeout:
+            self.timeout_manager.report_timeout()
+            self._report_error('Client timed out after %d seconds.' % self.timeout)
+            return
         if r.has_key('errors'):
             self._report_error(r['errors'])
 
@@ -516,12 +650,20 @@ class SimpleClient(object):
         :return: a dictionary maping each queried facet to a list of name strings
         :rtype: dictionary
         """
-        if self.timeout_counter.counter >= self.max_timeouts:
-            return None
+        if not self.timeout_manager.should_submit():
+            self._report_error("Too many timeouts. Won't try again for {1} seconds.".format(*self.timeout_manager.backoff_status()))
+            return
         if self.api_key is None or self.application_key is None:
             self._report_error("Search API requires api and application keys")
+            return
         s = SearchService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
-        r = s.query(query)
+        try:
+            r = s.query(query)
+        except socket.timeout:
+            self.timeout_manager.report_timeout()
+            self._report_error('Client timed out after %d seconds.' % self.timeout)
+            return
         if r.has_key('errors'):
             self._report_error(r['errors'])
+            return
         return r['results']

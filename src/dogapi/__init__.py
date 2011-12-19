@@ -1,3 +1,6 @@
+import logging
+logging.basicConfig()
+
 import common
 import facade
 import metric
