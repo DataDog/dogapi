@@ -26,11 +26,13 @@ class SimpleClient(object):
     def __init__(self):
         self.api_key = None
         self.application_key = None
-        self.max_timeouts = 3
-        self.timeout_counter = SharedCounter()
-        self.timeout_manager = TimeoutManager(10)
         self.timeout = 2
         self.swallow = True
+        self.timeout_manager = TimeoutManager()
+        # FIXME: preserved for backwards compatability. remove when no longer
+        # accessed in templeton
+        self.max_timeouts = 3
+        self.timeout_counter = SharedCounter()
 
     @decorator
     def _swallow_exceptions(f, self, *args, **kwargs):
@@ -125,7 +127,7 @@ class SimpleClient(object):
             self._report_error(".metrics takes a list of pairs not a %s. You might want to use .metric instead to send a scalar value" % type(values))
             return
 
-        s = MetricService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
+        s = MetricService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             if device:
                 r = s.post(name, values, host=host, device=device)
@@ -160,7 +162,7 @@ class SimpleClient(object):
         if self.api_key is None:
             self._report_error("Metric API requires an api key")
             return
-        s = MetricService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
+        s = MetricService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             if device:
                 r = s.post_batch(values, host=host, device=device)
@@ -202,7 +204,7 @@ class SimpleClient(object):
         if self.api_key is None or self.application_key is None:
             self._report_error("Comment API requires api and application keys")
             return
-        s = CommentService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
+        s = CommentService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             if comment_id is None:
                 r = s.post(handle, message, related_event_id)
@@ -233,7 +235,7 @@ class SimpleClient(object):
         if self.api_key is None or self.application_key is None:
             self._report_error("Comment API requires api and application keys")
             return
-        s = CommentService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
+        s = CommentService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.delete(comment_id)
         except socket.timeout:
@@ -260,7 +262,7 @@ class SimpleClient(object):
         if self.api_key is None or self.application_key is None:
             self._report_error("Tag API requires api and application keys")
             return
-        s = TagService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
+        s = TagService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.get_all()
         except socket.timeout:
@@ -289,7 +291,7 @@ class SimpleClient(object):
         if self.api_key is None or self.application_key is None:
             self._report_error("Tag API requires api and application keys")
             return
-        s = TagService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
+        s = TagService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.get(host_id)
         except socket.timeout:
@@ -318,7 +320,7 @@ class SimpleClient(object):
         if self.api_key is None or self.application_key is None:
             self._report_error("Tag API requires api and application keys")
             return
-        s = TagService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
+        s = TagService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.add(host_id, args)
         except socket.timeout:
@@ -345,7 +347,7 @@ class SimpleClient(object):
         if self.api_key is None or self.application_key is None:
             self._report_error("Tag API requires api and application keys")
             return
-        s = TagService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
+        s = TagService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.update(host_id, args)
         except socket.timeout:
@@ -369,7 +371,7 @@ class SimpleClient(object):
         if self.api_key is None or self.application_key is None:
             self._report_error("Tag API requires api and application keys")
             return
-        s = TagService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
+        s = TagService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.detach(host_id)
         except socket.timeout:
@@ -413,7 +415,7 @@ class SimpleClient(object):
         if self.api_key is None or self.application_key is None:
             self._report_error("Event API requires api and application keys")
             return
-        s = EventService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
+        s = EventService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.query(start, end, priority, sources, tags)
         except socket.timeout:
@@ -442,7 +444,7 @@ class SimpleClient(object):
         if self.api_key is None or self.application_key is None:
             self._report_error("Event API requires api and application keys")
             return
-        s = EventService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
+        s = EventService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.get(id)
         except socket.timeout:
@@ -495,7 +497,7 @@ class SimpleClient(object):
         if self.api_key is None:
             self._report_error("Event API requires api key")
             return
-        s = EventService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
+        s = EventService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.post(title, text, date_happened, handle, priority, related_event_id, tags, host, device_name)
         except socket.timeout:
@@ -527,7 +529,7 @@ class SimpleClient(object):
         if self.api_key is None or self.application_key is None:
             self._report_error("Dash API requires api and application keys")
             return
-        s = DashService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
+        s = DashService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.get(dash_id)
         except socket.timeout:
@@ -562,7 +564,7 @@ class SimpleClient(object):
         if self.api_key is None or self.application_key is None:
             self._report_error("Dash API requires api and application keys")
             return
-        s = DashService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
+        s = DashService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.create(title, description, graphs)
         except socket.timeout:
@@ -600,7 +602,7 @@ class SimpleClient(object):
         if self.api_key is None or self.application_key is None:
             self._report_error("Dash API requires api and application keys")
             return
-        s = DashService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
+        s = DashService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.update(dash_id, title, description, graphs)
         except socket.timeout:
@@ -626,7 +628,7 @@ class SimpleClient(object):
         if self.api_key is None or self.application_key is None:
             self._report_error("Dash API requires api and application keys")
             return
-        s = DashService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
+        s = DashService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.delete(dash_id)
         except socket.timeout:
@@ -656,7 +658,7 @@ class SimpleClient(object):
         if self.api_key is None or self.application_key is None:
             self._report_error("Search API requires api and application keys")
             return
-        s = SearchService(self.api_key, self.application_key, timeout=self.timeout, timeout_counter=self.timeout_counter)
+        s = SearchService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.query(query)
         except socket.timeout:

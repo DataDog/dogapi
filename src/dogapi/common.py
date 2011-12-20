@@ -112,7 +112,7 @@ class Service(object):
 
 class SharedCounter(object):
     # This thing is deprecated. Left around for backwards compatability.
-    # FIXME: remove the code in sobotka that messes with me
+    # FIXME: remove the code in templeton that messes with me
     def __init__(self):
         self.counter = 0
 
