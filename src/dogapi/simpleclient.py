@@ -54,7 +54,7 @@ class SimpleClient(object):
     # Metric API
 
     @_swallow_exceptions
-    def metric(self, name, value, host=None, device=None):
+    def metric(self, name, value, host=socket.gethostname(), device=None):
         """
         Submit a single data point to the metric API.
 
@@ -64,7 +64,9 @@ class SimpleClient(object):
         :param value: data point value
         :type value: numeric
 
-        :param host: optional host to scope the metric (e.g. ``"hostA.example.com"``)
+        :param host: optional host to scope the metric (e.g.
+        ``"hostA.example.com"``). defaults to local hostname. to submit without
+        a host, explicitly set host=None.
         :type host: string
 
         :param device: optional device to scope the metric (e.g. ``"eth0"``)
@@ -97,7 +99,7 @@ class SimpleClient(object):
             self._report_error(r['errors'])
 
     @_swallow_exceptions
-    def metrics(self, name, values, host=None, device=None):
+    def metrics(self, name, values, host=socket.gethostname(), device=None):
         """
         Submit a series of data points to the metric API.
 
@@ -107,7 +109,9 @@ class SimpleClient(object):
         :param values: data series. list of (POSIX timestamp, intever value) tuples. (e.g. ``[(1317652676, 15), (1317652706, 18), ...]``)
         :type values: list
 
-        :param host: optional host to scope the metric (e.g. ``"hostA.example.com"``)
+        :param host: optional host to scope the metric (e.g.
+        ``"hostA.example.com"``). defaults to local hostname. to submit without
+        a host, explicitly set host=None.
         :type host: string
 
         :param device: optional device to scope the metric (e.g. ``"eth0"``)
@@ -141,14 +145,16 @@ class SimpleClient(object):
             self._report_error(r['errors'])
 
     @_swallow_exceptions
-    def batch_metrics(self, values, host=None, device=None):
+    def batch_metrics(self, values, host=socket.gethostname(), device=None):
         """
         Submit a series of metrics with 1 or more data points to the metric API
 
         :param values A dictionary of names to a list values, in the form of {name: [(POSIX timestamp, integer value), ...], name2: [(POSIX timestamp, integer value), ...]}
         :type values: dict
 
-        :param host: optional host to scope the metric (e.g. ``"hostA.example.com"``)
+        :param host: optional host to scope the metric (e.g.
+        ``"hostA.example.com"``). to submit without a host, explicitly set
+        host=None.
         :type host: string
 
         :param device: optional device to scope the metric (e.g. ``"eth0"``)

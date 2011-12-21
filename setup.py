@@ -9,7 +9,7 @@ if sys.version_info < (2, 7):
 
 setup(
     name = "dogapi",
-    version = "0.10.2",
+    version = "0.10.3",
     packages = find_packages("src"),
     package_dir = {'':'src'},
     author = "Datadog, Inc.",
