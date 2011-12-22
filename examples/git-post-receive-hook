@@ -5,30 +5,48 @@
 # Make sure you have dogapi install; usually fixed by doing
 #   sudo easy_install dogapi
 #
-# Then copy this file to your repository, in .git/hooks/
-# and make it executable.
+# To install:
+# 1. copy this file to your repository, in .git/hooks/
+# 2. rename the file from git-post-receive-hook to post-receive
+# 3. make sure ls -l .git/hooks/ contains "post-receive"
+# 4. make that file executable (chmod 755 .git/hooks/post-receive)
 #
+# It will be invoked each time the git server is being pushed commits to
+
+import logging
+from logging.handlers import SysLogHandler
+logger = logging.getLogger("datadogit")
+logger.addHandler(SysLogHandler())
 
 try:
     import os
     import sys 
     from dogapi import dog 
 
-    dog.api_key = ... # FIXME put your API KEY here
+    dog.api_key = ... # !!! Enter your API key here !!!
 
-    print "Notifying Datadog"
+    logger.debug("Notifying Datadog")
     # Extract oldrev, newrev, refs
     args = sys.stdin.read().split()
     assert args is not None and len(args) == 3
+    logger.debug("git log %s..%s" % (args[0], args[1]))
 
     # Extract the log entry for the commits
     p = os.popen("git log %s..%s" % (args[0], args[1]))
+    event_data = p.read()
+    commit_count =  event_data.count("Author:")
+
+    if len(event_data) > 4000: event_data = event_data[:3996] + "..."
 
     # Post to Datadog
-    dog.event("Git commit on %s" % args[2], p.read())
-    print "Datadog has been notified"
+    if commit_count <= 1:
+        dog.event("Git commit on %s" % args[2], event_data)
+    else: 
+        dog.event("Git commits on %s" % args[2], event_data)
+
+    logger.debug("Datadog has been notified")
 except ImportError:
-    print "Make sure the dogapi module is installed; easy_install dogapi should do the trick"
-except Exception, e:
+    logger.warn("Make sure the dogapi module is installed; easy_install dogapi should do the trick")
+except:
     # If something happens, survive
-    print "Error while notifying Datadog: %s" % e
+    logger.exception("Error while notifying Datadog")
