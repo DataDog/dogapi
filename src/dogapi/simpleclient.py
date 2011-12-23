@@ -463,7 +463,7 @@ class SimpleClient(object):
         return r['event']
 
     @_swallow_exceptions
-    def event(self, title, text, date_happened=None, handle=None, priority=None, related_event_id=None, tags=None, host=None, device_name=None):
+    def event(self, title, text, date_happened=None, handle=None, priority=None, related_event_id=None, tags=None, host=None, device_name=None, **kwargs):
         """
         Post an event.
 
@@ -505,7 +505,7 @@ class SimpleClient(object):
             return
         s = EventService(self.api_key, self.application_key, timeout=self.timeout)
         try:
-            r = s.post(title, text, date_happened, handle, priority, related_event_id, tags, host, device_name)
+            r = s.post(title, text, date_happened, handle, priority, related_event_id, tags, host, device_name, **kwargs)
         except socket.timeout:
             self.timeout_manager.report_timeout()
             self._report_error('Client timed out after %d seconds.' % self.timeout)

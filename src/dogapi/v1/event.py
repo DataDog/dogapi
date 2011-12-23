@@ -8,6 +8,9 @@ from dogapi.common import APIService
 
 API_VERSION="v1"
 
+# Extra kwargs supported by POST
+SUPPORTED_POST_ARGS = ["event_type", "event_object", "alert_type", "source_type", "source_type_name"]
+
 class EventService(APIService):
     """
     Post to and read from the stream.
@@ -86,7 +89,7 @@ class EventService(APIService):
 
         return self.request('GET', '/api/' + API_VERSION + '/events/' + str(id), params, None)
 
-    def post(self, title, text, date_happened=None, handle=None, priority=None, related_event_id=None, tags=None, host=None, device_name=None):
+    def post(self, title, text, date_happened=None, handle=None, priority=None, related_event_id=None, tags=None, host=None, device_name=None, **kwargs):
         """
         Post an event.
 
@@ -121,6 +124,7 @@ class EventService(APIService):
         :rtype: decoded JSON
         """
 
+
         params = {
             'api_key':         self.api_key,
             'application_key': self.application_key,
@@ -151,5 +155,11 @@ class EventService(APIService):
 
         if device_name is not None:
             body['device_name'] = device_name
+
+        for kwarg in kwargs:
+            if kwarg in SUPPORTED_POST_ARGS:
+                body[kwarg] = kwargs[kwarg]
+            else:
+                logging.warning("Argument %s is not supported" % kwarg)
 
         return self.request('POST', '/api/' + API_VERSION + '/events', params, body, send_json=True)
