@@ -51,13 +51,26 @@ try:
     event_title = ""
 
     # Used to aggregate events together, best left alone.
-    event_object = sha1(gethostname() + ":" + os.getcwd() + ":" + args[2])
+    event_object = sha1(gethostname() + ":" + os.getcwd() + ":" + args[2]).hexdigest()
+
+    # branch name
+    branch_name = args[2].split("/")[-1]
+
+    # repo name
+    repo_name = "repository"
+    try:
+        # go 2 dirs up and use pwd as the repo name, not great but should work
+        repo_name = os.path.basename(os.path.realpath(os.path.join(__file__, "..", "..", "..")))
+    except:
+        # fail
+        pass
 
     # Post to Datadog
-    if commit_count <= 1:
-        event_title = "Commit on %s" % args[2]
-    else: 
-        event_title = "Commits on %s" % args[2]
+    commit = "Commit"
+    if commit_count > 1:
+        commit = "Commits"
+
+    event_title = "%s on %s (%s)" % (commit, repo_name, branch_name)
 
     dog.event(event_title, event_data,
               event_type="commit",
