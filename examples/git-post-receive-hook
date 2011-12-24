@@ -10,8 +10,11 @@
 # 2. rename the file from git-post-receive-hook to post-receive
 # 3. make sure ls -l .git/hooks/ contains "post-receive"
 # 4. make that file executable (chmod 755 .git/hooks/post-receive)
-#
-# It will be invoked each time the git server is being pushed commits to
+# 5. set up your datadog keys with git:
+#    git config datadog.api abcdefghi123456
+#    git config datadog.application jklmnop7890123
+
+
 
 import logging
 from logging.handlers import SysLogHandler
@@ -20,29 +23,59 @@ logger.addHandler(SysLogHandler())
 
 try:
     import os
-    import sys 
-    from dogapi import dog 
+    import sys
+    from hashlib import sha1
+    from socket import gethostname
+    from dogapi import dog
 
-    dog.api_key = ... # !!! Enter your API key here !!!
+    dog.api_key = os.popen("git config datadog.api").read().strip()
+    dog.application_key = os.popen("git config datadog.application").read().strip()
 
-    logger.debug("Notifying Datadog")
+    logger.debug("Notifying Datadog with %s/%s" % (dog.api_key, dog.application_key))
+
     # Extract oldrev, newrev, refs
     args = sys.stdin.read().split()
     assert args is not None and len(args) == 3
-    logger.debug("git log %s..%s" % (args[0], args[1]))
 
     # Extract the log entry for the commits
-    p = os.popen("git log %s..%s" % (args[0], args[1]))
+    p = os.popen("git log --graph --format=format:'%%h %%ce %%s' %s..%s" % (args[0], args[1]))
     event_data = p.read()
-    commit_count =  event_data.count("Author:")
+    commit_count = event_data.count("\n")
 
-    if len(event_data) > 4000: event_data = event_data[:3996] + "..."
+    # Events are limited to 4KB in size
+    if len(event_data) > 4000: event_data = event_data[:3980] + "..."
+
+    # Surround event_data with $$$ to trigger fixed-width font treatment
+    event_data = "$$$\n" + event_data + "\n$$$"
+
+    event_title = ""
+
+    # Used to aggregate events together, best left alone.
+    event_object = sha1(gethostname() + ":" + os.getcwd() + ":" + args[2]).hexdigest()
+
+    # branch name
+    branch_name = args[2].split("/")[-1]
+
+    # repo name
+    repo_name = "repository"
+    try:
+        # go 2 dirs up and use pwd as the repo name, not great but should work
+        repo_name = os.path.basename(os.path.realpath(os.path.join(__file__, "..", "..", "..")))
+    except:
+        # fail
+        pass
 
     # Post to Datadog
-    if commit_count <= 1:
-        dog.event("Git commit on %s" % args[2], event_data)
-    else: 
-        dog.event("Git commits on %s" % args[2], event_data)
+    commit = "Commit"
+    if commit_count > 1:
+        commit = "Commits"
+
+    event_title = "%s on %s (%s)" % (commit, repo_name, branch_name)
+
+    dog.event(event_title, event_data,
+              event_type="commit",
+              source_type_name="git",
+              event_object=event_object)
 
     logger.debug("Datadog has been notified")
 except ImportError:

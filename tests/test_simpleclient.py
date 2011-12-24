@@ -87,6 +87,20 @@ class TestSimpleClient(unittest.TestCase):
         assert 'test-tag-1' in event['tags']
         assert 'test-tag-2' in event['tags']
 
+    def test_git_commits(self):
+        """Pretend to send git commits"""
+        event_id = dog.event("Testing git commits", """$$$
+eac54655 *   Merge pull request #2 from DataDog/alq-add-arg-validation (alq@datadoghq.com)
+         |\  
+760735ef | * origin/alq-add-arg-validation Simple typechecking between metric and metrics (matt@datadoghq.com)
+         |/  
+f7a5a23d * missed version number in docs (matt@datadoghq.com)
+$$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
+        event = dog.get_event(event_id)
+
+        assert event.get("title", "") == "Testing git commits", event
+        assert event.get("source", "") == "Git", event
+
     def test_comments(self):
         now = datetime.datetime.now()
         now_ts = int(time.mktime(now.timetuple()))
