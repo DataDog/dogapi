@@ -9,7 +9,7 @@ if sys.version_info < (2, 7):
 
 setup(
     name = "dogapi",
-    version = "0.10.4",
+    version = "0.10.5",
     packages = find_packages("src"),
     package_dir = {'':'src'},
     author = "Datadog, Inc.",
@@ -17,7 +17,7 @@ setup(
     description = "Python bindings to Datadog's API and a user-facing command line tool.",
     license = "BSD",
     keywords = "datadog data",
-    url = "http://datadoghq.com",
+    url = "http://www.datadoghq.com",
     install_requires = reqs,
     entry_points={
         'console_scripts': [
