@@ -5,7 +5,7 @@ import simplejson
 
 from dogapi.v1 import MetricService
 
-from dogshell.common import report_errors, report_warnings, CommandLineClient
+from dogshell.common import report_errors, report_warnings, CommandLineClient, find_localhost
 
 class MetricClient(CommandLineClient):
 
@@ -29,7 +29,7 @@ class MetricClient(CommandLineClient):
         now = datetime.datetime.now()
         now = time.mktime(now.timetuple())
         if args.localhostname:
-            host = socket.gethostname()
+            host = find_localhost()
         else:
             host = args.host
         res = svc.post(args.name, [(now, args.value)], host=host, device=args.device)

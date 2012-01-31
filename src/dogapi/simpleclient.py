@@ -3,10 +3,10 @@ import socket
 import sys
 import time, datetime
 import types
+import urllib2
 from decorator import decorator
 
 from dogapi.common import SharedCounter, TimeoutManager
-
 from v1 import *
 
 log = logging.getLogger('dogapi')
@@ -33,6 +33,41 @@ class SimpleClient(object):
         # accessed in templeton
         self.max_timeouts = 3
         self.timeout_counter = SharedCounter()
+        self._use_ec2_instance_id = False
+        self._default_host = socket.gethostname()
+    
+    def use_ec2_instance_id():
+        def fget(self):
+            return self._use_ec2_instance_id
+        
+        def fset(self, value):
+            self._use_ec2_instance_id = value
+
+            if value:
+                try:
+                    # Remember the previous default timeout
+                    old_timeout = socket.getdefaulttimeout()
+
+                    # Try to query the EC2 internal metadata service, but fail fast
+                    socket.setdefaulttimeout(0.25)
+
+                    try:
+                        host = urllib2.urlopen(urllib2.Request('http://169.254.169.254/latest/meta-data/instance-id')).read()
+                    finally:
+                        # Reset the previous default timeout
+                        socket.setdefaulttimeout(old_timeout)
+                except Exception:
+                    host = socket.gethostname()
+
+                self._default_host = host
+            else:
+                self._default_host = socket.gethostname()
+        
+        def fdel(self):
+            del self._use_ec2_instance_id
+        
+        return locals()
+    use_ec2_instance_id = property(**use_ec2_instance_id())
 
     @decorator
     def _swallow_exceptions(f, self, *args, **kwargs):
@@ -54,7 +89,7 @@ class SimpleClient(object):
     # Metric API
 
     @_swallow_exceptions
-    def metric(self, name, value, host=socket.gethostname(), device=None):
+    def metric(self, name, value, host=None, device=None):
         """
         Submit a single data point to the metric API.
 
@@ -86,7 +121,9 @@ class SimpleClient(object):
         if type(value) not in (types.FloatType, types.IntType):
             self._report_error(".metric takes a scalar value not a %s. You might want to use .metrics instead" % type(value))
             return
-
+        
+        if host is None:
+            host = self._default_host
         s = MetricService(self.api_key, self.application_key, timeout=self.timeout)
         now = time.mktime(datetime.datetime.now().timetuple())
         try:
@@ -99,7 +136,7 @@ class SimpleClient(object):
             self._report_error(r['errors'])
 
     @_swallow_exceptions
-    def metrics(self, name, values, host=socket.gethostname(), device=None):
+    def metrics(self, name, values, host=None, device=None):
         """
         Submit a series of data points to the metric API.
 
@@ -131,6 +168,8 @@ class SimpleClient(object):
             self._report_error(".metrics takes a list of pairs not a %s. You might want to use .metric instead to send a scalar value" % type(values))
             return
 
+        if host is None:
+            host = self._default_host
         s = MetricService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             if device:
@@ -145,7 +184,7 @@ class SimpleClient(object):
             self._report_error(r['errors'])
 
     @_swallow_exceptions
-    def batch_metrics(self, values, host=socket.gethostname(), device=None):
+    def batch_metrics(self, values, host=None, device=None):
         """
         Submit a series of metrics with 1 or more data points to the metric API
 
@@ -168,6 +207,9 @@ class SimpleClient(object):
         if self.api_key is None:
             self._report_error("Metric API requires an api key")
             return
+
+        if host is None:
+            host = self._default_host
         s = MetricService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             if device:
