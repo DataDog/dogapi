@@ -4,8 +4,9 @@ import socket
 import simplejson
 
 from dogapi.v1 import MetricService
+from dogapi.common import find_localhost
 
-from dogshell.common import report_errors, report_warnings, CommandLineClient, find_localhost
+from dogshell.common import report_errors, report_warnings, CommandLineClient
 
 class MetricClient(CommandLineClient):
 
