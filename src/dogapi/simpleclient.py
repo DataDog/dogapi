@@ -11,6 +11,9 @@ from v1 import *
 
 log = logging.getLogger('dogapi')
 
+import ssl
+timeout_exceptions = (socket.timeout, ssl.SSLError)
+
 class SimpleClient(object):
     """
     A high-level client for interacting with the Datadog API.
@@ -128,7 +131,7 @@ class SimpleClient(object):
         now = time.mktime(datetime.datetime.now().timetuple())
         try:
             r = s.post(name, [[now, value]], host=host, device=device)
-        except socket.timeout:
+        except timeout_exceptions:
             self.timeout_manager.report_timeout()
             self._report_error('Client timed out after %d seconds.' % self.timeout)
             return
@@ -176,7 +179,7 @@ class SimpleClient(object):
                 r = s.post(name, values, host=host, device=device)
             else:
                 r = s.post(name, values, host=host)
-        except socket.timeout:
+        except timeout_exceptions:
             self.timeout_manager.report_timeout()
             self._report_error('Client timed out after %d seconds.' % self.timeout)
             return
@@ -216,7 +219,7 @@ class SimpleClient(object):
                 r = s.post_batch(values, host=host, device=device)
             else:
                 r = s.post_batch(values, host=host)
-        except socket.timeout:
+        except timeout_exceptions:
             self.timeout_manager.report_timeout()
             self._report_error('Client timed out after %d seconds.' % self.timeout)
             return
@@ -258,7 +261,7 @@ class SimpleClient(object):
                 r = s.post(handle, message, related_event_id)
             else:
                 r = s.edit(comment_id, handle, message, related_event_id)
-        except socket.timeout:
+        except timeout_exceptions:
             self.timeout_manager.report_timeout()
             self._report_error('Client timed out after %d seconds.' % self.timeout)
             return
@@ -286,7 +289,7 @@ class SimpleClient(object):
         s = CommentService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.delete(comment_id)
-        except socket.timeout:
+        except timeout_exceptions:
             self.timeout_manager.report_timeout()
             self._report_error('Client timed out after %d seconds.' % self.timeout)
             return
@@ -313,7 +316,7 @@ class SimpleClient(object):
         s = TagService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.get_all()
-        except socket.timeout:
+        except timeout_exceptions:
             self.timeout_manager.report_timeout()
             self._report_error('Client timed out after %d seconds.' % self.timeout)
             return
@@ -342,7 +345,7 @@ class SimpleClient(object):
         s = TagService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.get(host_id)
-        except socket.timeout:
+        except timeout_exceptions:
             self.timeout_manager.report_timeout()
             self._report_error('Client timed out after %d seconds.' % self.timeout)
             return
@@ -371,7 +374,7 @@ class SimpleClient(object):
         s = TagService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.add(host_id, args)
-        except socket.timeout:
+        except timeout_exceptions:
             self.timeout_manager.report_timeout()
             self._report_error('Client timed out after %d seconds.' % self.timeout)
             return
@@ -398,7 +401,7 @@ class SimpleClient(object):
         s = TagService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.update(host_id, args)
-        except socket.timeout:
+        except timeout_exceptions:
             self.timeout_manager.report_timeout()
             self._report_error('Client timed out after %d seconds.' % self.timeout)
             return
@@ -422,7 +425,7 @@ class SimpleClient(object):
         s = TagService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.detach(host_id)
-        except socket.timeout:
+        except timeout_exceptions:
             self.timeout_manager.report_timeout()
             self._report_error('Client timed out after %d seconds.' % self.timeout)
             return
@@ -466,7 +469,7 @@ class SimpleClient(object):
         s = EventService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.query(start, end, priority, sources, tags)
-        except socket.timeout:
+        except timeout_exceptions:
             self.timeout_manager.report_timeout()
             self._report_error('Client timed out after %d seconds.' % self.timeout)
             return
@@ -495,7 +498,7 @@ class SimpleClient(object):
         s = EventService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.get(id)
-        except socket.timeout:
+        except timeout_exceptions:
             self.timeout_manager.report_timeout()
             self._report_error('Client timed out after %d seconds.' % self.timeout)
             return
@@ -548,7 +551,7 @@ class SimpleClient(object):
         s = EventService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.post(title, text, date_happened, handle, priority, related_event_id, tags, host, device_name, **kwargs)
-        except socket.timeout:
+        except timeout_exceptions:
             self.timeout_manager.report_timeout()
             self._report_error('Client timed out after %d seconds.' % self.timeout)
             return
@@ -580,7 +583,7 @@ class SimpleClient(object):
         s = DashService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.get(dash_id)
-        except socket.timeout:
+        except timeout_exceptions:
             self.timeout_manager.report_timeout()
             self._report_error('Client timed out after %d seconds.' % self.timeout)
             return
@@ -615,7 +618,7 @@ class SimpleClient(object):
         s = DashService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.create(title, description, graphs)
-        except socket.timeout:
+        except timeout_exceptions:
             self.timeout_manager.report_timeout()
             self._report_error('Client timed out after %d seconds.' % self.timeout)
             return
@@ -653,7 +656,7 @@ class SimpleClient(object):
         s = DashService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.update(dash_id, title, description, graphs)
-        except socket.timeout:
+        except timeout_exceptions:
             self.timeout_manager.report_timeout()
             self._report_error('Client timed out after %d seconds.' % self.timeout)
             return
@@ -679,7 +682,7 @@ class SimpleClient(object):
         s = DashService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.delete(dash_id)
-        except socket.timeout:
+        except timeout_exceptions:
             self.timeout_manager.report_timeout()
             self._report_error('Client timed out after %d seconds.' % self.timeout)
             return
@@ -709,7 +712,7 @@ class SimpleClient(object):
         s = SearchService(self.api_key, self.application_key, timeout=self.timeout)
         try:
             r = s.query(query)
-        except socket.timeout:
+        except timeout_exceptions:
             self.timeout_manager.report_timeout()
             self._report_error('Client timed out after %d seconds.' % self.timeout)
             return
