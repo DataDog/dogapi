@@ -9,19 +9,13 @@ import httplib
 import urllib2
 from urllib import urlencode
 from decorator import decorator
-try:
-    import simplejson as json
-except ImportError:
-    import json
 
-from dogapi.common import TimeoutManager
+from dogapi.http import HttpClient, HttpTimeout, HttpBackoff, json
 
 log = logging.getLogger('dogapi')
 
-import ssl
-timeout_exceptions = (socket.timeout, ssl.SSLError)
 
-class Datadog(object):
+class Datadog(HttpClient):
     """
     A high-level client for interacting with the Datadog API.
 
@@ -35,16 +29,29 @@ class Datadog(object):
 
     def __init__(self, api_key=None, application_key=None, api_version='v1', api_host=None, timeout=2, max_timeouts=3, backoff_period=300, swallow=True, use_ec2_instance_id=False):
         self.api_host = api_host or os.environ.get('DATADOG_HOST', 'https://app.datadoghq.com')
+        super(Datadog, self).__init__(backoff_period, max_timeouts)
         self.api_key = api_key
         self.api_version = api_version
         self.application_key = application_key
         self.timeout = timeout
-        self.timeout_manager = TimeoutManager(backoff_period, max_timeouts)
         self.swallow = swallow
         self._default_host = socket.gethostname()
         self._use_ec2_instance_id = None
         self.use_ec2_instance_id = use_ec2_instance_id
     
+    def request(self, method, path, body=None, **params):
+        if self.api_key:
+            params['api_key'] = self.api_key
+        if self.application_key:
+            params['application_key'] = self.application_key
+        path = "/api/%s/%s" % (self.api_version, path.lstrip('/'))
+        try:
+            return super(Datadog, self).request(method, path, body, **params)
+        except HttpTimeout, e:
+            pass
+        except HttpBackoff, e:
+            pass
+
     def use_ec2_instance_id():
         def fget(self):
             return self._use_ec2_instance_id
@@ -97,56 +104,7 @@ class Datadog(object):
     #
     # Metric API
 
-    def request(self, method, path, body=None, **params):
-        if not self.timeout_manager.should_submit():
-            self._report_error("Too many timeouts. Won't try again for {1} seconds.".format(*self.timeout_manager.backoff_status()))
-            return None
-        
-        match = re.match('^(https?)://(.*)', self.api_host)
-        http_conn_cls = httplib.HTTPSConnection
-
-        if match:
-            host = match.group(2)
-            if match.group(1) == 'http':
-                http_conn_cls = httplib.HTTPConnection
-
-        conn = http_conn_cls(host)
-        url_params = {}
-        if self.api_key:
-            url_params['api_key'] = self.api_key
-        if self.application_key:
-            url_params['application_key'] = self.application_key
-        url_params.update(params)
-        url = "/api/%s/%s?%s" % (self.api_version, path.lstrip('/'), urlencode(url_params))
-        
-        headers = {}
-        if isinstance(body, dict):
-            body = json.dumps(body)
-            headers['Content-Type'] = 'application/json'
-                
-        try:
-            try:
-                conn.request(method, url, body, headers)
-            except timeout_exceptions:
-                self.timeout_manager.report_timeout()
-                self._report_error('%s %s timed out after %d seconds.' % (method, url, self.timeout))
-                return None
-            
-            response = conn.getresponse()
-            response_str = response.read()
-            if response_str:
-                try:
-                    response_obj = json.loads(response_str)
-                except ValueError:
-                    raise ValueError('Invalid JSON response: {0}'.format(response_str))
-                
-                if response_obj and 'errors' in response_obj:
-                    self._report_error(response_obj['errors'])
-            else:
-                response_obj = {}
-            return response_obj
-        finally:
-            conn.close()        
+       
 
     @_swallow_exceptions
     def metric(self, name, points, host=None, device=None):

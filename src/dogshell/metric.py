@@ -4,7 +4,7 @@ import socket
 import simplejson
 
 from dogapi import Datadog
-from dogapi.common import find_localhost
+#from dogapi.common import find_localhost
 
 from dogshell.common import report_errors, report_warnings, CommandLineClient
 
