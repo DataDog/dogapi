@@ -15,7 +15,7 @@ import datetime, time
 class TestSimpleClient(unittest.TestCase):
 
     def setUp(self):
-        self.test_user = "fabian"
+        self.test_user = os.environ.get('DATADOG_TEST_USER')
         dog.api_key = os.environ.get('DATADOG_API_KEY')
         dog.application_key = os.environ.get('DATADOG_APP_KEY')
         dog.swallow = False
@@ -112,7 +112,7 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         event = dog.get_event(comment_id)
         assert event['text'] == message
 
-        dog.comment(self.test_user, message + ' updated', comment_id)
+        dog.update_comment(self.test_user, message + ' updated', comment_id)
         event = dog.get_event(comment_id)
         assert event['text'] == message + ' updated'
 
@@ -213,7 +213,7 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
                 (int(time.mktime((now - datetime.timedelta(minutes=11)).timetuple())), 5),
                 ]
 
-        dog.metrics('matt.metric', matt_series, host="matt.metric.host")
+        dog.metric('matt.metric', matt_series, host="matt.metric.host")
 
     def test_swallow_exceptions(self):
         comment_id = dog.comment(self.test_user, 'test exception swallowing')
@@ -234,16 +234,9 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
 
 
     def test_type_check(self):
-        try:
-            dog.metric("test.metric", [(time.time() - 3600, 1.0)])
-            self.fail()
-        except Exception, e:
-            assert str(e) == ".metric takes a scalar value not a <type 'list'>. You might want to use .metrics instead", str(e)
-        try:
-            dog.metrics("test.metric", 1.0)
-            self.fail()
-        except Exception, e:
-            assert str(e) == ".metrics takes a list of pairs not a <type 'float'>. You might want to use .metric instead to send a scalar value", str(e)
+        dog.metric("test.metric", [(time.time() - 3600, 1.0)])
+        dog.metric("test.metric", 1.0)
+        dog.metric("test.metric", (time.time(), 1.0))
 
 if __name__ == '__main__':
     unittest.main()

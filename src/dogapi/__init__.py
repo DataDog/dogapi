@@ -1,6 +1,6 @@
 import logging
 logging.basicConfig()
 
-from simpleclient import SimpleClient
+from datadog import Datadog
 
-dog = SimpleClient()
+dog = Datadog()
