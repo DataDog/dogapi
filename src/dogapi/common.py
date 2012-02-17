@@ -110,12 +110,6 @@ class Service(object):
 
         return response_obj
 
-class SharedCounter(object):
-    # This thing is deprecated. Left around for backwards compatability.
-    # FIXME: remove the code in templeton that messes with me
-    def __init__(self):
-        self.counter = 0
-
 class TimeoutManager(object):
     # FIXME: maybe? officially this should be threadsafe, but probably it's
     # safe enough. there might be some race-y conditions, but I think the worst

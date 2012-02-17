@@ -7,7 +7,7 @@ from datetime import datetime
 import argparse
 import simplejson
 
-from dogapi.v1 import DashService
+from dogapi import Datadog
 
 from dogshell.common import report_errors, report_warnings, CommandLineClient
 
@@ -76,6 +76,7 @@ class DashClient(CommandLineClient):
         self._write_dash_to_file(args.dashboard_id, args.filename, args.timeout, args.format, args.string_ids)
 
     def _pull_all(self, args):
+        self.dog.timeout = args.timeout
         
         def _title_to_filename(title):
             # Get a lowercased version with most punctuation stripped out...
@@ -85,8 +86,7 @@ class DashClient(CommandLineClient):
             return no_punct.replace(" ", "_").replace("-", "_").strip("_")
 
         format = args.format
-        svc = DashService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
-        res = svc.get_all()
+        res = self.dog.dashboards()
         report_warnings(res)
         report_errors(res)
         
@@ -110,9 +110,9 @@ class DashClient(CommandLineClient):
                   .format(len(used_filenames), os.path.realpath(args.pull_dir)))
 
     def _new_file(self, args):
+        self.dog.timeout = arg.timeout
         format = args.format
-        svc = DashService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
-        res = svc.create(args.filename, 
+        res = self.dog.create_dashboard(args.filename, 
                          "Description for {0}".format(args.filename), [])
         report_warnings(res)
         report_errors(res)
@@ -126,8 +126,7 @@ class DashClient(CommandLineClient):
 
     def _write_dash_to_file(self, dash_id, filename, timeout, format='raw', string_ids=False):
         with open(filename, "wb") as f:
-            svc = DashService(self.config['apikey'], self.config['appkey'], timeout=timeout)
-            res = svc.get(dash_id)
+            res = self.dog.dashboard(dash_id)
             report_warnings(res)
             report_errors(res)
 
@@ -148,7 +147,7 @@ class DashClient(CommandLineClient):
                 print "{0} {1}".format(dash_id, filename)
 
     def _push(self, args):
-        svc = DashService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
+        self.dog.timeout = args.timeout
         for f in args.file:
             try:
                 dash_obj = simplejson.load(f)
@@ -165,8 +164,7 @@ class DashClient(CommandLineClient):
                              .format(datetime_str, f.name, dash_obj["id"], platform.node()))
                 dash_obj["description"] += auto_text
 
-            res = svc.update(dash_obj["id"], dash_obj["title"], 
-                             dash_obj["description"], dash_obj["graphs"])
+            res = self.dog.update_dashboard(dash_obj["id"], dash_obj["title"], dash_obj["description"], dash_obj["graphs"])
 
             if 'errors' in res:
                 print >> sys.stderr, 'Upload of dashboard {0} from file {1} failed.'.format(dash_obj["id"], f.name)
@@ -178,6 +176,7 @@ class DashClient(CommandLineClient):
                 print "Uploaded file {0} (dashboard {1})".format(f.name, dash_obj["id"])
         
     def _post(self, args):
+        self.dog.timeout = args.timeout
         format = args.format
         if args.graphs is None:
             graphs = sys.stdin.read()
@@ -185,8 +184,7 @@ class DashClient(CommandLineClient):
             graphs = simplejson.loads(graphs)
         except:
             raise Exception('bad json parameter')
-        svc = DashService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
-        res = svc.create(args.title, args.description, graphs)
+        res = self.dog.create_dashboard(args.title, args.description, graphs)
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
@@ -195,6 +193,7 @@ class DashClient(CommandLineClient):
             print simplejson.dumps(res)
 
     def _update(self, args):
+        self.dog.timeout = args.timeout
         format = args.format
         if args.graphs is None:
             graphs = sys.stdin.read()
@@ -202,8 +201,7 @@ class DashClient(CommandLineClient):
             graphs = simplejson.loads(graphs)
         except:
             raise Exception('bad json parameter')
-        svc = DashService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
-        res = svc.update(args.dashboard_id, args.title, args.description, graphs)
+        res = self.dog.update_dashboard(args.dashboard_id, args.title, args.description, graphs)
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
@@ -212,9 +210,9 @@ class DashClient(CommandLineClient):
             print simplejson.dumps(res)
 
     def _show(self, args):
+        self.dog.timeout = args.timeout
         format = args.format
-        svc = DashService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
-        res = svc.get(args.dashboard_id)
+        res = self.dog.dashboard(args.dashboard_id)
         report_warnings(res)
         report_errors(res)
 
@@ -227,9 +225,9 @@ class DashClient(CommandLineClient):
             print simplejson.dumps(res)
 
     def _show_all(self, args):
+        self.dog.timeout = args.timeout
         format = args.format
-        svc = DashService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
-        res = svc.get_all()
+        res = self.dog.dashboards()
         report_warnings(res)
         report_errors(res)
 
@@ -249,9 +247,9 @@ class DashClient(CommandLineClient):
                                  self._escape(d["description"])])
 
     def _delete(self, args):
+        self.dog.timeout = args.timeout
         format = args.format
-        svc = DashService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
-        res = svc.delete(args.dashboard_id)
+        res = self.dog.timeout.delete_dashboard(args.dashboard_id)
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
@@ -260,9 +258,8 @@ class DashClient(CommandLineClient):
             print simplejson.dumps(res)
 
     def _web_view(self, args):
-        svc = DashService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
         dash_id = simplejson.load(args.file)['id']
-        url = svc.api_host + "/dash/dash/{0}".format(dash_id)
+        url = self.dog.api_host + "/dash/dash/{0}".format(dash_id)
         webbrowser.open(url)
 
     def _escape(self, s):

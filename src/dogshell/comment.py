@@ -2,7 +2,7 @@ import sys
 
 import simplejson
 
-from dogapi.v1 import CommentService, EventService
+from dogapi import Datadog
 
 from dogshell.common import report_errors, report_warnings, CommandLineClient
 
@@ -10,6 +10,7 @@ class CommentClient(CommandLineClient):
 
     def __init__(self, config):
         self.config = config
+        self.dog = Datadog(api_key=self.config['apikey'], application_key=self.config['appkey'])
 
     def setup_parser(self, subparsers):
         parser = subparsers.add_parser('comment', help='Post, update, and delete comments.')
@@ -41,13 +42,13 @@ class CommentClient(CommandLineClient):
         delete_parser.set_defaults(func=self._delete)
 
     def _post(self, args):
+        self.dog.timeout = args.timeout
         handle = args.handle
         comment = args.comment
         format = args.format
         if comment is None:
             comment = sys.stdin.read()
-        svc = CommentService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
-        res = svc.post(handle, comment)
+        res = self.dog.comment(handle, comment)
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
@@ -76,7 +77,7 @@ class CommentClient(CommandLineClient):
         if comment is None:
             comment = sys.stdin.read()
         svc = CommentService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
-        res = svc.edit(id, handle, comment)
+        res = self.dog.update_comment(handle, comment, id)
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
@@ -98,14 +99,14 @@ class CommentClient(CommandLineClient):
             print 'message\t\t' + res['comment']['message'].__repr__()
 
     def _reply(self, args):
+        self.dog.timeout = args.timeout
         handle = args.handle
         comment = args.comment
         id = args.comment_id
         format = args.format
         if comment is None:
             comment = sys.stdin.read()
-        svc = CommentService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
-        res = svc.post(handle, comment, related_event_id=id)
+        res = self.dog.comment(handle, comment, related_event_id=id)
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
@@ -127,10 +128,10 @@ class CommentClient(CommandLineClient):
             print 'message\t\t' + res['comment']['message'].__repr__()
 
     def _show(self, args):
+        self.dog.timeout = args.timeout
         id = args.comment_id
         format = args.format
-        svc = EventService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
-        res = svc.get(id)
+        res = self.dog.get_event(id)
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
@@ -152,10 +153,10 @@ class CommentClient(CommandLineClient):
             print 'message\t\t' + res['event']['text'].__repr__()
 
     def _delete(self, args):
+        self.dog.timeout = args.timeout
         id = args.comment_id
         format = args.format
-        svc = CommentService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
-        res = svc.delete(id)
+        res = self.dog.delete_comment(id)
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':

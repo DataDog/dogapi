@@ -14,7 +14,7 @@ try:
 except ImportError:
     import json
 
-from dogapi.common import SharedCounter, TimeoutManager
+from dogapi.common import TimeoutManager
 
 log = logging.getLogger('dogapi')
 
@@ -33,20 +33,17 @@ class Datadog(object):
     client's `timeout` attribute.
     """
 
-    def __init__(self):
-        self.api_host = os.environ.get('DATADOG_HOST', 'https://app.datadoghq.com')
-        self.api_key = None
-        self.api_version = 'v1'
-        self.application_key = None
-        self.timeout = 2
-        self.swallow = True
-        self.timeout_manager = TimeoutManager()
-        # FIXME: preserved for backwards compatability. remove when no longer
-        # accessed in templeton
-        self.max_timeouts = 3
-        self.timeout_counter = SharedCounter()
-        self._use_ec2_instance_id = False
+    def __init__(self, api_key=None, application_key=None, api_version='v1', api_host=None, timeout=2, max_timeouts=3, backoff_period=300, swallow=True, use_ec2_instance_id=False):
+        self.api_host = api_host or os.environ.get('DATADOG_HOST', 'https://app.datadoghq.com')
+        self.api_key = api_key
+        self.api_version = api_version
+        self.application_key = application_key
+        self.timeout = timeout
+        self.timeout_manager = TimeoutManager(backoff_period, max_timeouts)
+        self.swallow = swallow
         self._default_host = socket.gethostname()
+        self._use_ec2_instance_id = None
+        self.use_ec2_instance_id = use_ec2_instance_id
     
     def use_ec2_instance_id():
         def fget(self):

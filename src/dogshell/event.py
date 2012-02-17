@@ -4,7 +4,7 @@ import sys
 
 import simplejson
 
-from dogapi.v1 import EventService
+from dogapi import Datadog
 
 from dogshell.common import report_errors, report_warnings, CommandLineClient
 
@@ -83,16 +83,16 @@ class EventClient(CommandLineClient):
         stream_parser.set_defaults(func=self._stream)
 
     def _post(self, args):
+        self.dog.timeoue = args.timeout
         format = args.format
         message = args.message
         if message is None:
             message = sys.stdin.read()
-        svc = EventService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
         if args.tags is not None:
             tags = [t.strip() for t in args.tags.split(',')]
         else:
             tags = None
-        res = svc.post(args.title,
+        res = self.dog.event(args.title,
                        message,
                        args.date_happened,
                        args.handle,
@@ -111,9 +111,9 @@ class EventClient(CommandLineClient):
             print_event(res['event'])
 
     def _show(self, args):
+        self.dog.timeoue = args.timeout
         format = args.format
-        svc = EventService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
-        res = svc.get(args.event_id)
+        res = self.dog.get(args.event_id)
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
@@ -124,8 +124,8 @@ class EventClient(CommandLineClient):
             print_event_details(res['event'])
 
     def _stream(self, args):
+        self.dog.timeoue = args.timeout
         format = args.format
-        svc = EventService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
         if args.sources is not None:
             sources = [s.strip() for s in args.sources.split(',')]
         else:
@@ -136,7 +136,7 @@ class EventClient(CommandLineClient):
             tags = None
         start = parse_time(args.start)
         end = parse_time(args.end)
-        res = svc.query(start, end, args.priority, sources, tags)
+        res = self.dog.stream(start, end, args.priority, sources, tags)
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
