@@ -23,10 +23,6 @@ class EventApi(object):
         :return: list of events (see https://github.com/DataDog/dogapi/wiki/Event for structure)
         :rtype: decoded JSON
         """
-        if self.api_key is None or self.application_key is None:
-            self._report_error("Event API requires api and application keys")
-            return
-
         params = {
             'start': start,
             'end': end,
@@ -50,11 +46,7 @@ class EventApi(object):
 
         :return: event details (see https://github.com/DataDog/dogapi/wiki/Event for structure)
         :rtype: decoded JSON
-        """
-        if self.api_key is None or self.application_key is None:
-            self._report_error("Event API requires api and application keys")
-            return
-        
+        """        
         response = self.request('GET', '/events/' + str(id))
         return response['event']
 
@@ -92,10 +84,6 @@ class EventApi(object):
         :return: new event id
         :rtype: integer
         """
-        if self.api_key is None:
-            self._report_error("Event API requires api key")
-            return
-        
         body = {
             'title': title,
             'text': text,
@@ -147,11 +135,7 @@ class EventApi(object):
         :rtype: integer
 
         :raises:  Exception on failure
-        """
-        if self.api_key is None or self.application_key is None:
-            self._report_error("Comment API requires api and application keys")
-            return
-        
+        """        
         body = {
             'handle':  handle,
             'message': message,
@@ -163,11 +147,7 @@ class EventApi(object):
         response = self.request(method, url, body)
         return response['comment']['id']
 
-    def update_comment(self, handle, message, comment_id):
-        if self.api_key is None or self.application_key is None:
-            self._report_error("Comment API requires api and application keys")
-            return
-        
+    def update_comment(self, handle, message, comment_id):        
         body = {
             'handle':  handle,
             'message': message,
@@ -186,7 +166,4 @@ class EventApi(object):
 
         :raises: Exception on error
         """
-        if self.api_key is None or self.application_key is None:
-            self._report_error("Comment API requires api and application keys")
-            return
         return self.request('DELETE', '/comments/' + str(comment_id))

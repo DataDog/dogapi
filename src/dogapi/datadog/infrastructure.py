@@ -36,11 +36,7 @@ class InfrastructureApi(object):
 
         :return: tags for the host
         :rtype: list
-        """
-        if self.api_key is None or self.application_key is None:
-            self._report_error("Tag API requires api and application keys")
-            return
-        
+        """        
         response = self.request('GET', '/tags/hosts/' + str(host_id))
         return response['tags']
 
@@ -54,9 +50,6 @@ class InfrastructureApi(object):
         :param tagN: tag name
         :type tagN: string
         """
-        if self.api_key is None or self.application_key is None:
-            self._report_error("Tag API requires api and application keys")
-            return
         body = {
             'tags': tags,
         }
@@ -72,9 +65,6 @@ class InfrastructureApi(object):
         :param tagN: tag name
         :type tagN: string
         """
-        if self.api_key is None or self.application_key is None:
-            self._report_error("Tag API requires api and application keys")
-            return
         body = {
             'tags': tags
         }
@@ -87,8 +77,4 @@ class InfrastructureApi(object):
         :param host_id: id or name of the host
         :type host_id: integer or string
         """
-        if self.api_key is None or self.application_key is None:
-            self._report_error("Tag API requires api and application keys")
-            return
-        
         return self.request('DELETE', '/tags/hosts/' + str(host_id))

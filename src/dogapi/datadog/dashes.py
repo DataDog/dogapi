@@ -9,9 +9,6 @@ class DashApi(object):
         :return: dashboard definition (see https://github.com/DataDog/dogapi/wiki/Dashboard for details)
         :rtype: decoded JSON
         """
-        if self.api_key is None or self.application_key is None:
-            self._report_error("Dash API requires api and application keys")
-            return
         response = self.request('GET', '/dash/' + str(dash_id))
         return response['dash']
 
@@ -30,11 +27,7 @@ class DashApi(object):
 
         :return: new dashboard's id
         :rtype: integer
-        """
-        if self.api_key is None or self.application_key is None:
-            self._report_error("Dash API requires api and application keys")
-            return
-        
+        """        
         if isinstance(graphs, (str, unicode)):
             graphs = json.loads(graphs)
         body = {
@@ -64,10 +57,6 @@ class DashApi(object):
         :return: dashboard's id
         :rtype: integer
         """
-        if self.api_key is None or self.application_key is None:
-            self._report_error("Dash API requires api and application keys")
-            return
-        
         if isinstance(graphs, (str, unicode)):
             graphs = json.loads(graphs)
         body = {
@@ -85,7 +74,4 @@ class DashApi(object):
         :param dash_id: dash to delete
         :type dash_id: integer
         """
-        if self.api_key is None or self.application_key is None:
-            self._report_error("Dash API requires api and application keys")
-            return
         self.request('DELETE', '/dash/' + str(dash_id))

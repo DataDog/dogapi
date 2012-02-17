@@ -1,14 +1,7 @@
 import os
 import logging
 import socket
-import re
-import sys
-import time, datetime
-import types
-import httplib
 import urllib2
-from urllib import urlencode
-from decorator import decorator
 
 from dogapi.http import HttpClient, HttpTimeout, HttpBackoff, json
 log = logging.getLogger('dogapi')

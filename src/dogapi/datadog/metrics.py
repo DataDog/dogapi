@@ -21,18 +21,9 @@ class MetricApi(object):
 
         :raises: Exception on failure
         """
-        if self.api_key is None:
-            self._report_error("Metric API requires an api key")
-            return
-                
         if host is None:
             host = self._default_host
         
-        params = {
-            'api_key':         self.api_key,
-            'application_key': self.application_key,
-        }
-
         now = time.mktime(datetime.datetime.now().timetuple())
         if isinstance(points, (float, int)):
             points = [(now, points)]
@@ -68,11 +59,7 @@ class MetricApi(object):
         :type device: string
 
         :raises: Exception on failure
-        """
-        if self.api_key is None:
-            self._report_error("Metric API requires an api key")
-            return
-        
+        """        
         body = { "series": [
             {
             'metric': name,
