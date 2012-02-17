@@ -14,7 +14,7 @@ try:
 except ImportError:
     import json
 
-log = logging.getLogger('dogapi')
+log = logging.getLogger('dogapi.http')
 
 def dt2epoch(d):
     return time.mktime(d.timetuple())
@@ -52,6 +52,7 @@ class HttpClient(object):
             headers['Content-Type'] = 'application/json'
                 
         try:
+            start_time = time.time()
             try:
                 conn.request(method, url, body, headers)
             except timeout_exceptions:
@@ -59,6 +60,8 @@ class HttpClient(object):
                 raise HttpTimeout('%s %s timed out after %d seconds.' % (method, url, self.timeout))
             
             response = conn.getresponse()
+            duration = round((time.time() - start_time) * 1000., 4) 
+            log.info("%s %s %s (%sms)" % (response.status, method, url, duration))
             response_str = response.read()
             if response_str:
                 try:
