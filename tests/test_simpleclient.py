@@ -15,6 +15,7 @@ import datetime, time
 class TestSimpleClient(unittest.TestCase):
 
     def setUp(self):
+        self.test_user = "fabian"
         dog.api_key = os.environ.get('DATADOG_API_KEY')
         dog.application_key = os.environ.get('DATADOG_APP_KEY')
         dog.swallow = False
@@ -107,16 +108,16 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         before_ts = int(time.mktime((now - datetime.timedelta(minutes=5)).timetuple()))
         message = 'test message ' + str(now_ts)
 
-        comment_id = dog.comment('fabian', message)
+        comment_id = dog.comment(self.test_user, message)
         event = dog.get_event(comment_id)
         assert event['text'] == message
 
-        dog.comment('fabian', message + ' updated', comment_id)
+        dog.comment(self.test_user, message + ' updated', comment_id)
         event = dog.get_event(comment_id)
         assert event['text'] == message + ' updated'
 
-        reply_id = dog.comment('fabian', message + ' reply', related_event_id=comment_id)
-        stream = dog.stream(before_ts, now_ts + 2)
+        reply_id = dog.comment(self.test_user, message + ' reply', related_event_id=comment_id)
+        stream = dog.stream(before_ts, now_ts + 10)
 
         assert reply_id in [x['id'] for x in stream[0]['comments']]
 
@@ -185,8 +186,9 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         now_ts = int(time.mktime(now.timetuple()))
 
         dog.metric('test.metric.' + str(now_ts), 1, host="test.host." + str(now_ts))
+        time.sleep(1)
         results = dog.search('hosts:test.host.' + str(now_ts))
-        assert len(results['hosts']) == 1
+        assert len(results['hosts']) == 1, results
         # FIXME: re-enable when LH #554 is fixed
         #results = dog.search('metrics:test.metric.' + str(now_ts))
         #assert len(results['metrics']) == 1
@@ -214,7 +216,7 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         dog.metrics('matt.metric', matt_series, host="matt.metric.host")
 
     def test_swallow_exceptions(self):
-        comment_id = dog.comment('fabian', 'test exception swallowing')
+        comment_id = dog.comment(self.test_user, 'test exception swallowing')
         dog.delete_comment(comment_id)
 
         # doesn't raise an exception when swallow is True
@@ -236,12 +238,12 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
             dog.metric("test.metric", [(time.time() - 3600, 1.0)])
             self.fail()
         except Exception, e:
-            assert e.message == ".metric takes a scalar value not a <type 'list'>. You might want to use .metrics instead", e.message
+            assert str(e) == ".metric takes a scalar value not a <type 'list'>. You might want to use .metrics instead", str(e)
         try:
             dog.metrics("test.metric", 1.0)
             self.fail()
         except Exception, e:
-            assert e.message == ".metrics takes a list of pairs not a <type 'float'>. You might want to use .metric instead to send a scalar value", e.message
+            assert str(e) == ".metrics takes a list of pairs not a <type 'float'>. You might want to use .metric instead to send a scalar value", str(e)
 
 if __name__ == '__main__':
     unittest.main()
