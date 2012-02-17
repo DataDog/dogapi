@@ -178,8 +178,7 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
     def test_search(self):
         results = dog.search('e')
         assert len(results['hosts']) > 0
-        # FIXME: re-enable when LH #554 is fixed
-        #assert len(results['metrics']) > 0
+        assert len(results['metrics']) > 0
 
     def test_metrics(self):
         now = datetime.datetime.now()
@@ -189,9 +188,9 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         time.sleep(1)
         results = dog.search('hosts:test.host.' + str(now_ts))
         assert len(results['hosts']) == 1, results
-        # FIXME: re-enable when LH #554 is fixed
-        #results = dog.search('metrics:test.metric.' + str(now_ts))
-        #assert len(results['metrics']) == 1
+
+        results = dog.search('metrics:test.metric.' + str(now_ts))
+        assert len(results['metrics']) == 1
 
         matt_series = [
                 (int(time.mktime((now - datetime.timedelta(minutes=25)).timetuple())), 5),
