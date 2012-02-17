@@ -1,3 +1,3 @@
-from datadog import Datadog
+from dogapi.datadog import Datadog
 
 dog = Datadog()

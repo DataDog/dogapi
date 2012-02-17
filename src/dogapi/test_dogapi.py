@@ -215,24 +215,6 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
 
         dog.metric('matt.metric', matt_series, host="matt.metric.host")
 
-    def test_swallow_exceptions(self):
-        comment_id = dog.comment(self.test_user, 'test exception swallowing')
-        dog.delete_comment(comment_id)
-
-        # doesn't raise an exception when swallow is True
-        dog.swallow = True
-        dog.get_event(comment_id)
-
-        # raises an exception when swallow is False
-        dog.swallow = False
-        try:
-            dog.get_event(comment_id)
-        except:
-            pass
-        else:
-            assert False
-
-
     def test_type_check(self):
         dog.metric("test.metric", [(time.time() - 3600, 1.0)])
         dog.metric("test.metric", 1.0)

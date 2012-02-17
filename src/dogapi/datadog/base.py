@@ -34,10 +34,11 @@ class BaseDatadog(HttpClient):
         path = "/api/%s/%s" % (self.api_version, path.lstrip('/'))
         try:
             return super(BaseDatadog, self).request(method, path, body, **params)
-        except HttpTimeout, e:
-            raise
-        except HttpBackoff, e:
-            raise
+        except (HttpTimeout, HttpBackoff), e:
+            if self.swallow:
+                log.error(str(e))
+            else:
+                raise            
 
     def use_ec2_instance_id():
         def fget(self):
@@ -71,20 +72,4 @@ class BaseDatadog(HttpClient):
         
         return locals()
     use_ec2_instance_id = property(**use_ec2_instance_id())
-
-    @decorator
-    def _swallow_exceptions(f, self, *args, **kwargs):
-        if self.swallow is True:
-            try:
-                return f(self, *args, **kwargs)
-            except Exception, e:
-                self._report_error(str(e))
-        else:
-            return f(self, *args, **kwargs)
-
-    def _report_error(self, message):
-        if self.swallow:
-            log.error(message)
-        else:
-            raise Exception(message)       
 

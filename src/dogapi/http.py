@@ -19,6 +19,7 @@ log = logging.getLogger('dogapi')
 def dt2epoch(d):
     return time.mktime(d.timetuple())
 
+class ClientError(Exception): pass
 class HttpTimeout(Exception): pass
 class HttpBackoff(Exception): pass
 timeout_exceptions = (socket.timeout, ssl.SSLError)
@@ -66,7 +67,7 @@ class HttpClient(object):
                     raise ValueError('Invalid JSON response: {0}'.format(response_str))
                 
                 if response_obj and 'errors' in response_obj:
-                    self._report_error(response_obj['errors'])
+                    raise ClientError(response_obj['errors'])
             else:
                 response_obj = {}
             return response_obj
