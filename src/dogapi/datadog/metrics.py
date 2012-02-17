@@ -60,6 +60,7 @@ class MetricApi(object):
 
         :raises: Exception on failure
         """        
+        mtype = "gauge" # FIXME: expose to client
         body = { "series": [
             {
             'metric': name,
