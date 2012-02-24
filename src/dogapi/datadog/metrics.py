@@ -43,7 +43,7 @@ class MetricApi(object):
         
         return self.request('POST', '/series', body)
 
-    def batch_metrics(self, values, host=None, device=None):
+    def metrics(self, values, host=None, device=None):
         """
         Submit a series of metrics with 1 or more data points to the metric API
 

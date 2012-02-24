@@ -214,7 +214,7 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
 
         dog.metric('matt.metric', matt_series, host="matt.metric.host")
 
-        dog.batch_metrics({
+        dog.metrics({
                 'test.metric1': [(1000000000, 1), (1000000000, 2)],
                 'test.metric2': [(1000000000, 2), (1000000000, 4)],
         })
