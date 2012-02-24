@@ -36,8 +36,8 @@ class BaseDatadog(object):
         # http transport params
         self.backoff_period = backoff_period
         self.max_timeouts = max_timeouts
-        self.backoff_timestamp = None
-        self.timeout_counter = 0
+        self._backoff_timestamp = None
+        self._timeout_counter = 0
 
         # statsd params
         self.statsd_host = statsd_host or 'localhost:8125'
@@ -82,8 +82,9 @@ class BaseDatadog(object):
                 try:
                     conn.request(method, url, body, headers)
                 except timeout_exceptions:
-                    self.report_timeout()
+                    self._timeout_counter += 1
                     raise HttpTimeout('%s %s timed out after %d seconds.' % (method, url, self.timeout))
+                self._timeout_counter = 0
                 
                 response = conn.getresponse()
                 duration = round((time.time() - start_time) * 1000., 4) 
@@ -149,12 +150,6 @@ class BaseDatadog(object):
         return locals()
     use_ec2_instance_id = property(**use_ec2_instance_id())
 
-    def report_timeout(self):
-        """ Report to the manager that a timeout has occurred.
-        """
-        self.timeout_counter += 1
-
-
     # Private functions
 
     def _should_submit(self):
@@ -167,20 +162,20 @@ class BaseDatadog(object):
         # If we're not backing off, but the timeout counter exceeds the max
         # number of timeouts, then enter the backoff state, recording the time
         # we started backing off
-        if not self.backoff_timestamp and self.timeout_counter >= self.max_timeouts:
+        if not self._backoff_timestamp and self._timeout_counter >= self.max_timeouts:
             log.info("Max number of dogapi timeouts exceeded, backing off for {0} seconds".format(self.backoff_period))
-            self.backoff_timestamp = now
+            self._backoff_timestamp = now
             should_submit = False
 
         # If we are backing off but the we've waiting sufficiently long enough
         # (backoff_retry_age), exit the backoff state and reset the timeout
         # counter so that we try submitting metrics again
-        elif self.backoff_timestamp:
+        elif self._backoff_timestamp:
             backed_off_time, backoff_time_left = self._backoff_status()
             if backoff_time_left < 0:
                 log.info("Exiting backoff state after {0} seconds, will try to submit metrics again".format(backed_off_time))
-                self.backoff_timestamp = None
-                self.timeout_counter = 0
+                self._backoff_timestamp = None
+                self._timeout_counter = 0
                 should_submit = True
             else:
                 log.info("In backoff state, won't submit metrics for another {0} seconds".format(backoff_time_left))
@@ -192,7 +187,7 @@ class BaseDatadog(object):
 
     def _backoff_status(self):
         now = time.time()
-        backed_off_time = now - self.backoff_timestamp
+        backed_off_time = now - self._backoff_timestamp
         backoff_time_left = self.backoff_period - backed_off_time
         return round(backed_off_time, 2), round(backoff_time_left, 2)
 
