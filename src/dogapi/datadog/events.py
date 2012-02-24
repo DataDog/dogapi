@@ -1,3 +1,7 @@
+__all__ = [
+    'EventApi',
+]
+
 class EventApi(object):
     def stream(self, start, end, priority=None, sources=None, tags=None):
         """
@@ -34,7 +38,7 @@ class EventApi(object):
         if tags:
             params['tags'] = ','.join(tags)
 
-        response = self.request('GET', '/events', **params)
+        response = self.http_request('GET', '/events', **params)
         return response['events']
 
     def get_event(self, id):
@@ -47,7 +51,7 @@ class EventApi(object):
         :return: event details (see https://github.com/DataDog/dogapi/wiki/Event for structure)
         :rtype: decoded JSON
         """        
-        response = self.request('GET', '/events/' + str(id))
+        response = self.http_request('GET', '/events/' + str(id))
         return response['event']
 
     def event(self, title, text, date_happened=None, handle=None, priority=None, related_event_id=None, tags=None, host=None, device_name=None, **kwargs):
@@ -112,7 +116,7 @@ class EventApi(object):
         
         body.update(kwargs)
 
-        response = self.request('POST', '/events', body)
+        response = self.http_request('POST', '/events', body)
         return response['event']['id']
 
     def comment(self, handle, message, comment_id=None, related_event_id=None):
@@ -144,7 +148,7 @@ class EventApi(object):
         method = 'POST'
         if related_event_id is not None:
             body['related_event_id'] = int(related_event_id)
-        response = self.request(method, url, body)
+        response = self.http_request(method, url, body)
         return response['comment']['id']
 
     def update_comment(self, handle, message, comment_id):        
@@ -153,7 +157,7 @@ class EventApi(object):
             'message': message,
         }
         method = 'PUT'
-        response = self.request('PUT', '/comments/%s' % comment_id, body)
+        response = self.http_request('PUT', '/comments/%s' % comment_id, body)
         return response['comment']['id']
 
 
@@ -166,4 +170,4 @@ class EventApi(object):
 
         :raises: Exception on error
         """
-        return self.request('DELETE', '/comments/' + str(comment_id))
+        return self.http_request('DELETE', '/comments/' + str(comment_id))

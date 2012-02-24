@@ -1,3 +1,7 @@
+__all__ = [
+    'DashApi',
+]
+
 class DashApi(object):
     def dashboard(self, dash_id):
         """
@@ -9,7 +13,7 @@ class DashApi(object):
         :return: dashboard definition (see https://github.com/DataDog/dogapi/wiki/Dashboard for details)
         :rtype: decoded JSON
         """
-        response = self.request('GET', '/dash/' + str(dash_id))
+        response = self.http_request('GET', '/dash/' + str(dash_id))
         return response['dash']
 
     def create_dashboard(self, title, description, graphs):
@@ -35,7 +39,7 @@ class DashApi(object):
             'description': description,
             'graphs': graphs
         }
-        response = self.request('POST', '/dash', body)
+        response = self.http_request('POST', '/dash', body)
         return response['dash']['id']
 
     def update_dashboard(self, dash_id, title, description, graphs):
@@ -64,7 +68,7 @@ class DashApi(object):
             'description': description,
             'graphs': graphs
         }
-        response = self.request('PUT', '/dash/' + str(dash_id), body)
+        response = self.http_request('PUT', '/dash/' + str(dash_id), body)
         return response['dash']['id']
 
     def delete_dashboard(self, dash_id):
@@ -74,4 +78,4 @@ class DashApi(object):
         :param dash_id: dash to delete
         :type dash_id: integer
         """
-        self.request('DELETE', '/dash/' + str(dash_id))
+        self.http_request('DELETE', '/dash/' + str(dash_id))

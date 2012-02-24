@@ -12,7 +12,7 @@ from dogapi import dog
 import datetime, time
 
 
-class TestSimpleClient(unittest.TestCase):
+class TestDatadog(unittest.TestCase):
 
     def setUp(self):
         self.test_user = os.environ.get('DATADOG_TEST_USER')

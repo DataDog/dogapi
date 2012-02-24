@@ -1,13 +1,17 @@
+__all__ = [
+    'BaseDatadog',
+]
+
 import httplib
 import os
 import logging
 import re
 import socket
-import ssl
 import time
 import urllib2
 from contextlib import contextmanager
 from pprint import pformat
+from socket import AF_INET, SOCK_DGRAM
 from urllib import urlencode
 
 try:
@@ -18,13 +22,15 @@ except ImportError:
 http_log = logging.getLogger('dogapi.http')
 log = logging.getLogger('dogapi')
 
-class ClientError(Exception): pass
-class HttpTimeout(Exception): pass
-class HttpBackoff(Exception): pass
-timeout_exceptions = (socket.timeout, ssl.SSLError)
+from dogapi.exceptions import *
+from dogapi.constants import *
+
+__all__ = [
+    'BaseDatadog'
+]
 
 class BaseDatadog(object):
-    def __init__(self, api_key=None, application_key=None, api_version='v1', api_host=None, timeout=2, max_timeouts=3, backoff_period=300, swallow=True, use_ec2_instance_id=False):
+    def __init__(self, api_key=None, application_key=None, api_version='v1', api_host=None, timeout=2, max_timeouts=3, backoff_period=300, swallow=True, use_ec2_instance_id=False, statsd_host=None):
         self.api_host = api_host or os.environ.get('DATADOG_HOST', 'https://app.datadoghq.com')
 
         # http transport params
@@ -32,6 +38,9 @@ class BaseDatadog(object):
         self.max_timeouts = max_timeouts
         self.backoff_timestamp = None
         self.timeout_counter = 0
+
+        # statsd params
+        self.statsd_host = statsd_host or 'localhost:8125'
 
         self.api_key = api_key
         self.api_version = api_version
@@ -42,7 +51,7 @@ class BaseDatadog(object):
         self._use_ec2_instance_id = None
         self.use_ec2_instance_id = use_ec2_instance_id
     
-    def request(self, method, path, body=None, **params):
+    def http_request(self, method, path, body=None, **params):
         if self.api_key:
             params['api_key'] = self.api_key
         if self.application_key:
@@ -98,6 +107,14 @@ class BaseDatadog(object):
                 log.error(str(e))
             else:
                 raise            
+
+    def statsd_request(self, messages):
+        if not isinstance(messages, (list, tuple)):
+            messages = [messages]
+
+        udp_sock = socket.socket(AF_INET, SOCK_DGRAM)
+        for message in messages:
+            udp_sock.sendto(message, self.statsd_host)
 
     def use_ec2_instance_id():
         def fget(self):

@@ -1,7 +1,16 @@
-import time, datetime
+__all__ = [
+    'HttpMetricApi',
+    'StatsdMetricApi',
+]
+
+import time
+from dogapi.exceptions import *
+from dogapi.constants import *
 
 class MetricApi(object):
-    def metric(self, name, points, host=None, device=None):
+    default_metric_type = MetricType.Gauge
+
+    def metric(self, name, points, host=None, device=None, metric_type=None):
         """
         Submit a series of data points to the metric API.
 
@@ -24,26 +33,21 @@ class MetricApi(object):
         if host is None:
             host = self._default_host
         
-        now = time.mktime(datetime.datetime.now().timetuple())
+        now = time.time()
         if isinstance(points, (float, int)):
             points = [(now, points)]
         elif isinstance(points, tuple):
             points = [points]
         
-        body = { "series": [
-            {
-            'metric': name,
-            'points': [[x[0], x[1]] for x in points],
-            'type': "gauge",
-            'host': host,
-            'device': device,
-            }
-            ]
-        }
-        
-        return self.request('POST', '/series', body)
+        self.metrics([{
+            'metric':   name,
+            'points':   [[ts, val] for ts, val in points],
+            'type':     metric_type,
+            'host':     host,
+            'device':   device,
+        }])
 
-    def metrics(self, values, host=None, device=None):
+    def metrics(self, metrics):
         """
         Submit a series of metrics with 1 or more data points to the metric API
 
@@ -59,19 +63,58 @@ class MetricApi(object):
         :type device: string
 
         :raises: Exception on failure
-        """        
-        mtype = "gauge" # FIXME: expose to client
-        body = { "series": [
-            {
-            'metric': name,
-            'points': [[x[0], x[1]] for x in points],
-            'type': mtype,
-            'host': host,
-            'device': device,
-            } for name, points in values.items()
-            ]
-        }
-        
-        return self.request('POST', '/series', body)
-        
- 
+        """
+        self._metrics(metrics)
+
+    def _metrics(self, metrics):
+        raise NotImplementedError()
+
+
+class HttpMetricApi(MetricApi):
+    def _metrics(self, metrics):
+        request = { "series": metrics }
+        self.http_request('POST', '/series', request)
+
+class StatsdMetricApi(MetricApi):
+    def _metrics(self, metrics):    
+        requests = []
+        for metric_series in metrics:
+            metric_name = metric_series.get('metric', None)
+            metric_points = metric_series.get('points', [])
+            metric_type = metric_series.get('type', self.default_metric_type)
+
+            # Don't send incomplete requests
+            if not (metric_name or metric_points):
+                continue
+
+            if metric_type == MetricType.Gauge:
+                # Note: not all StatsD implementations support gauges
+                statsd_type_abbrev = "g"
+
+            elif metric_type == MetricType.Counter:
+                sampling_rate = metric_series.get('sampling_rate', None)
+                try:
+                    sampling_rate = float(sampling_rate)
+                except:
+                    sampling_rate = None
+
+                if sampling_rate:
+                    statsd_type_abbrev = "c|@{0}".format(sampling_rate)
+                else:                            
+                    statsd_type_abbrev = "c"
+
+            elif metric_type == MetricType.Timer:
+                statsd_type_abbrev = metric_series.get('unit', 'ms')
+
+            else:
+                log.warn("Stats doesn't support the {0} metric type".format(metric_type))
+                continue
+
+            for _ts, value in metric_points:
+                requests.append("{0}:{1}|{2}".format(metric_name, value, statsd_type_abbrev))
+
+        self.statsd_request(requests)
+
+
+
+

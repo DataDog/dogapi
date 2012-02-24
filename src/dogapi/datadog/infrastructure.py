@@ -1,3 +1,6 @@
+__all__ = [
+    'InfrastructureApi',
+]
 
 class InfrastructureApi(object):
     def search(self, query):
@@ -10,7 +13,7 @@ class InfrastructureApi(object):
         :return: a dictionary maping each queried facet to a list of name strings
         :rtype: dictionary
         """
-        response = self.request('GET', '/search', q=query)
+        response = self.http_request('GET', '/search', q=query)
         return response['results']
 
     def all_tags(self):
@@ -24,7 +27,7 @@ class InfrastructureApi(object):
             self._report_error("Tag API requires api and application keys")
             return
         
-        response = self.request('GET', '/tags/hosts')
+        response = self.http_request('GET', '/tags/hosts')
         return response['tags']
 
     def host_tags(self, host_id):
@@ -37,7 +40,7 @@ class InfrastructureApi(object):
         :return: tags for the host
         :rtype: list
         """        
-        response = self.request('GET', '/tags/hosts/' + str(host_id))
+        response = self.http_request('GET', '/tags/hosts/' + str(host_id))
         return response['tags']
 
     def add_tags(self, host_id, *tags):
@@ -53,7 +56,7 @@ class InfrastructureApi(object):
         body = {
             'tags': tags,
         }
-        response = self.request('POST', '/tags/hosts/' + str(host_id), body)
+        response = self.http_request('POST', '/tags/hosts/' + str(host_id), body)
 
     def change_tags(self, host_id, *tags):
         """change_tags(host_id, tag1, [tag2, [...]])
@@ -68,7 +71,7 @@ class InfrastructureApi(object):
         body = {
             'tags': tags
         }
-        return self.request('PUT', '/tags/hosts/' + str(host_id), body)
+        return self.http_request('PUT', '/tags/hosts/' + str(host_id), body)
 
     def detach_tags(self, host_id):
         """
@@ -77,4 +80,4 @@ class InfrastructureApi(object):
         :param host_id: id or name of the host
         :type host_id: integer or string
         """
-        return self.request('DELETE', '/tags/hosts/' + str(host_id))
+        return self.http_request('DELETE', '/tags/hosts/' + str(host_id))

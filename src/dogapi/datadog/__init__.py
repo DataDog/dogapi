@@ -1,12 +1,12 @@
-from dogapi.datadog.base import BaseDatadog
-from dogapi.datadog.metrics import MetricApi
-from dogapi.datadog.events import EventApi
-from dogapi.datadog.dashes import DashApi
-from dogapi.datadog.infrastructure import InfrastructureApi
+from dogapi.datadog.base import *
+from dogapi.datadog.metrics import *
+from dogapi.datadog.events import *
+from dogapi.datadog.dashes import *
+from dogapi.datadog.infrastructure import *
 
 
 
-class Datadog(BaseDatadog, MetricApi, EventApi, DashApi, InfrastructureApi):
+class Datadog(BaseDatadog, HttpMetricApi, EventApi, DashApi, InfrastructureApi):
     """
     A high-level client for interacting with the Datadog API.
 
@@ -19,4 +19,9 @@ class Datadog(BaseDatadog, MetricApi, EventApi, DashApi, InfrastructureApi):
     """
 
 
+class StatsdDatadog(BaseDatadog, StatsdMetricApi, EventApi, DashApi, InfrastructureApi):
+    """ Same as the Datadog client, except sends metrics to a statsd 
+        instance which will aggregate multiple requests and send to 
+        Datadog instead of directly to Datadog. 
+    """
 
