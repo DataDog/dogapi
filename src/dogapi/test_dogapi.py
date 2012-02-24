@@ -224,5 +224,18 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         dog.metric("test.metric", 1.0)
         dog.metric("test.metric", (time.time(), 1.0))
 
+class TestStatsdDatadog(unittest.TestCase):
+    def setUp(self):
+        import dogapi.datadog
+        self.dog = dogapi.datadog.StatsdDatadog(
+            api_key=os.environ.get('DATADOG_API_KEY'),
+            application_key=os.environ.get('DATADOG_APP_KEY')
+        )
+
+    def test_metrics(self):
+        self.dog.metric("test", 1, metric_type="counter")
+
+
+
 if __name__ == '__main__':
     unittest.main()

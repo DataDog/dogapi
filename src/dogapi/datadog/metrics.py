@@ -4,8 +4,7 @@ __all__ = [
 ]
 
 import time
-from dogapi.exceptions import *
-from dogapi.constants import *
+from dogapi.common import *
 
 class MetricApi(object):
     default_metric_type = MetricType.Gauge

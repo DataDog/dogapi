@@ -110,9 +110,11 @@ class BaseDatadog(object):
         if not isinstance(messages, (list, tuple)):
             messages = [messages]
 
+        address = tuple(self.statsd_host.split(":"))
+        address = address[0], int(address[1])
         udp_sock = socket.socket(AF_INET, SOCK_DGRAM)
         for message in messages:
-            udp_sock.sendto(message, self.statsd_host)
+            udp_sock.sendto(message, address)
 
     def use_ec2_instance_id():
         def fget(self):
