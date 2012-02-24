@@ -31,6 +31,9 @@ __all__ = [
 
 class BaseDatadog(object):
     def __init__(self, api_key=None, application_key=None, api_version='v1', api_host=None, timeout=2, max_timeouts=3, backoff_period=300, swallow=True, use_ec2_instance_id=False, statsd_host=None):
+
+        self.http_conn_cls = httplib.HTTPSConnection
+        self._api_host = None
         self.api_host = api_host or os.environ.get('DATADOG_HOST', 'https://app.datadoghq.com')
 
         # http transport params
@@ -61,15 +64,7 @@ class BaseDatadog(object):
             if not self._should_submit():
                 raise HttpBackoff("Too many timeouts. Won't try again for {1} seconds.".format(*self._backoff_status()))
             
-            match = re.match('^(https?)://(.*)', self.api_host)
-            http_conn_cls = httplib.HTTPSConnection
-
-            if match:
-                host = match.group(2)
-                if match.group(1) == 'http':
-                    http_conn_cls = httplib.HTTPConnection
-
-            conn = http_conn_cls(host)
+            conn = self.http_conn_cls(self.api_host)
             url = "/%s?%s" % (path.lstrip('/'), urlencode(params))
             
             headers = {}
@@ -84,6 +79,8 @@ class BaseDatadog(object):
                 except timeout_exceptions:
                     self._timeout_counter += 1
                     raise HttpTimeout('%s %s timed out after %d seconds.' % (method, url, self.timeout))
+                except socket.error, e:
+                    raise ClientError("Could not request %s %s%s: %s" % (method, self.api_host, url, e))
                 self._timeout_counter = 0
                 
                 response = conn.getresponse()
@@ -103,7 +100,7 @@ class BaseDatadog(object):
                 return response_obj
             finally:
                 conn.close()
-        except (HttpTimeout, HttpBackoff), e:
+        except ClientError, e:
             if self.swallow:
                 log.error(str(e))
             else:
@@ -149,6 +146,26 @@ class BaseDatadog(object):
         
         return locals()
     use_ec2_instance_id = property(**use_ec2_instance_id())
+
+    def api_host():
+        def fget(self):
+            return self._api_host
+
+        def fset(self, value):
+            match = re.match('^(https?)://(.*)', value)
+            http_conn_cls = httplib.HTTPSConnection
+
+            if match:
+                host = match.group(2)
+                if match.group(1) == 'http':
+                    http_conn_cls = httplib.HTTPConnection
+            else:
+                host = value
+
+            self._api_host = host
+            self.http_conn_cls = http_conn_cls
+        return locals()
+    api_host = property(**api_host())
 
     # Private functions
 
