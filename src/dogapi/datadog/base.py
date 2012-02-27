@@ -55,18 +55,20 @@ class BaseDatadog(object):
         self.use_ec2_instance_id = use_ec2_instance_id
     
     def http_request(self, method, path, body=None, **params):
-        if self.api_key:
-            params['api_key'] = self.api_key
-        if self.application_key:
-            params['application_key'] = self.application_key
-        path = "/api/%s/%s" % (self.api_version, path.lstrip('/'))
         try:
+            # Check if it's ok to submit
             if not self._should_submit():
                 raise HttpBackoff("Too many timeouts. Won't try again for {1} seconds.".format(*self._backoff_status()))
-            
+
+            # Construct the url
+            if self.api_key:
+                params['api_key'] = self.api_key
+            if self.application_key:
+                params['application_key'] = self.application_key
+            url = "/api/%s/%s?%s" % (self.api_version, path.lstrip('/'), urlencode(params))
             conn = self.http_conn_cls(self.api_host)
-            url = "/%s?%s" % (path.lstrip('/'), urlencode(params))
             
+            # Construct the body, if necessary            
             headers = {}
             if isinstance(body, dict):
                 body = json.dumps(body)
@@ -74,15 +76,23 @@ class BaseDatadog(object):
                     
             try:
                 start_time = time.time()
+
+                # Make the request
                 try:
                     conn.request(method, url, body, headers)
                 except timeout_exceptions:
+                    # Keep a count of the timeouts to know when to back off
                     self._timeout_counter += 1
                     raise HttpTimeout('%s %s timed out after %d seconds.' % (method, url, self.timeout))
                 except socket.error, e:
+                    # Translate the low level socket error into a more 
+                    # descriptive one
                     raise ClientError("Could not request %s %s%s: %s" % (method, self.api_host, url, e))
+                
+                # If the request succeeded, reset the timeout counter
                 self._timeout_counter = 0
                 
+                # Parse the response as json
                 response = conn.getresponse()
                 duration = round((time.time() - start_time) * 1000., 4) 
                 log.info("%s %s %s (%sms)" % (response.status, method, url, duration))
