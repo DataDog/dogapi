@@ -1,13 +1,8 @@
 import simplejson
 
-from dogapi import Datadog
-
 from dogshell.common import report_errors, report_warnings, CommandLineClient
 
 class SearchClient(CommandLineClient):
-
-    def __init__(self, config):
-        self.config = config
 
     def setup_parser(self, subparsers):
         parser = subparsers.add_parser('search', help='search datadog')

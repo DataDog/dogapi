@@ -2,15 +2,9 @@ import sys
 
 import simplejson
 
-from dogapi import Datadog
-
 from dogshell.common import report_errors, report_warnings, CommandLineClient
 
 class CommentClient(CommandLineClient):
-
-    def __init__(self, config):
-        self.config = config
-        self.dog = Datadog(api_key=self.config['apikey'], application_key=self.config['appkey'])
 
     def setup_parser(self, subparsers):
         parser = subparsers.add_parser('comment', help='Post, update, and delete comments.')
@@ -76,7 +70,6 @@ class CommentClient(CommandLineClient):
         format = args.format
         if comment is None:
             comment = sys.stdin.read()
-        svc = CommentService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
         res = self.dog.update_comment(handle, comment, id)
         report_warnings(res)
         report_errors(res)

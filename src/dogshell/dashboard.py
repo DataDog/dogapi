@@ -7,14 +7,9 @@ from datetime import datetime
 import argparse
 import simplejson
 
-from dogapi import Datadog
-
 from dogshell.common import report_errors, report_warnings, CommandLineClient
 
 class DashClient(CommandLineClient):
-
-    def __init__(self, config):
-        self.config = config
 
     def setup_parser(self, subparsers):
         parser = subparsers.add_parser('dashboard', help='Create, edit, and delete dashboards.')

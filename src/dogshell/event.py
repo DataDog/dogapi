@@ -4,8 +4,6 @@ import sys
 
 import simplejson
 
-from dogapi import Datadog
-
 from dogshell.common import report_errors, report_warnings, CommandLineClient
 
 def prettyprint_event(event):
@@ -50,9 +48,6 @@ def parse_time(timestring):
     return int(t)
 
 class EventClient(CommandLineClient):
-
-    def __init__(self, config):
-        self.config = config
 
     def setup_parser(self, subparsers):
         parser = subparsers.add_parser('event', help='Post events, get event details, and view the event stream.')

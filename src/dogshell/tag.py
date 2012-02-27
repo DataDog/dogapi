@@ -2,14 +2,9 @@ import sys
 
 import simplejson
 
-from dogapi import Datadog
-
 from dogshell.common import report_errors, report_warnings, CommandLineClient
 
 class TagClient(CommandLineClient):
-
-    def __init__(self, config):
-        self.config = config
 
     def setup_parser(self, subparsers):
         parser = subparsers.add_parser('tag', help='View and modify host tags.')
