@@ -11,13 +11,15 @@ from nose.plugins.skip import SkipTest
 from dogapi import dog
 import datetime, time
 
+TEST_USER = os.environ.get('DATADOG_TEST_USER')
+API_KEY = os.environ.get('DATADOG_API_KEY')
+APP_KEY = os.environ.get('DATADOG_APP_KEY')
 
 class TestDatadog(unittest.TestCase):
 
     def setUp(self):
-        self.test_user = os.environ.get('DATADOG_TEST_USER')
-        dog.api_key = os.environ.get('DATADOG_API_KEY')
-        dog.application_key = os.environ.get('DATADOG_APP_KEY')
+        dog.api_key = API_KEY
+        dog.application_key = APP_KEY
         dog.swallow = False
 
     def test_tags(self):
@@ -62,8 +64,8 @@ class TestDatadog(unittest.TestCase):
         before_title = 'start test title ' + str(before_ts)
         before_message = 'test message ' + str(before_ts)
 
-        now_event_id = dog.event(now_title, now_message, now_ts)
-        before_event_id = dog.event(before_title, before_message, before_ts)
+        now_event_id = dog.event_with_response(now_title, now_message, now_ts)
+        before_event_id = dog.event_with_response(before_title, before_message, before_ts)
 
         stream = dog.stream(before_ts, now_ts + 2)
 
@@ -76,13 +78,13 @@ class TestDatadog(unittest.TestCase):
         assert now_event['text'] == now_message
         assert before_event['text'] == before_message
 
-        event_id = dog.event('test host and device', 'test host and device', host='test.host', device_name='test.device')
+        event_id = dog.event_with_response('test host and device', 'test host and device', host='test.host', device_name='test.device')
         event = dog.get_event(event_id)
 
         assert event['host'] == 'test.host'
         assert event['device_name'] == 'test.device'
 
-        event_id = dog.event('test event tags', 'test event tags', tags=['test-tag-1','test-tag-2'])
+        event_id = dog.event_with_response('test event tags', 'test event tags', tags=['test-tag-1','test-tag-2'])
         event = dog.get_event(event_id)
 
         assert 'test-tag-1' in event['tags']
@@ -90,7 +92,7 @@ class TestDatadog(unittest.TestCase):
 
     def test_git_commits(self):
         """Pretend to send git commits"""
-        event_id = dog.event("Testing git commits", """$$$
+        event_id = dog.event_with_response("Testing git commits", """$$$
 eac54655 *   Merge pull request #2 from DataDog/alq-add-arg-validation (alq@datadoghq.com)
          |\  
 760735ef | * origin/alq-add-arg-validation Simple typechecking between metric and metrics (matt@datadoghq.com)
@@ -108,15 +110,15 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         before_ts = int(time.mktime((now - datetime.timedelta(minutes=5)).timetuple()))
         message = 'test message ' + str(now_ts)
 
-        comment_id = dog.comment(self.test_user, message)
+        comment_id = dog.comment(TEST_USER, message)
         event = dog.get_event(comment_id)
         assert event['text'] == message
 
-        dog.update_comment(self.test_user, message + ' updated', comment_id)
+        dog.update_comment(TEST_USER, message + ' updated', comment_id)
         event = dog.get_event(comment_id)
         assert event['text'] == message + ' updated'
 
-        reply_id = dog.comment(self.test_user, message + ' reply', related_event_id=comment_id)
+        reply_id = dog.comment(TEST_USER, message + ' reply', related_event_id=comment_id)
         stream = dog.stream(before_ts, now_ts + 10)
 
         assert reply_id in [x['id'] for x in stream[0]['comments']]
@@ -228,8 +230,8 @@ class TestStatsdDatadog(unittest.TestCase):
     def setUp(self):
         import dogapi.datadog
         self.dog = dogapi.datadog.StatsdDatadog(
-            api_key=os.environ.get('DATADOG_API_KEY'),
-            application_key=os.environ.get('DATADOG_APP_KEY')
+            api_key=API_KEY,
+            application_key=APP_KEY
         )
 
     def test_metrics(self):

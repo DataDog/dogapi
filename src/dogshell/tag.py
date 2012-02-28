@@ -31,7 +31,7 @@ class TagClient(CommandLineClient):
     def _add(self, args):
         self.dog.timeout = args.timeout
         format = args.format
-        res = self.dog.add_tags(args.host, args.tag)
+        res = self.dog.add_tags(args.host, *args.tag)
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
@@ -47,7 +47,7 @@ class TagClient(CommandLineClient):
     def _replace(self, args):
         self.dog.timeout = args.timeout
         format = args.format
-        res = self.dog.change_tags(args.host, args.tag)
+        res = self.dog.change_tags(args.host, *args.tag)
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':

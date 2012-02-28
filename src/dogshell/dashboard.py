@@ -105,7 +105,7 @@ class DashClient(CommandLineClient):
                   .format(len(used_filenames), os.path.realpath(args.pull_dir)))
 
     def _new_file(self, args):
-        self.dog.timeout = arg.timeout
+        self.dog.timeout = args.timeout
         format = args.format
         res = self.dog.create_dashboard(args.filename, 
                          "Description for {0}".format(args.filename), [])
@@ -244,7 +244,7 @@ class DashClient(CommandLineClient):
     def _delete(self, args):
         self.dog.timeout = args.timeout
         format = args.format
-        res = self.dog.timeout.delete_dashboard(args.dashboard_id)
+        res = self.dog.delete_dashboard(args.dashboard_id)
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':

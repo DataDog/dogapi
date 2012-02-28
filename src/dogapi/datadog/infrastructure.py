@@ -14,7 +14,10 @@ class InfrastructureApi(object):
         :rtype: dictionary
         """
         response = self.http_request('GET', '/search', q=query)
-        return response['results']
+        if self.json_responses:
+            return response
+        else:
+            return response['results']
 
     def all_tags(self):
         """
@@ -28,7 +31,10 @@ class InfrastructureApi(object):
             return
         
         response = self.http_request('GET', '/tags/hosts')
-        return response['tags']
+        if self.json_responses:
+            return response
+        else:
+            return response['tags']
 
     def host_tags(self, host_id):
         """
@@ -41,7 +47,10 @@ class InfrastructureApi(object):
         :rtype: list
         """        
         response = self.http_request('GET', '/tags/hosts/' + str(host_id))
-        return response['tags']
+        if self.json_responses:
+            return response
+        else:
+            return response['tags']
 
     def add_tags(self, host_id, *tags):
         """add_tags(host_id, tag1, [tag2, [...]])
@@ -57,6 +66,10 @@ class InfrastructureApi(object):
             'tags': tags,
         }
         response = self.http_request('POST', '/tags/hosts/' + str(host_id), body)
+        if self.json_responses:
+            return response
+        else:
+            return response['tags']
 
     def change_tags(self, host_id, *tags):
         """change_tags(host_id, tag1, [tag2, [...]])
@@ -71,7 +84,11 @@ class InfrastructureApi(object):
         body = {
             'tags': tags
         }
-        return self.http_request('PUT', '/tags/hosts/' + str(host_id), body)
+        response = self.http_request('PUT', '/tags/hosts/' + str(host_id), body)
+        if self.json_responses:
+            return response
+        else:
+            return response['tags']
 
     def detach_tags(self, host_id):
         """
@@ -80,4 +97,12 @@ class InfrastructureApi(object):
         :param host_id: id or name of the host
         :type host_id: integer or string
         """
-        return self.http_request('DELETE', '/tags/hosts/' + str(host_id))
+        response = self.http_request('DELETE', '/tags/hosts/' + str(host_id))
+        if self.json_responses:
+            return response
+        else:
+            return None
+
+
+
+

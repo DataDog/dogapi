@@ -14,7 +14,10 @@ class DashApi(object):
         :rtype: decoded JSON
         """
         response = self.http_request('GET', '/dash/' + str(dash_id))
-        return response['dash']
+        if self.json_responses:
+            return response
+        else:
+            return response['dash']
 
     def create_dashboard(self, title, description, graphs):
         """
@@ -40,7 +43,10 @@ class DashApi(object):
             'graphs': graphs
         }
         response = self.http_request('POST', '/dash', body)
-        return response['dash']['id']
+        if self.json_responses:
+            return response
+        else:
+            return response['dash']['id']
 
     def update_dashboard(self, dash_id, title, description, graphs):
         """
@@ -69,7 +75,10 @@ class DashApi(object):
             'graphs': graphs
         }
         response = self.http_request('PUT', '/dash/' + str(dash_id), body)
-        return response['dash']['id']
+        if self.json_responses:
+            return response
+        else:
+            return response['dash']['id']
 
     def delete_dashboard(self, dash_id):
         """
@@ -78,4 +87,9 @@ class DashApi(object):
         :param dash_id: dash to delete
         :type dash_id: integer
         """
-        self.http_request('DELETE', '/dash/' + str(dash_id))
+        response = self.http_request('DELETE', '/dash/' + str(dash_id))
+        if self.json_responses:
+            return response
+        else:
+            return None
+

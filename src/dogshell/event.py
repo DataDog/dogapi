@@ -87,7 +87,7 @@ class EventClient(CommandLineClient):
             tags = [t.strip() for t in args.tags.split(',')]
         else:
             tags = None
-        res = self.dog.event(args.title,
+        res = self.dog.event_with_response(args.title,
                        message,
                        args.date_happened,
                        args.handle,
@@ -108,7 +108,7 @@ class EventClient(CommandLineClient):
     def _show(self, args):
         self.dog.timeoue = args.timeout
         format = args.format
-        res = self.dog.get(args.event_id)
+        res = self.dog.get_event(args.event_id)
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':

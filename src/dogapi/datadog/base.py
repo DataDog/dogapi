@@ -30,7 +30,7 @@ __all__ = [
 ]
 
 class BaseDatadog(object):
-    def __init__(self, api_key=None, application_key=None, api_version='v1', api_host=None, timeout=2, max_timeouts=3, backoff_period=300, swallow=True, use_ec2_instance_id=False, statsd_host=None):
+    def __init__(self, api_key=None, application_key=None, api_version='v1', api_host=None, timeout=2, max_timeouts=3, backoff_period=300, swallow=True, use_ec2_instance_id=False, statsd_host=None, json_responses=False):
 
         self.http_conn_cls = httplib.HTTPSConnection
         self._api_host = None
@@ -53,6 +53,7 @@ class BaseDatadog(object):
         self._default_host = socket.gethostname()
         self._use_ec2_instance_id = None
         self.use_ec2_instance_id = use_ec2_instance_id
+        self.json_responses = json_responses
     
     def http_request(self, method, path, body=None, **params):
         try:

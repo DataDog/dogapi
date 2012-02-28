@@ -39,7 +39,10 @@ class EventApi(object):
             params['tags'] = ','.join(tags)
 
         response = self.http_request('GET', '/events', **params)
-        return response['events']
+        if self.json_responses:
+            return response
+        else:
+            return response['events']
 
     def get_event(self, id):
         """
@@ -52,9 +55,12 @@ class EventApi(object):
         :rtype: decoded JSON
         """        
         response = self.http_request('GET', '/events/' + str(id))
-        return response['event']
+        if self.json_responses:
+            return response
+        else:
+            return response['event']
 
-    def event(self, title, text, date_happened=None, handle=None, priority=None, related_event_id=None, tags=None, host=None, device_name=None, **kwargs):
+    def _event(self, title, text, date_happened=None, handle=None, priority=None, related_event_id=None, tags=None, host=None, device_name=None, **kwargs):
         """
         Post an event.
 
@@ -117,7 +123,18 @@ class EventApi(object):
         body.update(kwargs)
 
         response = self.http_request('POST', '/events', body)
-        return response['event']['id']
+        if self.json_responses:
+            return response
+        else:
+            return response['event']['id']
+
+    def event(self, *args, **kwargs):
+        ''' No response, async interface by default
+        '''
+        self._event(*args, **kwargs)
+
+    def event_with_response(self, *args, **kwargs):
+        return self._event(*args, **kwargs)
 
     def comment(self, handle, message, comment_id=None, related_event_id=None):
         """
@@ -144,21 +161,25 @@ class EventApi(object):
             'handle':  handle,
             'message': message,
         }
-        url = '/comments'
-        method = 'POST'
         if related_event_id is not None:
             body['related_event_id'] = int(related_event_id)
-        response = self.http_request(method, url, body)
-        return response['comment']['id']
+        response = self.http_request('POST', '/comments', body)
+
+        if self.json_responses:
+            return response
+        else:
+            return response['comment']['id']
 
     def update_comment(self, handle, message, comment_id):        
         body = {
             'handle':  handle,
             'message': message,
         }
-        method = 'PUT'
         response = self.http_request('PUT', '/comments/%s' % comment_id, body)
-        return response['comment']['id']
+        if self.json_responses:
+            return response
+        else:
+            return response['comment']['id']
 
 
     def delete_comment(self, comment_id):
@@ -170,4 +191,12 @@ class EventApi(object):
 
         :raises: Exception on error
         """
-        return self.http_request('DELETE', '/comments/' + str(comment_id))
+        response = self.http_request('DELETE', '/comments/' + str(comment_id))
+        if self.json_responses:
+            return response
+        else:
+            return None
+
+
+
+

@@ -38,13 +38,14 @@ class MetricApi(object):
         elif isinstance(points, tuple):
             points = [points]
         
-        self.metrics([{
+        return self.metrics([{
             'metric':   name,
             'points':   [[ts, val] for ts, val in points],
             'type':     metric_type,
             'host':     host,
             'device':   device,
         }])
+
 
     def metrics(self, metrics):
         """
@@ -63,7 +64,7 @@ class MetricApi(object):
 
         :raises: Exception on failure
         """
-        self._metrics(metrics)
+        return self._metrics(metrics)
 
     def _metrics(self, metrics):
         raise NotImplementedError()
@@ -73,6 +74,10 @@ class HttpMetricApi(MetricApi):
     def _metrics(self, metrics):
         request = { "series": metrics }
         self.http_request('POST', '/series', request)
+        if self.json_responses:
+            return {}
+        else:
+            return None
 
 class StatsdMetricApi(MetricApi):
     def _metrics(self, metrics):    
@@ -113,6 +118,10 @@ class StatsdMetricApi(MetricApi):
                 requests.append("{0}:{1}|{2}".format(metric_name, value, statsd_type_abbrev))
 
         self.statsd_request(requests)
+        if self.json_responses:
+            return {}
+        else:
+            return None
 
 
 
