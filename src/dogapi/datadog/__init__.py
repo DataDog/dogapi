@@ -20,8 +20,8 @@ class Datadog(BaseDatadog, HttpMetricApi, EventApi, DashApi, InfrastructureApi):
 
 
 class StatsdDatadog(BaseDatadog, StatsdMetricApi, EventApi, DashApi, InfrastructureApi):
-    """ Same as the Datadog client, except sends metrics to a statsd 
-        instance which will aggregate multiple requests and send to 
-        Datadog instead of directly to Datadog. 
+    """ Same as the Datadog client, except sends metrics to a statsd
+        instance which will aggregate multiple requests and send to
+        Datadog instead of directly to Datadog.
     """
 

@@ -22,7 +22,8 @@ class MetricApi(object):
         :param name: name of the metric (e.g. ``"system.load.1"``)
         :type name: string
 
-        :param values: data series. list of (POSIX timestamp, intever value) tuples. (e.g. ``[(1317652676, 15), (1317652706, 18), ...]``)
+        :param values: data series. list of (POSIX timestamp, intever value) tuples.
+                (e.g. ``[(1317652676, 15), (1317652706, 18), ...]``)
         :type values: list
 
         :param host: optional host to scope the metric (e.g.
@@ -71,10 +72,8 @@ class MetricApi(object):
 
         :raises: Exception on failure
         """
-
-        logger.debug("adding metrics to bucket")
-
         # Add the metrics to our bucket.
+        logger.debug("adding metrics to bucket")
         self._metrics_bucket += metrics
 
         # Flush our bucket if we've eclipsed our flush interval.
