@@ -81,7 +81,7 @@ class MetricApi(object):
             logger.info("flushing metrics")
             self._last_flush_time = time.time()
             try:
-                return self._submit_metrics(self._metrics_bucket)
+                return self.submit(self._metrics_bucket, self._submit_metrics)
             finally:
                 self._metrics_bucket = []
 
