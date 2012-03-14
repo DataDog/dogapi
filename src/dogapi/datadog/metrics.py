@@ -3,8 +3,14 @@ __all__ = [
     'StatsdMetricApi',
 ]
 
+import logging
 import time
+
 from dogapi.common import *
+
+
+logger = logging.getLogger('dogapi')
+
 
 class MetricApi(object):
     default_metric_type = MetricType.Gauge
@@ -49,7 +55,8 @@ class MetricApi(object):
 
     def metrics(self, metrics):
         """
-        Submit a series of metrics with 1 or more data points to the metric API
+        Submit a series of metrics with 1 or more data points to the metric
+        API.
 
         :param values A dictionary of names to a list values, in the form of {name: [(POSIX timestamp, integer value), ...], name2: [(POSIX timestamp, integer value), ...]}
         :type values: dict
@@ -64,7 +71,20 @@ class MetricApi(object):
 
         :raises: Exception on failure
         """
-        return self._submit_metrics(metrics)
+
+        logger.debug("adding metrics to bucket")
+
+        # Add the metrics to our bucket.
+        self._metrics_bucket += metrics
+
+        # Flush our bucket if we've eclipsed our flush interval.
+        if (time.time() - self._last_flush_time) > self.flush_interval:
+            logger.info("flushing metrics")
+            self._last_flush_time = time.time()
+            try:
+                return self._submit_metrics(self._metrics_bucket)
+            finally:
+                self._metrics_bucket = []
 
     def _submit_metrics(self, metrics):
         raise NotImplementedError()

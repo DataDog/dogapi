@@ -54,7 +54,12 @@ class BaseDatadog(object):
         self._use_ec2_instance_id = None
         self.use_ec2_instance_id = use_ec2_instance_id
         self.json_responses = json_responses
-    
+
+        # flush params
+        self.flush_interval = 10 # Interval to wait between flushes in seconds.
+        self._metrics_bucket = []
+        self._last_flush_time = time.time()
+
     def http_request(self, method, path, body=None, **params):
         try:
             # Check if it's ok to submit
@@ -68,13 +73,13 @@ class BaseDatadog(object):
                 params['application_key'] = self.application_key
             url = "/api/%s/%s?%s" % (self.api_version, path.lstrip('/'), urlencode(params))
             conn = self.http_conn_cls(self.api_host)
-            
-            # Construct the body, if necessary            
+
+            # Construct the body, if necessary
             headers = {}
             if isinstance(body, dict):
                 body = json.dumps(body)
                 headers['Content-Type'] = 'application/json'
-                    
+
             try:
                 start_time = time.time()
 
@@ -86,16 +91,16 @@ class BaseDatadog(object):
                     self._timeout_counter += 1
                     raise HttpTimeout('%s %s timed out after %d seconds.' % (method, url, self.timeout))
                 except socket.error, e:
-                    # Translate the low level socket error into a more 
+                    # Translate the low level socket error into a more
                     # descriptive one
                     raise ClientError("Could not request %s %s%s: %s" % (method, self.api_host, url, e))
-                
+
                 # If the request succeeded, reset the timeout counter
                 self._timeout_counter = 0
-                
+
                 # Parse the response as json
                 response = conn.getresponse()
-                duration = round((time.time() - start_time) * 1000., 4) 
+                duration = round((time.time() - start_time) * 1000., 4)
                 log.info("%s %s %s (%sms)" % (response.status, method, url, duration))
                 response_str = response.read()
                 if response_str:
@@ -103,7 +108,7 @@ class BaseDatadog(object):
                         response_obj = json.loads(response_str)
                     except ValueError:
                         raise ValueError('Invalid JSON response: {0}'.format(response_str))
-                    
+
                     if response_obj and 'errors' in response_obj:
                         raise ClientError(response_obj['errors'])
                 else:
@@ -115,7 +120,7 @@ class BaseDatadog(object):
             if self.swallow:
                 log.error(str(e))
             else:
-                raise            
+                raise
 
     def statsd_request(self, messages):
         if not isinstance(messages, (list, tuple)):
@@ -130,7 +135,7 @@ class BaseDatadog(object):
     def use_ec2_instance_id():
         def fget(self):
             return self._use_ec2_instance_id
-        
+
         def fset(self, value):
             self._use_ec2_instance_id = value
 
@@ -153,10 +158,10 @@ class BaseDatadog(object):
                 self._default_host = host
             else:
                 self._default_host = socket.gethostname()
-        
+
         def fdel(self):
             del self._use_ec2_instance_id
-        
+
         return locals()
     use_ec2_instance_id = property(**use_ec2_instance_id())
 
