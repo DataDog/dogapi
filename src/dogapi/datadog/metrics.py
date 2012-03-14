@@ -31,13 +31,13 @@ class MetricApi(object):
         """
         if host is None:
             host = self._default_host
-        
+
         now = time.time()
         if isinstance(points, (float, int)):
             points = [(now, points)]
         elif isinstance(points, tuple):
             points = [points]
-        
+
         return self.metrics([{
             'metric':   name,
             'points':   [[ts, val] for ts, val in points],
@@ -64,14 +64,15 @@ class MetricApi(object):
 
         :raises: Exception on failure
         """
-        return self._metrics(metrics)
+        return self._submit_metrics(metrics)
 
-    def _metrics(self, metrics):
+    def _submit_metrics(self, metrics):
         raise NotImplementedError()
 
 
 class HttpMetricApi(MetricApi):
-    def _metrics(self, metrics):
+
+    def _submit_metrics(self, metrics):
         request = { "series": metrics }
         self.http_request('POST', '/series', request)
         if self.json_responses:
@@ -79,8 +80,10 @@ class HttpMetricApi(MetricApi):
         else:
             return None
 
+
 class StatsdMetricApi(MetricApi):
-    def _metrics(self, metrics):    
+
+    def _submit_metrics(self, metrics):
         requests = []
         for metric_series in metrics:
             metric_name = metric_series.get('metric', None)
@@ -104,7 +107,7 @@ class StatsdMetricApi(MetricApi):
 
                 if sampling_rate:
                     statsd_type_abbrev = "c|@{0}".format(sampling_rate)
-                else:                            
+                else:
                     statsd_type_abbrev = "c"
 
             elif metric_type == MetricType.Timer:
