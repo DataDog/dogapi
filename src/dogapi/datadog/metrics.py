@@ -5,6 +5,7 @@ __all__ = [
 
 import logging
 import time
+import Queue
 
 from dogapi.common import *
 
@@ -72,18 +73,34 @@ class MetricApi(object):
 
         :raises: Exception on failure
         """
-        # Add the metrics to our bucket.
-        logger.debug("adding metrics to bucket")
-        self._metrics_bucket += metrics
+        # Queue the metrics for flushing.
+        logger.debug("queueing metrics to be flushed")
+        self._metrics_queue.put(metrics)
 
-        # Flush our bucket if we've eclipsed our flush interval.
-        if (time.time() - self._last_flush_time) > self.flush_interval:
+        # If we're flushing in the main thread and we're ready for it,
+        # submit the metrics.
+        if not self._flush_thread and (time.time() - self._last_flush_time) > self.flush_interval:
+            self._flush_metrics()
+
+    def _flush_metrics(self):
             logger.info("flushing metrics")
-            self._last_flush_time = time.time()
+
             try:
-                return self.submit(self._metrics_bucket, self._submit_metrics)
+                # FIXME mattp: it's possible the thread can't completely
+                # exhaust the queue. maybe default to some sane amount of
+                # metrics to flush at once?
+                #
+                # also, is this performant enough?
+                to_be_flushed = []
+                while True:
+                    try:
+                        to_be_flushed += self._metrics_queue.get_nowait()
+                    except Queue.Empty:
+                        break
+                return self._submit_metrics(to_be_flushed)
             finally:
-                self._metrics_bucket = []
+                logger.debug("finished flush.")
+                self._last_flush_time = time.time()
 
     def _submit_metrics(self, metrics):
         raise NotImplementedError()
@@ -92,6 +109,7 @@ class MetricApi(object):
 class HttpMetricApi(MetricApi):
 
     def _submit_metrics(self, metrics):
+        logger.debug("submitting %s metrics via http" % len(metrics))
         request = { "series": metrics }
         self.http_request('POST', '/series', request)
         if self.json_responses:
@@ -103,6 +121,7 @@ class HttpMetricApi(MetricApi):
 class StatsdMetricApi(MetricApi):
 
     def _submit_metrics(self, metrics):
+        logger.debug("submitting %s metrics via statsd" % len(metrics))
         requests = []
         for metric_series in metrics:
             metric_name = metric_series.get('metric', None)

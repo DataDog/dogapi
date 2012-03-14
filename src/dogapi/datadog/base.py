@@ -5,8 +5,10 @@ __all__ = [
 import httplib
 import os
 import logging
+import Queue
 import re
 import socket
+import threading
 import time
 import urllib2
 from contextlib import contextmanager
@@ -56,9 +58,22 @@ class BaseDatadog(object):
         self.json_responses = json_responses
 
         # flush params
-        self.flush_interval = 10 # Interval to wait between flushes in seconds.
-        self._metrics_bucket = []
+        self.flush_interval = 10  # Interval to wait between flushes in seconds.
+
+        self._metrics_queue = Queue.Queue()
         self._last_flush_time = time.time()
+        self._flush_thread = None
+
+    def flush_in_thread(self):
+        def log_and_flush():
+            log.debug("flushing in thread")
+            self._flush_metrics()
+            self.flush_in_thread()
+
+        self._flush_thread = threading.Timer(self.flush_interval, log_and_flush)
+        self._flush_thread.daemon = True
+        self._flush_thread.start()
+
 
     def http_request(self, method, path, body=None, **params):
         try:
