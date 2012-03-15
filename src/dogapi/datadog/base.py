@@ -16,6 +16,8 @@ from pprint import pformat
 from socket import AF_INET, SOCK_DGRAM
 from urllib import urlencode
 
+from dogapi.datadog.periodic_timer import PeriodicTimer
+
 try:
     import simplejson as json
 except ImportError:
@@ -65,14 +67,15 @@ class BaseDatadog(object):
         self._flush_thread = None
 
     def flush_in_thread(self):
+
         def log_and_flush():
             log.debug("flushing in thread")
             self._flush_metrics()
-            self.flush_in_thread()
 
-        self._flush_thread = threading.Timer(self.flush_interval, log_and_flush)
-        self._flush_thread.daemon = True
-        self._flush_thread.start()
+        if not self._flush_thread:
+            self._flush_thread = PeriodicTimer(self.flush_interval, log_and_flush)
+            self._flush_thread.daemon = True
+            self._flush_thread.start()
 
 
     def http_request(self, method, path, body=None, **params):
