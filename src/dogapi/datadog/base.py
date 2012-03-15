@@ -66,16 +66,23 @@ class BaseDatadog(object):
         self._last_flush_time = time.time()
         self._flush_thread = None
 
-    def flush_in_thread(self):
+    def start_flush_thread(self):
+        """
+        Start a thread that will flush the metrics, instead of flushing in
+        process.
+        """
 
         def log_and_flush():
             log.debug("flushing in thread")
             self._flush_metrics()
 
         if not self._flush_thread:
+            log.info("initializing flush thread")
             self._flush_thread = PeriodicTimer(self.flush_interval, log_and_flush)
             self._flush_thread.daemon = True
             self._flush_thread.start()
+        else:
+            log.info("flush thread already running")
 
 
     def http_request(self, method, path, body=None, **params):
