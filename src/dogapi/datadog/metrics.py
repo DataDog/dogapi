@@ -83,24 +83,24 @@ class MetricApi(object):
             self._flush_metrics()
 
     def _flush_metrics(self):
-            logger.info("flushing metrics")
+        logger.info("flushing metrics")
 
-            try:
-                # FIXME mattp: it's possible the thread can't completely
-                # exhaust the queue. maybe default to some sane amount of
-                # metrics to flush at once?
-                #
-                # also, is this performant enough?
-                to_be_flushed = []
-                while True:
-                    try:
-                        to_be_flushed += self._metrics_queue.get_nowait()
-                    except Queue.Empty:
-                        break
-                return self._submit_metrics(to_be_flushed)
-            finally:
-                logger.debug("finished flush.")
-                self._last_flush_time = time.time()
+        try:
+            # FIXME mattp: it's possible the thread can't completely
+            # exhaust the queue. maybe default to some sane amount of
+            # metrics to flush at once?
+            #
+            # also, is this performant enough?
+            to_be_flushed = []
+            while True:
+                try:
+                    to_be_flushed += self._metrics_queue.get_nowait()
+                except Queue.Empty:
+                    break
+            return self._submit_metrics(to_be_flushed)
+        finally:
+            logger.debug("finished flush.")
+            self._last_flush_time = time.time()
 
     def _submit_metrics(self, metrics):
         raise NotImplementedError()
