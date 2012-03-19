@@ -95,39 +95,30 @@ class MetricsAggregator(object):
     A small class to handle the roll-ups of multiple metrics at once.
     """
 
-    # FIXME mattp
-    #
-    #   - handle when metrics change type
-
     def __init__(self, roll_up_interval=10):
         self._metrics = {}
         self._roll_up_interval = roll_up_interval
 
     def increment(self, metric, timestamp, value=1):
-        """
-        Increment the given counter.
-        """
-        if metric not in self._metrics:
-            self._metrics[metric] = Counter(metric, self._roll_up_interval)
-        self._metrics[metric].add_point(timestamp, value)
+        """ Increment the given counter. """
+        self._add_point(metric, timestamp, value, Counter)
 
     def gauge(self, metric, timestamp, value):
-        """
-        Record a gauge metric.
-        """
-        if metric not in self._metrics:
-            self._metrics[metric] = Gauge(metric, self._roll_up_interval)
-        self._metrics[metric].add_point(timestamp, value)
+        """ Record a gauge metric. """
+        self._add_point(metric, timestamp, value, Gauge)
 
     def histogram(self, metric, timestamp, value):
+        """ Sample a histogram point. """
+        self._add_point(metric, timestamp, value, Histogram)
+
+    def _add_point(self, metric, timestamp, value, metric_class):
+        # FIXME mattp: overwrite metric if we add a different type?
         if metric not in self._metrics:
-            self._metrics[metric] = Histogram(metric, self._roll_up_interval)
+            self._metrics[metric] = metric_class(metric, self._roll_up_interval)
         self._metrics[metric].add_point(timestamp, value)
 
     def flush(self, timestamp):
-        """
-        Flush all metrics up to the given timestamp.
-        """
+        """ Flush all metrics up to the given timestamp. """
         # remove empty metrics on flush?
         metrics = []
         for metric in self._metrics.values():
