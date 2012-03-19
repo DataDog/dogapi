@@ -73,10 +73,9 @@ class MetricApi(object):
             'device':   device,
         }])
 
-
     def metered(self, metric):
         """
-        A python decorator that will track a histogram of the method's timing
+        A decorator that will track a histogram of the method's timing
         calls.
         """
         def wrapper(func):
@@ -87,6 +86,18 @@ class MetricApi(object):
                 return result
             return wrapped
         return wrapper
+
+    def counted(self, metric):
+        """
+        A decorator that will track the number of times a method is invoked.
+        """
+        def wrapper(func):
+            def wrapped(*args, **kwargs):
+                self.increment(metric)
+                return func(*args, **kwargs)
+            return wrapped
+        return wrapper
+
 
     def metrics(self, metrics):
         """
