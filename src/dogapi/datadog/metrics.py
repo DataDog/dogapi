@@ -74,6 +74,20 @@ class MetricApi(object):
         }])
 
 
+    def metered(self, metric):
+        """
+        A python decorator that will track a histogram of the method's timing
+        calls.
+        """
+        def wrapper(func):
+            def wrapped(*args, **kwargs):
+                start = time.time()
+                result = func(*args, **kwargs)
+                self.histogram(metric, time.time() - start)
+                return result
+            return wrapped
+        return wrapper
+
     def metrics(self, metrics):
         """
         Submit a series of metrics with 1 or more data points to the metric
