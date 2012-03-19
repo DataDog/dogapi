@@ -11,7 +11,6 @@ import Queue
 from dogapi.constants import MetricType
 
 
-
 logger = logging.getLogger('dogapi')
 
 
@@ -94,12 +93,16 @@ class MetricApi(object):
             self._flush_metrics()
 
     def _flush_metrics(self):
-        logger.info("flushing metrics")
         try:
             metrics = self._get_aggregated_metrics()
-            return self._submit_metrics(metrics)
+            count = len(metrics)
+            if count == 0:
+                logger.info("No metrics to flush. Continuing.")
+                return
+            else:
+                logger.info("Flushing %s metrics." % count)
+                return self._submit_metrics(metrics)
         finally:
-            logger.debug("finished flush.")
             self._last_flush_time = time.time()
 
     def _get_aggregated_metrics(self):
@@ -159,7 +162,7 @@ class MetricApi(object):
 class HttpMetricApi(MetricApi):
 
     def _submit_metrics(self, metrics):
-        logger.debug("submitting %s metrics via http" % len(metrics))
+        logger.debug("flushing metrics over http.")
         request = { "series": metrics }
         self.http_request('POST', '/series', request)
         if self.json_responses:
@@ -171,7 +174,7 @@ class HttpMetricApi(MetricApi):
 class StatsdMetricApi(MetricApi):
 
     def _submit_metrics(self, metrics):
-        logger.debug("submitting %s metrics via statsd" % len(metrics))
+        logger.debug("flushing metrics over statsd")
         requests = []
         for metric_series in metrics:
             metric_name = metric_series.get('metric', None)
