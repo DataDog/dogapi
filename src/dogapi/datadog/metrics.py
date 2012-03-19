@@ -18,15 +18,24 @@ class MetricApi(object):
     default_metric_type = MetricType.Gauge
 
     def increment(self, name, value=1):
+        """
+        Increment the given counter.
+        """
         self.metric(name, value, metric_type=MetricType.Counter)
 
     def gauge(self, name, value):
+        """
+        Record the given gauge value.
+        """
         self.metric(name, value, metric_type=MetricType.Gauge)
 
     def histogram(self, name, value):
+        """
+        Track the histogram of the given value.
+        """
         self.metric(name, value, metric_type=MetricType.Histogram)
 
-    def metric(self, name, points, host=None, device=None, metric_type=None):
+    def metric(self, name, points, host=None, device=None, metric_type=MetricType.Gauge):
         """
         Submit a series of data points to the metric API.
 
@@ -142,16 +151,19 @@ class MetricApi(object):
         return metrics
 
     def _get_metrics_from_queue(self):
-        # FIXME mattp: it's possible the thread can't completely
-        # exhaust the queue. maybe default to some sane amount of
-        # metrics to flush at once?
-        #
-        # also, is this performant enough?
         metrics = []
+        pops = 0
+        MAX_POPS = 1000
         while True:
+            # FIXME mattp: is this performant enough?
             try:
                 metrics += self._metrics_queue.get_nowait()
             except Queue.Empty:
+                break
+            # Ensure that we aren't popping metrics for a dangerously
+            # long time.
+            pops += 1
+            if pops > MAX_POPS:
                 break
         return metrics
 
