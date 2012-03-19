@@ -7,7 +7,9 @@ import logging
 import time
 import Queue
 
-from dogapi.common import *
+
+from dogapi.constants import MetricType
+
 
 
 logger = logging.getLogger('dogapi')
@@ -17,14 +19,13 @@ class MetricApi(object):
     default_metric_type = MetricType.Gauge
 
     def increment(self, name, value=1):
-        self.metric(name, value, metric_type="counter")
+        self.metric(name, value, metric_type=MetricType.Counter)
 
     def gauge(self, name, value):
-        self.metric(name, value, metric_type="gauge")
+        self.metric(name, value, metric_type=MetricType.Gauge)
 
     def histogram(self, name, value):
-        """ Histogram. """
-        self.metric(name, value, metric_type="histogram")
+        self.metric(name, value, metric_type=MetricType.Histogram)
 
     def metric(self, name, points, host=None, device=None, metric_type=None):
         """
@@ -109,11 +110,11 @@ class MetricApi(object):
             type_ = raw_metric['type']
             # Figure out the type of metric.
             aggregator = None
-            if type_ == 'counter':
+            if type_ == MetricType.Counter:
                 aggregator = self._metrics_aggregator.increment
-            elif type_  == 'gauge':
+            elif type_  == MetricType.Gauge:
                 aggregator = self._metrics_aggregator.gauge
-            elif type_ == 'histogram':
+            elif type_ == MetricType.Histogram:
                 aggregator = self._metrics_aggregator.histogram
             else:
                 raise Exception('unknown metric type %s' % type_)

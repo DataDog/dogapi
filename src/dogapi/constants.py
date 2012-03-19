@@ -11,3 +11,4 @@ class MetricType(object):
     Counter = "counter"
     Timer = "timer"
     Sampler = "sampler"
+    Histogram = "histogram"
