@@ -142,7 +142,7 @@ class MetricApi(object):
         for timestamp, value, name in rolled_up_metrics:
             metric = {
                 'metric' : name,
-                'points' : [timestamp, value],
+                'points' : [[timestamp, value]],
                 'type':     'gauge',
                 'host':     self._default_host,
                 'device':   None
