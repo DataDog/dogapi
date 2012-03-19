@@ -217,6 +217,3 @@ class StatsdMetricApi(MetricApi):
         else:
             return None
 
-
-
-
