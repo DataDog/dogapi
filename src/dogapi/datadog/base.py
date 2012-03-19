@@ -64,8 +64,11 @@ class BaseDatadog(object):
         self.flush_interval = 10  # Interval to wait between flushes in seconds.
         self.roll_up_interval = 5
 
-        self._metrics_aggregator = MetricsAggregator(self.roll_up_interval)
+        # We store metrics in a queue (which is thread safe) to ensure that
+        # the flush thread plays nice with the main process.
         self._metrics_queue = Queue.Queue()
+
+        self._metrics_aggregator = MetricsAggregator(self.roll_up_interval)
         self._last_flush_time = time.time()
         self._flush_thread = None
 

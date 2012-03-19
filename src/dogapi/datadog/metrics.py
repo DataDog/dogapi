@@ -95,46 +95,49 @@ class MetricApi(object):
     def _flush_metrics(self):
         logger.info("flushing metrics")
         try:
-            raw_metrics = self._clear_queue()
-            for raw_metric in raw_metrics:
-                name = raw_metric['metric']
-                type_ = raw_metric['type']
-                # Figure out the type of metric.
-                aggregator = None
-                if type_ == 'counter':
-                    aggregator = self._metrics_aggregator.increment
-                elif type_  == 'gauge':
-                    aggregator = self._metrics_aggregator.gauge
-                elif type_ == 'histogram':
-                    aggregator = self._metrics_aggregator.histogram
-                else:
-                    raise Exception('unknown metric type %s' % type_)
-
-                # Aggregate them.
-                for timestamp, value in raw_metric['points']:
-                    aggregator(name, timestamp, value)
-            # Get rolled up metrics
-            rolled_up_metrics = self._metrics_aggregator.flush(time.time())
-
-            metrics = []
-            for rm in rolled_up_metrics:
-                metric = {
-                    'metric' : rm[2],
-                    'points' : [(rm[0], rm[1])],
-                    'type':     'gauge',
-                    'host':     self._default_host,
-                    'device':   None
-                }
-                metrics.append(metric)
-
-            print '\n\n'
-            print metrics
+            metrics = self._get_aggregated_metrics()
             return self._submit_metrics(metrics)
         finally:
             logger.debug("finished flush.")
             self._last_flush_time = time.time()
 
-    def _clear_queue(self):
+    def _get_aggregated_metrics(self):
+        flush_time = time.time()
+        raw_metrics = self._get_metrics_from_queue()
+        for raw_metric in raw_metrics:
+            name = raw_metric['metric']
+            type_ = raw_metric['type']
+            # Figure out the type of metric.
+            aggregator = None
+            if type_ == 'counter':
+                aggregator = self._metrics_aggregator.increment
+            elif type_  == 'gauge':
+                aggregator = self._metrics_aggregator.gauge
+            elif type_ == 'histogram':
+                aggregator = self._metrics_aggregator.histogram
+            else:
+                raise Exception('unknown metric type %s' % type_)
+
+            # Aggregate them.
+            for timestamp, value in raw_metric['points']:
+                aggregator(name, timestamp, value)
+
+        # Get rolled up metrics
+        rolled_up_metrics = self._metrics_aggregator.flush(flush_time)
+
+        metrics = []
+        for timestamp, value, name in rolled_up_metrics:
+            metric = {
+                'metric' : name,
+                'points' : [timestamp, value],
+                'type':     'gauge',
+                'host':     self._default_host,
+                'device':   None
+            }
+            metrics.append(metric)
+        return metrics
+
+    def _get_metrics_from_queue(self):
         # FIXME mattp: it's possible the thread can't completely
         # exhaust the queue. maybe default to some sane amount of
         # metrics to flush at once?
