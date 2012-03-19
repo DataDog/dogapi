@@ -16,6 +16,7 @@ from pprint import pformat
 from socket import AF_INET, SOCK_DGRAM
 from urllib import urlencode
 
+from dogapi.datadog.metricsapi import MetricsAggregator
 from dogapi.datadog.periodic_timer import PeriodicTimer
 
 try:
@@ -61,7 +62,9 @@ class BaseDatadog(object):
 
         # flush params
         self.flush_interval = 10  # Interval to wait between flushes in seconds.
+        self.roll_up_interval = 5
 
+        self._metrics_aggregator = MetricsAggregator(self.roll_up_interval)
         self._metrics_queue = Queue.Queue()
         self._last_flush_time = time.time()
         self._flush_thread = None

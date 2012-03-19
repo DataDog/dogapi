@@ -16,6 +16,16 @@ logger = logging.getLogger('dogapi')
 class MetricApi(object):
     default_metric_type = MetricType.Gauge
 
+    def increment(self, name, value=1):
+        self.metric(name, value, metric_type="counter")
+
+    def gauge(self, name, value):
+        self.metric(name, value, metric_type="gauge")
+
+    def histogram(self, name, value):
+        """ Histogram. """
+        self.metric(name, value, metric_type="histogram")
+
     def metric(self, name, points, host=None, device=None, metric_type=None):
         """
         Submit a series of data points to the metric API.
@@ -84,23 +94,59 @@ class MetricApi(object):
 
     def _flush_metrics(self):
         logger.info("flushing metrics")
-
         try:
-            # FIXME mattp: it's possible the thread can't completely
-            # exhaust the queue. maybe default to some sane amount of
-            # metrics to flush at once?
-            #
-            # also, is this performant enough?
-            to_be_flushed = []
-            while True:
-                try:
-                    to_be_flushed += self._metrics_queue.get_nowait()
-                except Queue.Empty:
-                    break
-            return self._submit_metrics(to_be_flushed)
+            raw_metrics = self._clear_queue()
+            for raw_metric in raw_metrics:
+                name = raw_metric['metric']
+                type_ = raw_metric['type']
+                # Figure out the type of metric.
+                aggregator = None
+                if type_ == 'counter':
+                    aggregator = self._metrics_aggregator.increment
+                elif type_  == 'gauge':
+                    aggregator = self._metrics_aggregator.gauge
+                elif type_ == 'histogram':
+                    aggregator = self._metrics_aggregator.histogram
+                else:
+                    raise Exception('unknown metric type %s' % type_)
+
+                # Aggregate them.
+                for timestamp, value in raw_metric['points']:
+                    aggregator(name, timestamp, value)
+            # Get rolled up metrics
+            rolled_up_metrics = self._metrics_aggregator.flush(time.time())
+
+            metrics = []
+            for rm in rolled_up_metrics:
+                metric = {
+                    'metric' : rm[2],
+                    'points' : [(rm[0], rm[1])],
+                    'type':     'gauge',
+                    'host':     self._default_host,
+                    'device':   None
+                }
+                metrics.append(metric)
+
+            print '\n\n'
+            print metrics
+            return self._submit_metrics(metrics)
         finally:
             logger.debug("finished flush.")
             self._last_flush_time = time.time()
+
+    def _clear_queue(self):
+        # FIXME mattp: it's possible the thread can't completely
+        # exhaust the queue. maybe default to some sane amount of
+        # metrics to flush at once?
+        #
+        # also, is this performant enough?
+        metrics = []
+        while True:
+            try:
+                metrics += self._metrics_queue.get_nowait()
+            except Queue.Empty:
+                break
+        return metrics
 
     def _submit_metrics(self, metrics):
         raise NotImplementedError()
