@@ -90,6 +90,16 @@ class BaseDatadog(object):
         else:
             log.info("flush thread already running")
 
+    def start_flush_greenlet(self):
+        import gevent
+        def log_and_flush():
+            while True:
+                log.debug("flushing in greenlet")
+                self._flush_metrics()
+                gevent.sleep(self.flush_interval)
+
+        gevent.spawn(log_and_flush)
+        self._flush_thread = True # FIXME: So we don't flush synchronously.
 
     def http_request(self, method, path, body=None, **params):
         try:
