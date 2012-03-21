@@ -187,7 +187,7 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         now_ts = int(time.mktime(now.timetuple()))
 
         dog.metric('test.metric.' + str(now_ts), 1, host="test.host." + str(now_ts))
-        time.sleep(1)
+        time.sleep(2)
         results = dog.search('hosts:test.host.' + str(now_ts))
         assert len(results['hosts']) == 1, results
 

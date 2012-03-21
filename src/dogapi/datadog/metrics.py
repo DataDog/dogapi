@@ -21,19 +21,38 @@ class MetricApi(object):
         """
         Increment the given counter.
         """
-        self.metric(name, value, metric_type=MetricType.Counter)
+        self._queue_metric(name, value, metric_type=MetricType.Counter)
 
     def gauge(self, name, value):
         """
         Record the given gauge value.
         """
-        self.metric(name, value, metric_type=MetricType.Gauge)
+        self._queue_metric(name, value, metric_type=MetricType.Gauge)
 
     def histogram(self, name, value):
         """
         Track the histogram of the given value.
         """
-        self.metric(name, value, metric_type=MetricType.Histogram)
+        self._queue_metric(name, value, metric_type=MetricType.Histogram)
+
+    def _queue_metric(self, name, value, metric_type):
+        """ Queue the given metric for flushing. """
+
+        metrics = [{
+            'metric':   name,
+            'points':   [[time.time(), value]],
+            'type':     metric_type,
+            'host':     self._default_host,
+            'device':   None
+        }]
+        self._metrics_queue.put(metrics)
+        
+        # If we're flushing in the main thread and we're ready for it,
+        # submit the metrics.
+        if not self._flush_thread and (time.time() - self._last_flush_time) > self.flush_interval:
+            self._flush_metrics()
+
+
 
     def metric(self, name, points, host=None, device=None, metric_type=MetricType.Gauge):
         """
@@ -119,12 +138,7 @@ class MetricApi(object):
         """
         # Queue the metrics for flushing.
         logger.debug("queueing metrics to be flushed")
-        self._metrics_queue.put(metrics)
-
-        # If we're flushing in the main thread and we're ready for it,
-        # submit the metrics.
-        if not self._flush_thread and (time.time() - self._last_flush_time) > self.flush_interval:
-            self._flush_metrics()
+        return self._submit_metrics(metrics)
 
     def _flush_metrics(self):
         try:
