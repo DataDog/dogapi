@@ -168,7 +168,7 @@ class MetricApi(object):
             metric = {
                 'metric' : name,
                 'points' : [[timestamp, value]],
-                'type':     'gauge',
+                'type':     MetricType.Gauge,
                 'host':     self._default_host,
                 'device':   None
             }
