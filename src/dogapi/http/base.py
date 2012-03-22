@@ -5,19 +5,16 @@ __all__ = [
 import httplib
 import os
 import logging
-import Queue
 import re
 import socket
-import threading
 import time
 import urllib2
 from contextlib import contextmanager
 from pprint import pformat
-from socket import AF_INET, SOCK_DGRAM
 from urllib import urlencode
 
-from dogapi.datadog.metricsapi import MetricsAggregator
-from dogapi.datadog.periodic_timer import PeriodicTimer
+#from dogapi.datadog.metricsapi import MetricsAggregator
+#from dogapi.datadog.periodic_timer import PeriodicTimer
 
 try:
     import simplejson as json
@@ -35,7 +32,7 @@ __all__ = [
 ]
 
 class BaseDatadog(object):
-    def __init__(self, api_key=None, application_key=None, api_version='v1', api_host=None, timeout=2, max_timeouts=3, backoff_period=300, swallow=True, use_ec2_instance_id=False, statsd_host=None, json_responses=False):
+    def __init__(self, api_key=None, application_key=None, api_version='v1', api_host=None, timeout=2, max_timeouts=3, backoff_period=300, swallow=True, use_ec2_instance_id=False, json_responses=False):
 
         self.http_conn_cls = httplib.HTTPSConnection
         self._api_host = None
@@ -47,9 +44,6 @@ class BaseDatadog(object):
         self._backoff_timestamp = None
         self._timeout_counter = 0
 
-        # statsd params
-        self.statsd_host = statsd_host or 'localhost:8125'
-
         self.api_key = api_key
         self.api_version = api_version
         self.application_key = application_key
@@ -59,47 +53,6 @@ class BaseDatadog(object):
         self._use_ec2_instance_id = None
         self.use_ec2_instance_id = use_ec2_instance_id
         self.json_responses = json_responses
-
-        # flush params
-        self.flush_interval = 10  # Interval to wait between flushes in seconds.
-        self.roll_up_interval = 5
-
-        # We store metrics in a queue (which is thread safe) to ensure that
-        # the flush thread plays nice with the main process.
-        self._metrics_queue = Queue.Queue()
-
-        self._metrics_aggregator = MetricsAggregator(self.roll_up_interval)
-        self._last_flush_time = time.time()
-        self._flush_thread = None
-
-    def start_flush_thread(self):
-        """
-        Start a thread that will flush the metrics, instead of flushing in
-        process.
-        """
-
-        def log_and_flush():
-            log.debug("flushing in thread")
-            self._flush_metrics()
-
-        if not self._flush_thread:
-            log.info("initializing flush thread")
-            self._flush_thread = PeriodicTimer(self.flush_interval, log_and_flush)
-            self._flush_thread.daemon = True
-            self._flush_thread.start()
-        else:
-            log.info("flush thread already running")
-
-    def start_flush_greenlet(self):
-        import gevent
-        def log_and_flush():
-            while True:
-                log.debug("flushing in greenlet")
-                self._flush_metrics()
-                gevent.sleep(self.flush_interval)
-
-        gevent.spawn(log_and_flush)
-        self._flush_thread = True # FIXME: So we don't flush synchronously.
 
     def http_request(self, method, path, body=None, **params):
         try:
@@ -162,16 +115,6 @@ class BaseDatadog(object):
                 log.error(str(e))
             else:
                 raise
-
-    def statsd_request(self, messages):
-        if not isinstance(messages, (list, tuple)):
-            messages = [messages]
-
-        address = tuple(self.statsd_host.split(":"))
-        address = address[0], int(address[1])
-        udp_sock = socket.socket(AF_INET, SOCK_DGRAM)
-        for message in messages:
-            udp_sock.sendto(message, address)
 
     def use_ec2_instance_id():
         def fget(self):

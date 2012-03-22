@@ -3,7 +3,8 @@ import os
 import sys
 from UserDict import IterableUserDict
 
-from dogapi import Datadog
+from dogapi import DogHttpApi
+
 
 def report_errors(res):
     if 'errors' in res:
@@ -27,7 +28,7 @@ class CommandLineClient(object):
     @property
     def dog(self):
         if not self._dog:
-            self._dog = Datadog(self.config['apikey'], self.config['appkey'], swallow=False, json_responses=True)
+            self._dog = DogHttpApi(self.config['apikey'], self.config['appkey'], swallow=False, json_responses=True)
         return self._dog
         
 

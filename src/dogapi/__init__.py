@@ -1,3 +1,2 @@
-from dogapi.datadog import Datadog
-
-dog = Datadog()
+from dogapi.http import DogHttpApi
+from dogapi.stats import DogStatsApi

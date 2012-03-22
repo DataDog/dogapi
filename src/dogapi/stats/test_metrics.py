@@ -4,8 +4,7 @@ Tests for metric aggregation/
 
 import nose.tools as nt
 
-
-from metricsapi import Counter, Histogram, Gauge
+from metrics import Counter, Histogram, Gauge
 
 def test_counter():
     counter = Counter('my.counter', 10)
