@@ -27,7 +27,9 @@ class DogStatsApi(object):
                        api_host='https://app.datadoghq.com',
                        application_key=None,
                        api_key=None,
-                       max_queue_size=0):
+                       max_queue_size=0,
+                       flush_in_thread=True,
+                       flush_in_greenlet=False):
         """
         Create a DogStatsApi instance.
         """
@@ -50,32 +52,36 @@ class DogStatsApi(object):
         self._metrics_aggregator = MetricsAggregator(self.roll_up_interval)
 
         self._flushing = False # True if a flush mechanism has been started.
-        self._start_flush_thread()
 
-    def gauge(self, metric_name, value):
+        # Start the appropriate flushing mechanism.
+        if flush_in_thread:
+            self._start_flush_thread()
+        elif flush_in_greenlet:
+            self._start_flush_greenlet()
+
+    def gauge(self, metric_name, value, timestamp=None):
         """
         Record a value for the given gauge.
         """
-        self._queue_metric(metric_name, value, GAUGE)
+        self._queue_metric(metric_name, value, GAUGE, timestamp)
 
-    def increment(self, metric_name, value=1):
-        self._queue_metric(metric_name, value, COUNTER)
-        pass
+    def increment(self, metric_name, value=1, timestamp=None):
+        self._queue_metric(metric_name, value, COUNTER, timestamp)
 
-    def histogram(self):
-        pass
+    def histogram(self, metric_name, value, timestamp=None):
+        self._queue_metric(metric_name, value, HISTOGRAM, timestamp)
 
     def timed(self):
         pass
 
-    def flush(self):
+    def flush(self, timestamp=None):
         """ Aggregate metrics and pass along to the reporter. """
         raw_metrics = self._dequeue_metrics()
-        metrics = self._aggregate_metrics(raw_metrics)
+        metrics = self._aggregate_metrics(raw_metrics, timestamp)
         self.reporter.flush(metrics)
 
-    def _aggregate_metrics(self, raw_metrics):
-        flush_time = time.time()
+    def _aggregate_metrics(self, raw_metrics, flush_time=None):
+        flush_time = flush_time or time.time()
         for raw_metric in raw_metrics:
             name = raw_metric['metric']
             type_ = raw_metric['type']
@@ -157,11 +163,11 @@ class DogStatsApi(object):
         log.info("Starting flush greenlet with interval %s." % self.flush_interval)
         gevent.spawn(flush)
 
-    def _queue_metric(self, metric_name, value, metric_type):
+    def _queue_metric(self, metric_name, value, metric_type, timestamp=None):
         """ Queue the given metric for aggregation. """
         metric = {
             'metric':   metric_name,
-            'points':   [[time.time(), value]],
+            'points':   [[timestamp or time.time(), value]],
             'type':     metric_type,
             'host':     self._host_name,
             'device':   None
