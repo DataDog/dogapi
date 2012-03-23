@@ -35,6 +35,25 @@ class TestDogStatsAPI(object):
         sort = lambda metric: (metric['points'][0][0], metric['metric'])
         return sorted(metrics, key=sort)
 
+    def test_timed_decorator(self):
+        dog = DogStatsApi(roll_up_interval=1, flush_in_thread=False)
+        reporter = dog.reporter = MemoryReporter()
+
+        @dog.timed('timed.test')
+        def func(a, b, c=1, d=1):
+            return (a, b, c, d)
+
+        result = func(1, 2, d=3)
+        # Assert it handles args and kwargs correctly.
+        nt.assert_equal(result, (1, 2, 1, 3))
+        time.sleep(1) # Argh. I hate this.
+        dog.flush()
+        metrics = self.sort_metrics(reporter.metrics)
+        nt.assert_equal(len(metrics), 2)
+        (avg, count) = metrics
+        nt.assert_equal(avg['metric'], 'timed.test.avg')
+        nt.assert_equal(count['metric'], 'timed.test.count')
+
     def test_histogram(self):
         dog = DogStatsApi(roll_up_interval=10, flush_in_thread=False)
         reporter = dog.reporter = MemoryReporter()

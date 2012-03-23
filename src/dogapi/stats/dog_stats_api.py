@@ -72,8 +72,15 @@ class DogStatsApi(object):
     def histogram(self, metric_name, value, timestamp=None):
         self._queue_metric(metric_name, value, HISTOGRAM, timestamp)
 
-    def timed(self):
-        pass
+    def timed(self, metric_name):
+        def wrapper(func):
+            def wrapped(*args, **kwargs):
+                start = time.time()
+                result = func(*args, **kwargs)
+                self.histogram(metric_name, time.time() - start)
+                return result
+            return wrapped
+        return wrapper
 
     def flush(self, timestamp=None):
         """ Aggregate metrics and pass along to the reporter. """
