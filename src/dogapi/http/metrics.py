@@ -73,8 +73,7 @@ class HttpMetricApi(object):
 
         :raises: Exception on failure
         """
-        # Queue the metrics for flushing.
-        logger.debug("queueing metrics to be flushed")
+        logger.debug("Submitting metrics to the api")
         return self._submit_metrics(metrics)
 
     def _submit_metrics(self, metrics):
@@ -85,4 +84,4 @@ class HttpMetricApi(object):
             return {}
         else:
             return None
-                
+
