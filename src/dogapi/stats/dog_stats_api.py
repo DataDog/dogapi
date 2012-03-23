@@ -9,8 +9,9 @@ import time
 import Queue
 
 from dogapi.constants import MetricType
-from dogapi.stats.periodic_timer import PeriodicTimer
 from dogapi.stats.metrics import MetricsAggregator
+from dogapi.stats.periodic_timer import PeriodicTimer
+from dogapi.stats.reporters import HttpReporter
 
 
 log = logging.getLogger('dogapi')
@@ -26,15 +27,12 @@ class DogStatsApi(object):
                        max_flush_size=1000,
                        host=None,
                        device=None,
-                       api_host='https://app.datadoghq.com',
+                       api_host=None,
                        flush_in_thread=True,
                        flush_in_greenlet=False):
         """
         Create a DogStatsApi instance.
         """
-
-        self.reporter = None
-
         self.flush_interval = flush_interval
         self.roll_up_interval = roll_up_interval
         self.max_queue_size = max_queue_size
@@ -49,9 +47,14 @@ class DogStatsApi(object):
         # Initialize the metrics aggregator.
         self._metrics_aggregator = MetricsAggregator(self.roll_up_interval)
 
-        self._flushing = False # True if a flush mechanism has been started.
+        # The reporter is responsible for sending metrics off to their final destination.
+        # It's abstracted to support easy unit testing and in the near future, forwarding
+        # to the datadog agent.
+        self.reporter = HttpReporter(api_key=api_key, api_host=api_host)
 
         # Start the appropriate flushing mechanism.
+        self._flushing = False
+        self.flush_count = 0
         if flush_in_thread:
             self._start_flush_thread()
         elif flush_in_greenlet:
@@ -59,17 +62,26 @@ class DogStatsApi(object):
 
     def gauge(self, metric_name, value, timestamp=None):
         """
-        Record a value for the given gauge.
+        Record the instantaneous value of the given gauge.
         """
         self._queue_metric(metric_name, value, MetricType.Gauge, timestamp)
 
     def increment(self, metric_name, value=1, timestamp=None):
+        """
+        Increment the given counter.
+        """
         self._queue_metric(metric_name, value, MetricType.Counter, timestamp)
 
     def histogram(self, metric_name, value, timestamp=None):
+        """
+        Sample a value of the given histogram.
+        """
         self._queue_metric(metric_name, value, MetricType.Histogram, timestamp)
 
     def timed(self, metric_name):
+        """
+        A decorator that will sample the run time of a function in a histogram.
+        """
         def wrapper(func):
             def wrapped(*args, **kwargs):
                 start = time.time()
@@ -80,10 +92,18 @@ class DogStatsApi(object):
         return wrapper
 
     def flush(self, timestamp=None):
-        """ Aggregate metrics and pass along to the reporter. """
+        """
+        Flush all metrics to their final destination.
+        """
         raw_metrics = self._dequeue_metrics()
         metrics = self._aggregate_metrics(raw_metrics, timestamp)
-        self.reporter.flush(metrics)
+        count = len(metrics)
+        if count:
+            self.flush_count += 1
+            log.debug("Flush #%s sending %s metrics" % (self.flush_count, count))
+            self.reporter.flush(metrics)
+        else:
+            log.debug("No metrics to flush. Continuing.")
 
     def _aggregate_metrics(self, raw_metrics, flush_time=None):
         flush_time = flush_time or time.time()

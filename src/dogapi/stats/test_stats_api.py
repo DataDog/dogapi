@@ -2,7 +2,7 @@
 Tests for the DogStatsAPI class.
 """
 
-
+import os
 import time
 
 import nose.tools as nt
@@ -25,10 +25,11 @@ class MemoryReporter(object):
 
 
 #
-# Test code.
+# Unit tests.
 #
 
-class TestDogStatsAPI(object):
+class TestUnitDogStatsAPI(object):
+    """ Unit tests for the dog stats api. """
 
     def sort_metrics(self, metrics):
         """ Sort metrics by timestamp of first point and then name """
@@ -207,6 +208,26 @@ class TestDogStatsAPI(object):
         nt.assert_equal(metric['host'], 'host')
 
 
+#
+# Integration tests.
+#
 
+API_KEY = os.environ.get('DATADOG_API_KEY')
+APP_KEY = os.environ.get('DATADOG_APP_KEY')
 
+class TestIntegrationDogStatsAPI(object):
+
+    def test_flushing_in_thread(self):
+        dog = DogStatsApi(roll_up_interval=1,
+                          flush_interval=1,
+                          api_key=API_KEY)
+
+        now = time.time()
+        dog.gauge('test.dogapi.gauge.%s' % now , 3)
+        dog.increment('test.dogapi.counter.%s' % now)
+        dog.increment('test.dogapi.counter.%s' % now)
+        dog.histogram('test.dogapi.histogram.%s' % now, 20)
+        dog.histogram('test.dogapi.histogram.%s' % now, 30)
+        time.sleep(3)
+        assert 1 <= dog.flush_count <= 5
 
