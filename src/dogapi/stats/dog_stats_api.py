@@ -20,11 +20,13 @@ class DogStatsApi(object):
 
     def __init__(self, flush_interval=10,
                        roll_up_interval=10,
-                       api_host='https://app.datadoghq.com',
                        application_key=None,
                        api_key=None,
                        max_queue_size=0,
                        max_flush_size=1000,
+                       host=None,
+                       device=None,
+                       api_host='https://app.datadoghq.com',
                        flush_in_thread=True,
                        flush_in_greenlet=False):
         """
@@ -37,9 +39,8 @@ class DogStatsApi(object):
         self.roll_up_interval = roll_up_interval
         self.max_queue_size = max_queue_size
         self.max_flush_size = max_flush_size
-
-        # FIXME mattp: share with http api?
-        self._host_name = socket.gethostname()
+        self.host = host or socket.gethostname()
+        self.device = device
 
         # We buffer metrics in a thread safe queue, so that there is no conflict
         # if we are flushing metrics in another thread.
@@ -103,8 +104,8 @@ class DogStatsApi(object):
                 'metric' : name,
                 'points' : [[timestamp, value]],
                 'type':    MetricType.Gauge,
-                'host':    self._host_name,
-                'device':  None
+                'host':    self.host,
+                'device':  self.device
             }
             metrics.append(metric)
         return metrics
@@ -161,9 +162,7 @@ class DogStatsApi(object):
         metric = {
             'metric':   metric_name,
             'points':   [[timestamp or time.time(), value]],
-            'type':     metric_type,
-            'host':     self._host_name,
-            'device':   None
+            'type':     metric_type
         }
         # If the metrics queue is full, don't block.
         try:

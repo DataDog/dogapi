@@ -188,6 +188,25 @@ class TestDogStatsAPI(object):
         dog.flush(2000.0)
         nt.assert_equal(len(reporter.metrics), 5)
 
-    def test_no_manual_flusing_when_running_already(self):
-        pass
+    def test_default_host_and_device(self):
+        dog = DogStatsApi(roll_up_interval=1, flush_in_thread=False)
+        reporter = dog.reporter = MemoryReporter()
+        dog.gauge('my.gauge', 1, 100.0)
+        dog.flush(1000)
+        metric = reporter.metrics[0]
+        assert not metric['device']
+        assert metric['host']
+
+    def test_custom_host_and_device(self):
+        dog = DogStatsApi(roll_up_interval=1, flush_in_thread=False, host='host', device='dev')
+        reporter = dog.reporter = MemoryReporter()
+        dog.gauge('my.gauge', 1, 100.0)
+        dog.flush(1000)
+        metric = reporter.metrics[0]
+        nt.assert_equal(metric['device'], 'dev')
+        nt.assert_equal(metric['host'], 'host')
+
+
+
+
 
