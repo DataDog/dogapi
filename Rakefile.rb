@@ -23,7 +23,7 @@ end
 
 task :test do
   # Testing greenlet flush requires another process, so run them seperately.
-  #sh 'nosetests --exclude ".*greenlet.*"'
+  sh 'nosetests --exclude ".*greenlet.*"'
   sh "PYTHONPATH=src:$PYTHONPATH python src/dogapi/stats/test_stats_api_greenlet.py"
 end
 
