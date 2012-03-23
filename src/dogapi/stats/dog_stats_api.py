@@ -8,16 +8,12 @@ import socket
 import time
 import Queue
 
+from dogapi.constants import MetricType
 from dogapi.stats.periodic_timer import PeriodicTimer
 from dogapi.stats.metrics import MetricsAggregator
 
 
 log = logging.getLogger('dogapi')
-
-
-GAUGE = 'gauge'
-COUNTER = 'counter'
-HISTOGRAM = 'histogram'
 
 
 class DogStatsApi(object):
@@ -64,13 +60,13 @@ class DogStatsApi(object):
         """
         Record a value for the given gauge.
         """
-        self._queue_metric(metric_name, value, GAUGE, timestamp)
+        self._queue_metric(metric_name, value, MetricType.Gauge, timestamp)
 
     def increment(self, metric_name, value=1, timestamp=None):
-        self._queue_metric(metric_name, value, COUNTER, timestamp)
+        self._queue_metric(metric_name, value, MetricType.Counter, timestamp)
 
     def histogram(self, metric_name, value, timestamp=None):
-        self._queue_metric(metric_name, value, HISTOGRAM, timestamp)
+        self._queue_metric(metric_name, value, MetricType.Histogram, timestamp)
 
     def timed(self, metric_name):
         def wrapper(func):
@@ -93,18 +89,7 @@ class DogStatsApi(object):
         for raw_metric in raw_metrics:
             name = raw_metric['metric']
             type_ = raw_metric['type']
-            # Figure out the type of metric.
-
-            aggregator = None
-            if type_ == COUNTER:
-                aggregator = self._metrics_aggregator.increment
-            elif type_  == GAUGE:
-                aggregator = self._metrics_aggregator.gauge
-            elif type_ == HISTOGRAM:
-                aggregator = self._metrics_aggregator.histogram
-            else:
-                raise Exception('unknown metric type %s' % type_)
-
+            aggregator = self._metrics_aggregator.get_aggregator_function(type_)
             # Aggregate them.
             for timestamp, value in raw_metric['points']:
                 aggregator(name, timestamp, value)
@@ -117,7 +102,7 @@ class DogStatsApi(object):
             metric = {
                 'metric' : name,
                 'points' : [[timestamp, value]],
-                'type':    GAUGE,
+                'type':    MetricType.Gauge,
                 'host':    self._host_name,
                 'device':  None
             }

@@ -188,3 +188,6 @@ class TestDogStatsAPI(object):
         dog.flush(2000.0)
         nt.assert_equal(len(reporter.metrics), 5)
 
+    def test_no_manual_flusing_when_running_already(self):
+        pass
+

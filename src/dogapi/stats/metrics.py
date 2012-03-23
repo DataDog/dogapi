@@ -6,6 +6,7 @@ Metric roll-up classes.
 from collections import defaultdict
 import time
 
+from dogapi.constants import MetricType
 
 class Metric(object):
     """
@@ -126,4 +127,14 @@ class MetricsAggregator(object):
         for metric in self._metrics.values():
             metrics += metric.flush(timestamp)
         return metrics
+
+    def get_aggregator_function(self, metric_type):
+        if metric_type == MetricType.Gauge:
+            return self.gauge
+        elif metric_type == MetricType.Counter:
+            return self.increment
+        elif metric_type == MetricType.Histogram:
+            return self.histogram
+        else:
+            raise Exception('unknown metric type: %s' % metric_type)
 
