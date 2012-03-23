@@ -16,10 +16,10 @@ from dogapi import DogStatsApi
 
 class TestReporter(object):
     """ A reporting class that reports to memory for testing. """
-    
+
     def __init__(self):
         self.metrics = []
-    
+
     def flush(self, metrics):
         self.metrics += metrics
 
@@ -45,7 +45,7 @@ class TestDogStatsAPI(object):
         # Assert they've been properly flushed.
         metrics = reporter.metrics
         nt.assert_equal(len(metrics), 2)
-       
+
         (first, second) = metrics
         nt.assert_equal(first['metric'], 'test.gauge.1')
         nt.assert_equal(first['points'][0][0], 100.0)
@@ -76,9 +76,9 @@ class TestDogStatsAPI(object):
         # Assert they've been properly flushed.
         metrics = reporter.metrics
         nt.assert_equal(len(metrics), 2)
-      
+
         (first, second) = metrics
-        
+
         # order isn't guarantted. cheeezy.
         if first['metric'] == 'test.counter.2':
             (second, first) = (first, second)
@@ -101,7 +101,7 @@ class TestDogStatsAPI(object):
         dog = DogStatsApi(flush_interval=1, max_queue_size=5, roll_up_interval=1, flush_in_thread=False)
         reporter = dog.reporter = TestReporter()
         for i in range(10):
-            dog.gauge('my.gauge.%s' % i,  1)
-        dog.flush()
-        #nt.assert_equal(len(reporter.metrics), 5)
+            dog.gauge('my.gauge.%s' % i,  1, 1000.0)
+        dog.flush(2000.0)
+        nt.assert_equal(len(reporter.metrics), 5)
 
