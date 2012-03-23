@@ -28,6 +28,7 @@ class DogStatsApi(object):
                        application_key=None,
                        api_key=None,
                        max_queue_size=0,
+                       max_flush_size=1000,
                        flush_in_thread=True,
                        flush_in_greenlet=False):
         """
@@ -39,7 +40,7 @@ class DogStatsApi(object):
         self.flush_interval = flush_interval
         self.roll_up_interval = roll_up_interval
         self.max_queue_size = max_queue_size
-        self.max_flush_size = 1000
+        self.max_flush_size = max_flush_size
 
         # FIXME mattp: share with http api?
         self._host_name = socket.gethostname()
@@ -191,7 +192,7 @@ class DogStatsApi(object):
                 break
             # Ensure that we aren't popping metrics for a dangerously
             # long time.
-            if len(metrics) > self.max_flush_size:
+            if len(metrics) >= self.max_flush_size:
                 break
         return metrics
 
