@@ -17,12 +17,14 @@ task :doc do
   sh "python setup.py build_sphinx"
 end
 
-task :build do  
+task :build do
   sh "python setup.py egg_info -b '_#{build_number}' bdist_egg"
 end
 
 task :test do
-  sh "nosetests"
+  # Testing greenlet flush requires another process, so run them seperately.
+  #sh 'nosetests --exclude ".*greenlet.*"'
+  sh "PYTHONPATH=src:$PYTHONPATH python src/dogapi/stats/test_stats_api_greenlet.py"
 end
 
 def build_number

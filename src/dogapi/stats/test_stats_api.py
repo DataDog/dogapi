@@ -207,6 +207,14 @@ class TestUnitDogStatsAPI(object):
         nt.assert_equal(metric['device'], 'dev')
         nt.assert_equal(metric['host'], 'host')
 
+    def test_flush_settings(self):
+        try:
+            dog = DogStatsApi(flush_in_thread=True, flush_in_greenlet=True)
+        except:
+            pass
+        else:
+            assert 0, "can't flush in greenlet and thread"
+
 
 #
 # Integration tests.
@@ -223,11 +231,11 @@ class TestIntegrationDogStatsAPI(object):
                           api_key=API_KEY)
 
         now = time.time()
-        dog.gauge('test.dogapi.gauge.%s' % now , 3)
-        dog.increment('test.dogapi.counter.%s' % now)
-        dog.increment('test.dogapi.counter.%s' % now)
-        dog.histogram('test.dogapi.histogram.%s' % now, 20)
-        dog.histogram('test.dogapi.histogram.%s' % now, 30)
+        dog.gauge('test.dogapi.thread.gauge.%s' % now , 3)
+        dog.increment('test.dogapi.thread.counter.%s' % now)
+        dog.increment('test.dogapi.thread.counter.%s' % now)
+        dog.histogram('test.dogapi.thread.histogram.%s' % now, 20)
+        dog.histogram('test.dogapi.thread.histogram.%s' % now, 30)
         time.sleep(3)
         assert 1 <= dog.flush_count <= 5
 
