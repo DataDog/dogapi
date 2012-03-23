@@ -23,7 +23,7 @@ class DogStatsApi(object):
                        roll_up_interval=10,
                        application_key=None,
                        api_key=None,
-                       max_queue_size=0,
+                       max_queue_size=100000,
                        max_flush_size=1000,
                        host=None,
                        device=None,
