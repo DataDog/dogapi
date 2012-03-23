@@ -207,15 +207,6 @@ class TestUnitDogStatsAPI(object):
         nt.assert_equal(metric['device'], 'dev')
         nt.assert_equal(metric['host'], 'host')
 
-    def test_flush_settings(self):
-        try:
-            dog = DogStatsApi(flush_in_thread=True, flush_in_greenlet=True)
-        except:
-            pass
-        else:
-            assert 0, "can't flush in greenlet and thread"
-
-
 #
 # Integration tests.
 #

@@ -55,9 +55,7 @@ class DogStatsApi(object):
         # Start the appropriate flushing mechanism.
         self._flushing = False
         self.flush_count = 0
-        if flush_in_greenlet and flush_in_thread:
-            raise Exception("DogApi can't flush in a greenlet and a thread. Choose one.")
-        elif flush_in_greenlet:
+        if flush_in_greenlet:
             self._start_flush_greenlet()
         elif flush_in_thread:
             self._start_flush_thread()
