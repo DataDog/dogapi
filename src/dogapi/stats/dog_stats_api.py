@@ -39,7 +39,7 @@ class DogStatsApi(object):
         self.flush_interval = flush_interval
         self.roll_up_interval = roll_up_interval
         self.max_queue_size = max_queue_size
-        self.max_flush_size = 1000 
+        self.max_flush_size = 1000
 
         # FIXME mattp: share with http api?
         self._host_name = socket.gethostname()
@@ -48,7 +48,7 @@ class DogStatsApi(object):
         # if we are flushing metrics in another thread.
         self._metrics_queue = Queue.Queue(self.max_queue_size)
 
-        # Initialize the metrics aggregator.  
+        # Initialize the metrics aggregator.
         self._metrics_aggregator = MetricsAggregator(self.roll_up_interval)
 
         self._flushing = False # True if a flush mechanism has been started.
@@ -123,7 +123,7 @@ class DogStatsApi(object):
             return
 
         self._flushing = True
-        
+
         # A small helper for logging and flushing.
         def flush():
             try:
@@ -180,18 +180,18 @@ class DogStatsApi(object):
 
     def _dequeue_metrics(self):
         """ Pop all metrics off of the queue. """
-        pops = 0
         metrics = []
         while True:
-            # FIXME mattp: is this performant enough?
+            # FIXME mattp: is this performant enough? If we're flushing
+            # manually or in a greenlet, we could skip this step and queue
+            # directly onto the aggregator.
             try:
                 metrics.append(self._metrics_queue.get_nowait())
             except Queue.Empty:
                 break
             # Ensure that we aren't popping metrics for a dangerously
             # long time.
-            pops += 1
-            if pops > self.max_flush_size:
+            if len(metrics) > self.max_flush_size:
                 break
         return metrics
 
