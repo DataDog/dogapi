@@ -14,7 +14,7 @@ from dogapi import DogStatsApi
 # Test fixtures.
 #
 
-class TestReporter(object):
+class MemoryReporter(object):
     """ A reporting class that reports to memory for testing. """
 
     def __init__(self):
@@ -34,7 +34,7 @@ class TestDogStatsAPI(object):
 
         # Create some fake metrics.
         dog = DogStatsApi(roll_up_interval=10, flush_in_thread=False)
-        reporter = dog.reporter = TestReporter()
+        reporter = dog.reporter = MemoryReporter()
 
         dog.gauge('test.gauge.1', 20, 100.0)
         dog.gauge('test.gauge.1', 22, 105.0)
@@ -65,7 +65,7 @@ class TestDogStatsAPI(object):
     def test_counter(self):
         # Create some fake metrics.
         dog = DogStatsApi(roll_up_interval=10, flush_in_thread=False)
-        reporter = dog.reporter = TestReporter()
+        reporter = dog.reporter = MemoryReporter()
 
         dog.increment('test.counter.1', timestamp=1000.0)
         dog.increment('test.counter.1', value=2, timestamp=1005.0)
@@ -99,7 +99,7 @@ class TestDogStatsAPI(object):
 
     def test_max_queue_size(self):
         dog = DogStatsApi(flush_interval=1, max_queue_size=5, roll_up_interval=1, flush_in_thread=False)
-        reporter = dog.reporter = TestReporter()
+        reporter = dog.reporter = MemoryReporter()
         for i in range(10):
             dog.gauge('my.gauge.%s' % i,  1, 1000.0)
         dog.flush(2000.0)
