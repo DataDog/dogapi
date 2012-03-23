@@ -4,7 +4,6 @@ __all__ = [
 
 import logging
 import time
-import Queue
 
 
 from dogapi.constants import MetricType
