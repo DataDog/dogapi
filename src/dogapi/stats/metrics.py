@@ -6,6 +6,7 @@ Metric roll-up classes.
 from collections import defaultdict
 import time
 
+from dogapi.constants import MetricType
 
 class Metric(object):
     """
@@ -32,7 +33,8 @@ class Metric(object):
 
     def _get_past_intervals(self, timestamp):
         """ Return all intervals that are before the given timestamp. """
-        return [i for i in self._intervals if i < self._get_interval(timestamp)]
+        ts_interval = self._get_interval(timestamp)
+        return sorted((i for i in self._intervals if i < ts_interval))
 
 
 class Gauge(Metric):
@@ -56,11 +58,12 @@ class Counter(Metric):
 
     def __init__(self, name, roll_up_interval):
         super(Counter, self).__init__(name, roll_up_interval)
-        self._intervals = defaultdict(lambda: 0)
+        self._intervals = {}
 
     def add_point(self, timestamp, value):
         interval = self._get_interval(timestamp)
-        self._intervals[interval] += value
+        count = self._intervals.get(interval, 0)
+        self._intervals[interval] = count + value
 
     def flush(self, timestamp):
         past_intervals = self._get_past_intervals(timestamp)
@@ -124,4 +127,14 @@ class MetricsAggregator(object):
         for metric in self._metrics.values():
             metrics += metric.flush(timestamp)
         return metrics
+
+    def get_aggregator_function(self, metric_type):
+        if metric_type == MetricType.Gauge:
+            return self.gauge
+        elif metric_type == MetricType.Counter:
+            return self.increment
+        elif metric_type == MetricType.Histogram:
+            return self.histogram
+        else:
+            raise Exception('unknown metric type: %s' % metric_type)
 

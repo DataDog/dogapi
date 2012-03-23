@@ -104,5 +104,3 @@ class InfrastructureApi(object):
             return None
 
 
-
-

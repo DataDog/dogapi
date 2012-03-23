@@ -8,16 +8,22 @@ import os
 from nose.plugins.skip import SkipTest
 
 # dogapi
-from dogapi import dog
+import dogapi
 import datetime, time
+
 
 TEST_USER = os.environ.get('DATADOG_TEST_USER')
 API_KEY = os.environ.get('DATADOG_API_KEY')
 APP_KEY = os.environ.get('DATADOG_APP_KEY')
 
+# Our 
+dog = None
+
 class TestDatadog(unittest.TestCase):
 
     def setUp(self):
+        global dog
+        dog = dogapi.DogHttpApi()
         dog.api_key = API_KEY
         dog.application_key = APP_KEY
         dog.swallow = False
@@ -225,18 +231,6 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         dog.metric("test.metric", [(time.time() - 3600, 1.0)])
         dog.metric("test.metric", 1.0)
         dog.metric("test.metric", (time.time(), 1.0))
-
-class TestStatsdDatadog(unittest.TestCase):
-    def setUp(self):
-        import dogapi.datadog
-        self.dog = dogapi.datadog.StatsdDatadog(
-            api_key=API_KEY,
-            application_key=APP_KEY
-        )
-
-    def test_metrics(self):
-        self.dog.metric("test", 1, metric_type="counter")
-
 
 
 if __name__ == '__main__':
