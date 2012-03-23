@@ -200,6 +200,7 @@ class DogStatsApi(object):
             # Ensure that we aren't popping metrics for a dangerously
             # long time.
             if len(metrics) >= self.max_flush_size:
+                log.info("Maximum flush size hit %s" % self.max_flush_size)
                 break
         return metrics
 
