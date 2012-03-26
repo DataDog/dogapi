@@ -19,7 +19,8 @@ log = logging.getLogger('dogapi')
 class DogStatsApi(object):
 
     def __init__(self):
-        pass
+        self.max_queue_size = 100000
+        self._metrics_queue = Queue.Queue(self.max_queue_size)
 
     def start(self, api_key=None,
                     flush_interval=10,
