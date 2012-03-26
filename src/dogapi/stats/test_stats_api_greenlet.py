@@ -20,10 +20,11 @@ API_KEY = os.environ.get('DATADOG_API_KEY')
 class TestGreenletIntegrationDogStatsApi(unittest.TestCase):
 
     def test_flushing_in_thread(self):
-        dog = DogStatsApi(roll_up_interval=1,
-                          flush_interval=1,
-                          flush_in_greenlet=True,
-                          api_key=API_KEY)
+        dog = DogStatsApi()
+        dog.start(roll_up_interval=1,
+                  flush_interval=1,
+                  flush_in_greenlet=True,
+                  api_key=API_KEY)
 
         now = time.time()
         dog.gauge('test.dogapi.greenlet.gauge.%s' % now , 3)

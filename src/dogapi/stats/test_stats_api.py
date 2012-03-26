@@ -37,7 +37,8 @@ class TestUnitDogStatsAPI(object):
         return sorted(metrics, key=sort)
 
     def test_timed_decorator(self):
-        dog = DogStatsApi(roll_up_interval=1, flush_in_thread=False)
+        dog = DogStatsApi()
+        dog.start(roll_up_interval=1, flush_in_thread=False)
         reporter = dog.reporter = MemoryReporter()
 
         @dog.timed('timed.test')
@@ -56,7 +57,8 @@ class TestUnitDogStatsAPI(object):
         nt.assert_equal(count['metric'], 'timed.test.count')
 
     def test_histogram(self):
-        dog = DogStatsApi(roll_up_interval=10, flush_in_thread=False)
+        dog = DogStatsApi()
+        dog.start(roll_up_interval=10, flush_in_thread=False)
         reporter = dog.reporter = MemoryReporter()
 
         # Add some histogram metrics.
@@ -111,7 +113,8 @@ class TestUnitDogStatsAPI(object):
     def test_gauge(self):
 
         # Create some fake metrics.
-        dog = DogStatsApi(roll_up_interval=10, flush_in_thread=False)
+        dog = DogStatsApi()
+        dog.start(roll_up_interval=10, flush_in_thread=False)
         reporter = dog.reporter = MemoryReporter()
 
         dog.gauge('test.gauge.1', 20, 100.0)
@@ -142,7 +145,8 @@ class TestUnitDogStatsAPI(object):
 
     def test_counter(self):
         # Create some fake metrics.
-        dog = DogStatsApi(roll_up_interval=10, flush_in_thread=False)
+        dog = DogStatsApi()
+        dog.start(roll_up_interval=10, flush_in_thread=False)
         reporter = dog.reporter = MemoryReporter()
 
         dog.increment('test.counter.1', timestamp=1000.0)
@@ -172,7 +176,8 @@ class TestUnitDogStatsAPI(object):
 
 
     def test_max_flush_size(self):
-        dog = DogStatsApi(flush_in_thread=False, flush_interval=10, max_flush_size=10)
+        dog = DogStatsApi()
+        dog.start(flush_in_thread=False, flush_interval=10, max_flush_size=10)
         reporter = dog.reporter = MemoryReporter()
         for i in range(100):
             dog.gauge('flush.size.%s' % i, i, 123.435)
@@ -182,7 +187,8 @@ class TestUnitDogStatsAPI(object):
         nt.assert_equal(len(reporter.metrics), 20)
 
     def test_max_queue_size(self):
-        dog = DogStatsApi(max_queue_size=5, roll_up_interval=1, flush_in_thread=False)
+        dog = DogStatsApi()
+        dog.start(max_queue_size=5, roll_up_interval=1, flush_in_thread=False)
         reporter = dog.reporter = MemoryReporter()
         for i in range(10):
             dog.gauge('my.gauge.%s' % i,  1, 1000.0)
@@ -190,7 +196,8 @@ class TestUnitDogStatsAPI(object):
         nt.assert_equal(len(reporter.metrics), 5)
 
     def test_default_host_and_device(self):
-        dog = DogStatsApi(roll_up_interval=1, flush_in_thread=False)
+        dog = DogStatsApi()
+        dog.start(roll_up_interval=1, flush_in_thread=False)
         reporter = dog.reporter = MemoryReporter()
         dog.gauge('my.gauge', 1, 100.0)
         dog.flush(1000)
@@ -199,7 +206,8 @@ class TestUnitDogStatsAPI(object):
         assert metric['host']
 
     def test_custom_host_and_device(self):
-        dog = DogStatsApi(roll_up_interval=1, flush_in_thread=False, host='host', device='dev')
+        dog = DogStatsApi()
+        dog.start(roll_up_interval=1, flush_in_thread=False, host='host', device='dev')
         reporter = dog.reporter = MemoryReporter()
         dog.gauge('my.gauge', 1, 100.0)
         dog.flush(1000)
@@ -217,9 +225,10 @@ APP_KEY = os.environ.get('DATADOG_APP_KEY')
 class TestIntegrationDogStatsAPI(object):
 
     def test_flushing_in_thread(self):
-        dog = DogStatsApi(roll_up_interval=1,
-                          flush_interval=1,
-                          api_key=API_KEY)
+        dog = DogStatsApi()
+        dog.start(roll_up_interval=1,
+                  flush_interval=1,
+                  api_key=API_KEY)
 
         now = time.time()
         dog.gauge('test.dogapi.thread.gauge.%s' % now , 3)

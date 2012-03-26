@@ -10,7 +10,6 @@ import Queue
 
 from dogapi.constants import MetricType
 from dogapi.stats.metrics import MetricsAggregator
-from dogapi.stats.periodic_timer import PeriodicTimer
 from dogapi.stats.reporters import HttpReporter
 
 
@@ -19,17 +18,20 @@ log = logging.getLogger('dogapi')
 
 class DogStatsApi(object):
 
-    def __init__(self, flush_interval=10,
-                       roll_up_interval=10,
-                       application_key=None,
-                       api_key=None,
-                       max_queue_size=100000,
-                       max_flush_size=1000,
-                       host=None,
-                       device=None,
-                       api_host=None,
-                       flush_in_thread=True,
-                       flush_in_greenlet=False):
+    def __init__(self):
+        pass
+
+    def start(self, api_key=None,
+                    flush_interval=10,
+                    roll_up_interval=10,
+                    max_queue_size=100000,
+                    max_flush_size=1000,
+                    host=None,
+                    device=None,
+                    api_host=None,
+                    use_ec2_instance_ids=False,
+                    flush_in_thread=True,
+                    flush_in_greenlet=False):
         """
         Create a DogStatsApi instance.
         """
@@ -132,6 +134,7 @@ class DogStatsApi(object):
 
     def _start_flush_thread(self):
         """ Start a thread to flush metrics. """
+        from dogapi.stats.periodic_timer import PeriodicTimer
         if self._flushing:
             log.info("Already running.")
             return
