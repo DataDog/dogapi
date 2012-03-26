@@ -15,7 +15,7 @@ class Reporter(object):
 class HttpReporter(Reporter):
 
     def __init__(self, api_key=None, api_host=None):
-        self.dog = DogHttpApi(api_key, api_host)
+        self.dog = DogHttpApi(api_key=api_key, api_host=api_host)
 
     def flush(self, metrics):
         self.dog.metrics(metrics)
