@@ -9,7 +9,7 @@ import time
 from dogapi.constants import MetricType
 
 
-logger = logging.getLogger('dogapi')
+logger = logging.getLogger('dd.dogapi')
 
 
 class HttpMetricApi(object):

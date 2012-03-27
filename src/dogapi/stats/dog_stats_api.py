@@ -13,7 +13,7 @@ from dogapi.stats.metrics import MetricsAggregator
 from dogapi.stats.reporters import HttpReporter
 
 
-log = logging.getLogger('dogapi')
+log = logging.getLogger('dd.dogapi')
 
 
 class DogStatsApi(object):

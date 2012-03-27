@@ -21,8 +21,8 @@ try:
 except ImportError:
     import json
 
-http_log = logging.getLogger('dogapi.http')
-log = logging.getLogger('dogapi')
+http_log = logging.getLogger('dd.dogapi.http')
+log = logging.getLogger('dd.dogapi')
 
 from dogapi.exceptions import *
 from dogapi.constants import *
