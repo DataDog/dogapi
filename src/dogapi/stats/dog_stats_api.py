@@ -26,7 +26,7 @@ class DogStatsApi(object):
                     flush_interval=10,
                     roll_up_interval=10,
                     max_queue_size=100000,
-                    max_flush_size=1000,
+                    metric_timeout=0.005,
                     host=None,
                     device=None,
                     api_host=None,
@@ -39,9 +39,9 @@ class DogStatsApi(object):
         self.flush_interval = flush_interval
         self.roll_up_interval = roll_up_interval
         self.max_queue_size = max_queue_size
-        self.max_flush_size = max_flush_size
         self.host = host or socket.gethostname()
         self.device = device
+        self.metric_timeout = metric_timeout
 
         # We buffer metrics in a thread safe queue, so that there is no conflict
         # if we are flushing metrics in another thread.
@@ -190,25 +190,36 @@ class DogStatsApi(object):
         }
         # If the metrics queue is full, don't block.
         try:
-            self._metrics_queue.put_nowait(metric)
+            self._metrics_queue.put(metric, True, self.metric_timeout)
         except Queue.Full:
-            log.error("Metrics queue is full with size %s" % self.max_queue_size)
+            # This check has a race condition, but if we're in the 
+            # ballpark of the max queue size, it's true enough.
+            if self._metrics_queue.full():
+                log.error("Metrics queue is full with size %s" % self.max_queue_size)
+            else:
+                log.error("Hit metric timeout of %s. Dropping point." % self.metric_timeout)
 
     def _dequeue_metrics(self):
         """ Pop all metrics off of the queue. """
         metrics = []
+        loops = 0
+        log.debug("Dequeuing metrics. Size: %s" % self._metrics_queue.qsize())
         while True:
+            loops += 1
             # FIXME mattp: is this performant enough? If we're flushing
             # manually or in a greenlet, we could skip this step and queue
             # directly onto the aggregator.
             try:
-                metrics.append(self._metrics_queue.get_nowait())
+                metrics.append(self._metrics_queue.get(False, self.metric_timeout * 2))
             except Queue.Empty:
+                # Only break if the queue is actually close to empty. Let the 
+                if self._metrics_queue.empty():
+                    break
+            # Ensure that we aren't popping metrics for a dangerously long time.
+            if loops >= self.max_queue_size:
+                log.info("Maximum flush size hit %s" % self.max_queue_size)
                 break
-            # Ensure that we aren't popping metrics for a dangerously
-            # long time.
-            if len(metrics) >= self.max_flush_size:
-                log.info("Maximum flush size hit %s" % self.max_flush_size)
-                break
+        log.debug("Finished dequeueing metrics. Size: %s" % 
+                                        self._metrics_queue.qsize())
         return metrics
 
