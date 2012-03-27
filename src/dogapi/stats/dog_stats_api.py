@@ -21,6 +21,7 @@ class DogStatsApi(object):
     def __init__(self):
         """ Initialize a dogstats object. """
         self.max_queue_size = 200000
+        self.metric_timeout = 0.01
 
         # We buffer metrics in a thread safe queue, so that there is no conflict
         # if we are flushing metrics in another thread.
