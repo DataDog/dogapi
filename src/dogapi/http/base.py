@@ -8,13 +8,10 @@ import logging
 import re
 import socket
 import time
-import urllib2
 from contextlib import contextmanager
 from pprint import pformat
 from urllib import urlencode
 
-#from dogapi.datadog.metricsapi import MetricsAggregator
-#from dogapi.datadog.periodic_timer import PeriodicTimer
 
 try:
     import simplejson as json
@@ -26,6 +23,7 @@ log = logging.getLogger('dd.dogapi')
 
 from dogapi.exceptions import *
 from dogapi.constants import *
+from dogapi.common import get_ec2_instance_id
 
 __all__ = [
     'BaseDatadog'
@@ -124,22 +122,7 @@ class BaseDatadog(object):
             self._use_ec2_instance_id = value
 
             if value:
-                try:
-                    # Remember the previous default timeout
-                    old_timeout = socket.getdefaulttimeout()
-
-                    # Try to query the EC2 internal metadata service, but fail fast
-                    socket.setdefaulttimeout(0.25)
-
-                    try:
-                        host = urllib2.urlopen(urllib2.Request('http://169.254.169.254/latest/meta-data/instance-id')).read()
-                    finally:
-                        # Reset the previous default timeout
-                        socket.setdefaulttimeout(old_timeout)
-                except Exception:
-                    host = socket.gethostname()
-
-                self._default_host = host
+                self._default_host = get_ec2_instance_id()
             else:
                 self._default_host = socket.gethostname()
 

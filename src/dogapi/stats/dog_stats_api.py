@@ -8,6 +8,7 @@ import socket
 import time
 import Queue
 
+from dogapi.common import get_ec2_instance_id
 from dogapi.constants import MetricType
 from dogapi.stats.metrics import MetricsAggregator
 from dogapi.stats.reporters import HttpReporter
@@ -42,9 +43,12 @@ class DogStatsApi(object):
         """
         self.flush_interval = flush_interval
         self.roll_up_interval = roll_up_interval
-        self.host = host or socket.gethostname()
         self.device = device
         self.metric_timeout = metric_timeout
+
+        self.host = host or socket.gethostname()
+        if use_ec2_instance_ids:
+            self.host = get_ec2_instance_id()
 
         # Initialize the metrics aggregator.
         self._metrics_aggregator = MetricsAggregator(self.roll_up_interval)
