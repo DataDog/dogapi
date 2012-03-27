@@ -103,10 +103,10 @@ class DogStatsApi(object):
         count = len(metrics)
         if count:
             self.flush_count += 1
-            log.debug("Flush #%s sending %s metrics" % (self.flush_count, count))
+            log.info("Flush #%s sending %s metrics" % (self.flush_count, count))
             self.reporter.flush(metrics)
         else:
-            log.debug("No metrics to flush. Continuing.")
+            log.info("No metrics to flush. Continuing.")
 
     def _aggregate_metrics(self, raw_metrics, flush_time=None):
         flush_time = flush_time or time.time()
