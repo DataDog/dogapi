@@ -174,15 +174,6 @@ class TestUnitDogStatsAPI(object):
         dog.flush(1050.0)
         nt.assert_equal(len(reporter.metrics), 0)
 
-    def test_max_queue_size(self):
-        dog = DogStatsApi()
-        dog.start(max_queue_size=5, roll_up_interval=1, flush_in_thread=False)
-        reporter = dog.reporter = MemoryReporter()
-        for i in range(10):
-            dog.gauge('my.gauge.%s' % i,  1, 1000.0)
-        dog.flush(2000.0)
-        nt.assert_equal(len(reporter.metrics), 5)
-
     def test_default_host_and_device(self):
         dog = DogStatsApi()
         dog.start(roll_up_interval=1, flush_in_thread=False)

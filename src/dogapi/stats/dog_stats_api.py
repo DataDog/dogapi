@@ -19,17 +19,20 @@ log = logging.getLogger('dd.dogapi')
 class DogStatsApi(object):
 
     def __init__(self):
-        self.max_queue_size = 100000
+        """ Initialize a dogstats object. """
+        self.max_queue_size = 200000
+
+        # We buffer metrics in a thread safe queue, so that there is no conflict
+        # if we are flushing metrics in another thread.
         self._metrics_queue = Queue.Queue(self.max_queue_size)
 
     def start(self, api_key=None,
                     flush_interval=10,
                     roll_up_interval=10,
-                    max_queue_size=100000,
-                    metric_timeout=0.005,
                     host=None,
                     device=None,
                     api_host=None,
+                    metric_timeout=0.01,
                     use_ec2_instance_ids=False,
                     flush_in_thread=True,
                     flush_in_greenlet=False):
@@ -38,14 +41,9 @@ class DogStatsApi(object):
         """
         self.flush_interval = flush_interval
         self.roll_up_interval = roll_up_interval
-        self.max_queue_size = max_queue_size
         self.host = host or socket.gethostname()
         self.device = device
         self.metric_timeout = metric_timeout
-
-        # We buffer metrics in a thread safe queue, so that there is no conflict
-        # if we are flushing metrics in another thread.
-        self._metrics_queue = Queue.Queue(self.max_queue_size)
 
         # Initialize the metrics aggregator.
         self._metrics_aggregator = MetricsAggregator(self.roll_up_interval)
@@ -192,7 +190,7 @@ class DogStatsApi(object):
         try:
             self._metrics_queue.put(metric, True, self.metric_timeout)
         except Queue.Full:
-            # This check has a race condition, but if we're in the 
+            # This check has a race condition, but if we're in the
             # ballpark of the max queue size, it's true enough.
             if self._metrics_queue.full():
                 log.error("Metrics queue is full with size %s" % self.max_queue_size)
@@ -212,14 +210,14 @@ class DogStatsApi(object):
             try:
                 metrics.append(self._metrics_queue.get(False, self.metric_timeout * 2))
             except Queue.Empty:
-                # Only break if the queue is actually close to empty. Let the 
+                # Only break if the queue is actually close to empty. Let the
                 if self._metrics_queue.empty():
                     break
             # Ensure that we aren't popping metrics for a dangerously long time.
             if loops >= self.max_queue_size:
                 log.info("Maximum flush size hit %s" % self.max_queue_size)
                 break
-        log.debug("Finished dequeueing metrics. Size: %s" % 
+        log.debug("Finished dequeueing metrics. Size: %s" %
                                         self._metrics_queue.qsize())
         return metrics
 
