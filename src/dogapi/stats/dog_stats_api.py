@@ -1,7 +1,7 @@
 """
-DataDog Stat's API
+DogStatsAPI collects metrics and asynchronously flushes them to DataDog's
+HTTP API.
 """
-
 
 import logging
 import socket
@@ -39,7 +39,12 @@ class DogStatsApi(object):
                     flush_in_thread=True,
                     flush_in_greenlet=False):
         """
-        Create a DogStatsApi instance.
+        Configure the DogStatsApi instance and optionally, begin auto-flusing metrics.
+
+        :param api_key: Your DataDog API key.
+        :param flush_interval: The number of seconds to wait between flushes.
+        :param flush_in_thread: True if you'd like to spawn a thread to flush metrics. It will run every `flush_interval` seconds.
+        :param flush_in_greenlet: Set to true if you'd like to flush in a gevent greenlet.
         """
         self.flush_interval = flush_interval
         self.roll_up_interval = roll_up_interval
@@ -69,24 +74,38 @@ class DogStatsApi(object):
     def gauge(self, metric_name, value, timestamp=None):
         """
         Record the instantaneous value of the given gauge.
+
+        :param metric_name: The name of the gauge (e.g. 'my.app.users.online')
+        :param value: The integer or floating point value of the gauge.
+        :param timestamp: The time the value was recorded. Defaults to now.
         """
         self._queue_metric(metric_name, value, MetricType.Gauge, timestamp)
 
     def increment(self, metric_name, value=1, timestamp=None):
         """
         Increment the given counter.
+
+        :param metric_name: The name of the counter (e.g. 'home.page.request.count')
+        :param value: The value to increment to by. Defaults to one.
+        :param timestamp: The time the counter was incremented. Defaults to now.
         """
         self._queue_metric(metric_name, value, MetricType.Counter, timestamp)
 
     def histogram(self, metric_name, value, timestamp=None):
         """
-        Sample a value of the given histogram.
+        Sample a value of the given histogram
+
+        :param metric_name: The name of the histogram (e.g. 'home.page.query.time')
+        :param value: The integer or floating value to sample.
+        :param timestamp: The time the value was sampled. Defaults to now.
         """
         self._queue_metric(metric_name, value, MetricType.Histogram, timestamp)
 
     def timed(self, metric_name):
         """
         A decorator that will sample the run time of a function in a histogram.
+
+        :param metric_name: The name of the histogram metric.
         """
         def wrapper(func):
             def wrapped(*args, **kwargs):
