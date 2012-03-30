@@ -58,8 +58,8 @@ class DogStatsApi(object):
         # to the datadog agent.
         self.reporter = HttpReporter(api_key=api_key, api_host=api_host)
 
-        # Start the appropriate flushing mechanism.
         self._is_auto_flushing = False
+        self._is_flush_in_progress = False
         self.flush_count = 0
         if flush_in_greenlet:
             self._start_flush_greenlet()
@@ -101,15 +101,22 @@ class DogStatsApi(object):
         """
         Flush all metrics to their final destination.
         """
-        raw_metrics = self._dequeue_metrics()
-        metrics = self._aggregate_metrics(raw_metrics, timestamp)
-        count = len(metrics)
-        if count:
-            self.flush_count += 1
-            log.info("Flush #%s sending %s metrics" % (self.flush_count, count))
-            self.reporter.flush(metrics)
-        else:
-            log.info("No metrics to flush. Continuing.")
+        if self._is_flush_in_progress:
+            log.debug("A flush is already in progress. Skipping this one.")
+            return
+        try:
+            self._is_flush_in_progress = True
+            raw_metrics = self._dequeue_metrics()
+            metrics = self._aggregate_metrics(raw_metrics, timestamp)
+            count = len(metrics)
+            if count:
+                self.flush_count += 1
+                log.info("Flush #%s sending %s metrics" % (self.flush_count, count))
+                self.reporter.flush(metrics)
+            else:
+                log.info("No metrics to flush. Continuing.")
+        finally:
+            self._is_flush_in_progress = False
 
     def _aggregate_metrics(self, raw_metrics, flush_time=None):
         flush_time = flush_time or time.time()
