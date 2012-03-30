@@ -59,7 +59,7 @@ class DogStatsApi(object):
         self.reporter = HttpReporter(api_key=api_key, api_host=api_host)
 
         # Start the appropriate flushing mechanism.
-        self._flushing = False
+        self._is_auto_flushing = False
         self.flush_count = 0
         if flush_in_greenlet:
             self._start_flush_greenlet()
@@ -139,11 +139,10 @@ class DogStatsApi(object):
     def _start_flush_thread(self):
         """ Start a thread to flush metrics. """
         from dogapi.stats.periodic_timer import PeriodicTimer
-        if self._flushing:
-            log.info("Already running.")
+        if self._is_auto_flushing:
+            log.info("Autoflushing already started.")
             return
-
-        self._flushing = True
+        self._is_auto_flushing = True
 
         # A small helper for logging and flushing.
         def flush():
@@ -162,10 +161,10 @@ class DogStatsApi(object):
         self._flush_thread.start()
 
     def _start_flush_greenlet(self):
-        if self._flushing:
-            log.info("Already flushing.")
+        if self._is_auto_flushing:
+            log.info("Autoflushing already started.")
             return
-        self._flushing = True
+        self._is_auto_flushing = True
 
         import gevent
         # A small helper for flushing.
