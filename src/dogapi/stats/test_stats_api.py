@@ -110,7 +110,7 @@ class TestUnitDogStatsAPI(object):
         nt.assert_equal(h2cnt1['points'][0][0], 100.0)
         nt.assert_equal(h2cnt1['points'][0][1], 1)
 
-        # Flush agin ensure they're gone.
+        # Flush again ensure they're gone.
         dog.reporter.metrics = []
         dog.flush(140.0)
         nt.assert_equal(len(dog.reporter.metrics), 4)
