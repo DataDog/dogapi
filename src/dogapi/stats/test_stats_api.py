@@ -3,6 +3,7 @@ Tests for the DogStatsAPI class.
 """
 
 import os
+import random
 import time
 
 import nose.tools as nt
@@ -51,8 +52,8 @@ class TestUnitDogStatsAPI(object):
         time.sleep(1) # Argh. I hate this.
         dog.flush()
         metrics = self.sort_metrics(reporter.metrics)
-        nt.assert_equal(len(metrics), 4)
-        (avg, count, max_, min_) = metrics
+        nt.assert_equal(len(metrics), 8)
+        (_, _, _, _, avg, count, max_, min_) = metrics
         nt.assert_equal(avg['metric'], 'timed.test.avg')
         nt.assert_equal(count['metric'], 'timed.test.count')
         nt.assert_equal(max_['metric'], 'timed.test.max')
@@ -79,11 +80,12 @@ class TestUnitDogStatsAPI(object):
         # Flush and ensure they roll up properly.
         dog.flush(120.0)
         metrics = self.sort_metrics(reporter.metrics)
-        nt.assert_equal(len(metrics), 12)
+        nt.assert_equal(len(metrics), 24)
 
-        (h1avg1, h1cnt1, h1max1, h1min1,
-         h2avg1, h2cnt1, h2max1, h2min1,
-         h1avg2, h1cnt2, h1max2, h1min2) = metrics
+        # Test histograms elsewhere.
+        (_, _, _, _, h1avg1, h1cnt1, h1max1, h1min1,
+         _, _, _, _, h2avg1, h2cnt1, h2max1, h2min1,
+         _, _, _, _, h1avg2, h1cnt2, h1max2, h1min2) = metrics
 
         nt.assert_equal(h1avg1['metric'], 'histogram.1.avg')
         nt.assert_equal(h1avg1['points'][0][0], 100.0)
@@ -113,10 +115,35 @@ class TestUnitDogStatsAPI(object):
         # Flush again ensure they're gone.
         dog.reporter.metrics = []
         dog.flush(140.0)
-        nt.assert_equal(len(dog.reporter.metrics), 4)
+        nt.assert_equal(len(dog.reporter.metrics), 8)
         dog.reporter.metrics = []
         dog.flush(200.0)
         nt.assert_equal(len(dog.reporter.metrics), 0)
+
+    def test_histogram_percentiles(self):
+        dog = DogStatsApi()
+        dog.start(roll_up_interval=10, flush_in_thread=False)
+        reporter = dog.reporter = MemoryReporter()
+        # Sample all numbers between 1-100 many times. This
+        # means our percentiles should be relatively close to themselves.
+        percentiles = range(100)
+        random.shuffle(percentiles) # in place
+        for i in percentiles:
+            for j in xrange(20):
+                dog.histogram('percentiles', i, 1000.0)
+        dog.flush(2000.0)
+        metrics = reporter.metrics
+        def assert_almost_equal(i, j, e=1):
+            # Floating point math?
+            assert abs(i - j) <= e, "%s %s %s" % (i, j, e)
+        nt.assert_equal(len(metrics), 8)
+        p75, p85, p95, p99, _, _, _, _ = self.sort_metrics(metrics)
+        nt.assert_equal(p75['metric'], 'percentiles.75percentile')
+        nt.assert_equal(p75['points'][0][0], 1000.0)
+        assert_almost_equal(p75['points'][0][1], 75, 5)
+        assert_almost_equal(p85['points'][0][1], 85, 5)
+        assert_almost_equal(p95['points'][0][1], 95, 5)
+        assert_almost_equal(p99['points'][0][1], 99, 5)
 
     def test_gauge(self):
         # Create some fake metrics.

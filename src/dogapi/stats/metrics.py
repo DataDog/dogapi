@@ -4,6 +4,7 @@ Metric roll-up classes.
 
 
 from collections import defaultdict
+import random
 import time
 
 from dogapi.constants import MetricType
@@ -73,18 +74,42 @@ class Counter(Metric):
 class Histogram(Metric):
     """ A histogram metric. """
 
-    def __init__(self, name, roll_up_interval):
+    def __init__(self, name, roll_up_interval, sample_size=1000):
        super(Histogram, self).__init__(name, roll_up_interval)
        self._intervals = defaultdict(lambda: [])
+       self._sample_size = sample_size
+       self._sampled_values = []
+       self._percentiles = [0.75, 0.85, 0.95, 0.99]
 
     def add_point(self, timestamp, value):
         interval = self._get_interval(timestamp)
         self._intervals[interval].append(value)
+        self._sample_value(value)
+
+    def _sample_value(self, value):
+        # A random uniform sample.
+        count = len(self._sampled_values)
+        if count < self._sample_size:
+            self._sampled_values.append(value)
+        else:
+            index = random.randint(0, self._sample_size - 1)
+            self._sampled_values[index] = value
+
+    def _get_percentiles(self):
+        self._sampled_values.sort()
+        length = len(self._sampled_values)
+        output = {}
+        if not length:
+            return output
+        for percentile in self._percentiles:
+            index = int(round(percentile * length - 1))
+            output[percentile] = self._sampled_values[index]
+        return output
 
     def flush(self, timestamp):
         metrics = []
         for i in self._get_past_intervals(timestamp):
-            #FIXME: make this real.
+            # FIXME: this should probably get moved to it's own class.
             values = self._intervals.pop(i)
             count = len(values)
             avg = sum(values) / count
@@ -92,6 +117,10 @@ class Histogram(Metric):
             metrics.append((i, count, self._name + '.count'))
             metrics.append((i, min(values), self._name + '.min'))
             metrics.append((i, max(values), self._name + '.max'))
+            percentiles = self._get_percentiles()
+            for p, value in percentiles.items():
+                name = "%s.%spercentile" % (self._name, str(int(p * 100)))
+                metrics.append((i, value, name))
         return metrics
 
 
