@@ -90,6 +90,8 @@ class Histogram(Metric):
             avg = sum(values) / count
             metrics.append((i, avg, self._name + '.avg'))
             metrics.append((i, count, self._name + '.count'))
+            metrics.append((i, min(values), self._name + '.min'))
+            metrics.append((i, max(values), self._name + '.max'))
         return metrics
 
 

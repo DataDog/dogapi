@@ -51,10 +51,12 @@ class TestUnitDogStatsAPI(object):
         time.sleep(1) # Argh. I hate this.
         dog.flush()
         metrics = self.sort_metrics(reporter.metrics)
-        nt.assert_equal(len(metrics), 2)
-        (avg, count) = metrics
+        nt.assert_equal(len(metrics), 4)
+        (avg, count, max_, min_) = metrics
         nt.assert_equal(avg['metric'], 'timed.test.avg')
         nt.assert_equal(count['metric'], 'timed.test.count')
+        nt.assert_equal(max_['metric'], 'timed.test.max')
+        nt.assert_equal(min_['metric'], 'timed.test.min')
 
     def test_histogram(self):
         dog = DogStatsApi()
@@ -77,9 +79,11 @@ class TestUnitDogStatsAPI(object):
         # Flush and ensure they roll up properly.
         dog.flush(120.0)
         metrics = self.sort_metrics(reporter.metrics)
-        nt.assert_equal(len(metrics), 6)
+        nt.assert_equal(len(metrics), 12)
 
-        (h1avg1, h1cnt1, h2avg1, h2cnt1, h1avg2, h1cnt2) = metrics
+        (h1avg1, h1cnt1, h1max1, h1min1,
+         h2avg1, h2cnt1, h2max1, h2min1,
+         h1avg2, h1cnt2, h1max2, h1min2) = metrics
 
         nt.assert_equal(h1avg1['metric'], 'histogram.1.avg')
         nt.assert_equal(h1avg1['points'][0][0], 100.0)
@@ -87,6 +91,10 @@ class TestUnitDogStatsAPI(object):
         nt.assert_equal(h1cnt1['metric'], 'histogram.1.count')
         nt.assert_equal(h1cnt1['points'][0][0], 100.0)
         nt.assert_equal(h1cnt1['points'][0][1], 3)
+        nt.assert_equal(h1min1['metric'], 'histogram.1.min')
+        nt.assert_equal(h1min1['points'][0][1], 20)
+        nt.assert_equal(h1max1['metric'], 'histogram.1.max')
+        nt.assert_equal(h1max1['points'][0][1], 30)
 
         nt.assert_equal(h1avg2['metric'], 'histogram.1.avg')
         nt.assert_equal(h1avg2['points'][0][0], 110.0)
@@ -105,13 +113,12 @@ class TestUnitDogStatsAPI(object):
         # Flush agin ensure they're gone.
         dog.reporter.metrics = []
         dog.flush(140.0)
-        nt.assert_equal(len(dog.reporter.metrics), 2)
+        nt.assert_equal(len(dog.reporter.metrics), 4)
         dog.reporter.metrics = []
         dog.flush(200.0)
         nt.assert_equal(len(dog.reporter.metrics), 0)
 
     def test_gauge(self):
-
         # Create some fake metrics.
         dog = DogStatsApi()
         dog.start(roll_up_interval=10, flush_in_thread=False)
