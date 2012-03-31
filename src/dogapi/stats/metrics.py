@@ -34,7 +34,7 @@ class Metric(object):
     def _get_past_intervals(self, timestamp):
         """ Return all intervals that are before the given timestamp. """
         ts_interval = self._get_interval(timestamp)
-        return sorted((i for i in self._intervals if i < ts_interval))
+        return sorted([i for i in self._intervals if i < ts_interval])
 
 
 class Gauge(Metric):
