@@ -32,10 +32,11 @@ class Metric(object):
         """ Return the interval into which the given timestamp fits. """
         return timestamp - timestamp % self._roll_up_interval
 
-    def _get_past_intervals(self, timestamp):
+    def _pop_past_intervals(self, timestamp):
         """ Return all intervals that are before the given timestamp. """
         ts_interval = self._get_interval(timestamp)
-        return sorted([i for i in self._intervals if i < ts_interval])
+        past_timestamps = sorted([i for i in self._intervals if i < ts_interval])
+        return [(ts, self._intervals.pop(ts)) for ts in past_timestamps]
 
 
 class Gauge(Metric):
@@ -50,8 +51,8 @@ class Gauge(Metric):
         self._intervals[interval] = value
 
     def flush(self, timestamp):
-        past_intervals = self._get_past_intervals(timestamp)
-        return [(i, self._intervals.pop(i), self._name) for i in past_intervals]
+        past_intervals = self._pop_past_intervals(timestamp)
+        return [(ts, gauge, self._name) for ts, gauge in past_intervals]
 
 
 class Counter(Metric):
@@ -67,8 +68,8 @@ class Counter(Metric):
         self._intervals[interval] = count + value
 
     def flush(self, timestamp):
-        past_intervals = self._get_past_intervals(timestamp)
-        return [(i, self._intervals.pop(i), self._name) for i in past_intervals]
+        past_intervals = self._pop_past_intervals(timestamp)
+        return [(ts, count, self._name) for ts, count in past_intervals]
 
 
 class Histogram(Metric):
@@ -108,9 +109,7 @@ class Histogram(Metric):
 
     def flush(self, timestamp):
         metrics = []
-        for i in self._get_past_intervals(timestamp):
-            # FIXME: this should probably get moved to it's own class.
-            values = self._intervals.pop(i)
+        for i, values in self._pop_past_intervals(timestamp):
             count = len(values)
             avg = sum(values) / count
             metrics.append((i, avg, self._name + '.avg'))
