@@ -66,8 +66,9 @@ class TestUnitDogStatsAPI(object):
 
         # Add some histogram metrics.
         dog.histogram('histogram.1', 20, 100.0)
-        dog.histogram('histogram.1', 25, 105.0)
-        dog.histogram('histogram.1', 30, 106.0)
+        dog.histogram('histogram.1', 30, 105.0)
+        dog.histogram('histogram.1', 40, 106.0)
+        dog.histogram('histogram.1', 50, 106.0)
 
         dog.histogram('histogram.1', 30, 110.0)
         dog.histogram('histogram.1', 50, 115.0)
@@ -83,20 +84,25 @@ class TestUnitDogStatsAPI(object):
         nt.assert_equal(len(metrics), 24)
 
         # Test histograms elsewhere.
-        (_, _, _, _, h1avg1, h1cnt1, h1max1, h1min1,
+        (h1751, h1851, h1951, h1991, h1avg1, h1cnt1, h1max1, h1min1,
          _, _, _, _, h2avg1, h2cnt1, h2max1, h2min1,
-         _, _, _, _, h1avg2, h1cnt2, h1max2, h1min2) = metrics
+         h1752, _, _, h1992, h1avg2, h1cnt2, h1max2, h1min2) = metrics
 
         nt.assert_equal(h1avg1['metric'], 'histogram.1.avg')
         nt.assert_equal(h1avg1['points'][0][0], 100.0)
-        nt.assert_equal(h1avg1['points'][0][1], 25)
+        nt.assert_equal(h1avg1['points'][0][1], 35)
         nt.assert_equal(h1cnt1['metric'], 'histogram.1.count')
         nt.assert_equal(h1cnt1['points'][0][0], 100.0)
-        nt.assert_equal(h1cnt1['points'][0][1], 3)
+        nt.assert_equal(h1cnt1['points'][0][1], 4)
         nt.assert_equal(h1min1['metric'], 'histogram.1.min')
         nt.assert_equal(h1min1['points'][0][1], 20)
         nt.assert_equal(h1max1['metric'], 'histogram.1.max')
-        nt.assert_equal(h1max1['points'][0][1], 30)
+        nt.assert_equal(h1max1['points'][0][1], 50)
+        nt.assert_equal(h1751['metric'], 'histogram.1.75percentile')
+        nt.assert_equal(h1751['points'][0][1], 40)
+        nt.assert_equal(h1991['metric'], 'histogram.1.99percentile')
+        nt.assert_equal(h1991['points'][0][1], 50)
+
 
         nt.assert_equal(h1avg2['metric'], 'histogram.1.avg')
         nt.assert_equal(h1avg2['points'][0][0], 110.0)
@@ -104,6 +110,13 @@ class TestUnitDogStatsAPI(object):
         nt.assert_equal(h1cnt2['metric'], 'histogram.1.count')
         nt.assert_equal(h1cnt2['points'][0][0], 110.0)
         nt.assert_equal(h1cnt2['points'][0][1], 3)
+        nt.assert_equal(h1752['metric'], 'histogram.1.75percentile')
+        nt.assert_equal(h1752['points'][0][0], 110.0)
+        nt.assert_equal(h1752['points'][0][1], 40.0)
+        nt.assert_equal(h1992['metric'], 'histogram.1.99percentile')
+        nt.assert_equal(h1992['points'][0][0], 110.0)
+        nt.assert_equal(h1992['points'][0][1], 50.0)
+
 
         nt.assert_equal(h2avg1['metric'], 'histogram.2.avg')
         nt.assert_equal(h2avg1['points'][0][0], 100.0)
