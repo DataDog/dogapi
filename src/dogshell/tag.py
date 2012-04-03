@@ -2,14 +2,9 @@ import sys
 
 import simplejson
 
-from dogapi.v1 import TagService
-
 from dogshell.common import report_errors, report_warnings, CommandLineClient
 
 class TagClient(CommandLineClient):
-
-    def __init__(self, config):
-        self.config = config
 
     def setup_parser(self, subparsers):
         parser = subparsers.add_parser('tag', help='View and modify host tags.')
@@ -34,9 +29,9 @@ class TagClient(CommandLineClient):
         detach_parser.set_defaults(func=self._detach)
 
     def _add(self, args):
+        self.dog.timeout = args.timeout
         format = args.format
-        svc = TagService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
-        res = svc.add(args.host, args.tag)
+        res = self.dog.add_tags(args.host, *args.tag)
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
@@ -50,9 +45,9 @@ class TagClient(CommandLineClient):
                 print c
 
     def _replace(self, args):
+        self.dog.timeout = args.timeout
         format = args.format
-        svc = TagService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
-        res = svc.update(args.host, args.tag)
+        res = self.dog.change_tags(args.host, *args.tag)
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
@@ -66,12 +61,12 @@ class TagClient(CommandLineClient):
                 print c
 
     def _show(self, args):
+        self.dog.timeout = args.timeout
         format = args.format
-        svc = TagService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
         if args.host == 'all':
-            res = svc.get_all()
+            res = self.dog.all_tags()
         else:
-            res = svc.get(args.host)
+            res = self.dog.host_tags(args.host)
         report_warnings(res)
         report_errors(res)
         if args.host == 'all':
@@ -98,9 +93,9 @@ class TagClient(CommandLineClient):
                     print tag
 
     def _detach(self, args):
+        self.dog.timeout = args.timeout
         format = args.format
-        svc = TagService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
-        res = svc.detach(args.host)
+        res = self.dog.detach_tags(args.host)
         report_warnings(res)
         report_errors(res)
         if format == 'raw':

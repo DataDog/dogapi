@@ -1,11 +1,6 @@
-import logging
-logging.basicConfig()
+from dogapi.http import DogHttpApi
+from dogapi.stats import DogStatsApi
 
-import common
-import facade
-import metric
-import event
-from facade import init
-from simpleclient import SimpleClient
-
-dog = SimpleClient()
+#FIXME matt: remove the 'dog' variable.
+dog = dog_stats_api = DogStatsApi()
+dog_http_api = DogHttpApi()

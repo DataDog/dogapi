@@ -1,13 +1,8 @@
 import simplejson
 
-from dogapi.v1 import SearchService
-
 from dogshell.common import report_errors, report_warnings, CommandLineClient
 
 class SearchClient(CommandLineClient):
-
-    def __init__(self, config):
-        self.config = config
 
     def setup_parser(self, subparsers):
         parser = subparsers.add_parser('search', help='search datadog')
@@ -18,8 +13,8 @@ class SearchClient(CommandLineClient):
         query_parser.set_defaults(func=self._query)
 
     def _query(self, args):
-        svc = SearchService(self.config['apikey'], self.config['appkey'], timeout=args.timeout)
-        res = svc.query(args.query)
+        self.dog.timeout = args.timeout
+        res = self.dog.search(args.query)
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':

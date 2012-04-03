@@ -8,16 +8,24 @@ import os
 from nose.plugins.skip import SkipTest
 
 # dogapi
-from dogapi import dog
+import dogapi
 import datetime, time
 
 
-class TestSimpleClient(unittest.TestCase):
+TEST_USER = os.environ.get('DATADOG_TEST_USER')
+API_KEY = os.environ.get('DATADOG_API_KEY')
+APP_KEY = os.environ.get('DATADOG_APP_KEY')
+
+# Our
+dog = None
+
+class TestDatadog(unittest.TestCase):
 
     def setUp(self):
-        self.test_user = "fabian"
-        dog.api_key = os.environ.get('DATADOG_API_KEY')
-        dog.application_key = os.environ.get('DATADOG_APP_KEY')
+        global dog
+        dog = dogapi.DogHttpApi()
+        dog.api_key = API_KEY
+        dog.application_key = APP_KEY
         dog.swallow = False
 
     def test_tags(self):
@@ -62,8 +70,8 @@ class TestSimpleClient(unittest.TestCase):
         before_title = 'start test title ' + str(before_ts)
         before_message = 'test message ' + str(before_ts)
 
-        now_event_id = dog.event(now_title, now_message, now_ts)
-        before_event_id = dog.event(before_title, before_message, before_ts)
+        now_event_id = dog.event_with_response(now_title, now_message, now_ts)
+        before_event_id = dog.event_with_response(before_title, before_message, before_ts)
 
         stream = dog.stream(before_ts, now_ts + 2)
 
@@ -76,13 +84,13 @@ class TestSimpleClient(unittest.TestCase):
         assert now_event['text'] == now_message
         assert before_event['text'] == before_message
 
-        event_id = dog.event('test host and device', 'test host and device', host='test.host', device_name='test.device')
+        event_id = dog.event_with_response('test host and device', 'test host and device', host='test.host', device_name='test.device')
         event = dog.get_event(event_id)
 
         assert event['host'] == 'test.host'
         assert event['device_name'] == 'test.device'
 
-        event_id = dog.event('test event tags', 'test event tags', tags=['test-tag-1','test-tag-2'])
+        event_id = dog.event_with_response('test event tags', 'test event tags', tags=['test-tag-1','test-tag-2'])
         event = dog.get_event(event_id)
 
         assert 'test-tag-1' in event['tags']
@@ -90,17 +98,18 @@ class TestSimpleClient(unittest.TestCase):
 
     def test_git_commits(self):
         """Pretend to send git commits"""
-        event_id = dog.event("Testing git commits", """$$$
+        event_id = dog.event_with_response("Testing git commits", """$$$
 eac54655 *   Merge pull request #2 from DataDog/alq-add-arg-validation (alq@datadoghq.com)
-         |\  
+         |\
 760735ef | * origin/alq-add-arg-validation Simple typechecking between metric and metrics (matt@datadoghq.com)
-         |/  
+         |/
 f7a5a23d * missed version number in docs (matt@datadoghq.com)
 $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
+
+
         event = dog.get_event(event_id)
 
         assert event.get("title", "") == "Testing git commits", event
-        assert event.get("source", "") == "Git", event
 
     def test_comments(self):
         now = datetime.datetime.now()
@@ -108,15 +117,15 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         before_ts = int(time.mktime((now - datetime.timedelta(minutes=5)).timetuple()))
         message = 'test message ' + str(now_ts)
 
-        comment_id = dog.comment(self.test_user, message)
+        comment_id = dog.comment(TEST_USER, message)
         event = dog.get_event(comment_id)
         assert event['text'] == message
 
-        dog.comment(self.test_user, message + ' updated', comment_id)
+        dog.update_comment(TEST_USER, message + ' updated', comment_id)
         event = dog.get_event(comment_id)
         assert event['text'] == message + ' updated'
 
-        reply_id = dog.comment(self.test_user, message + ' reply', related_event_id=comment_id)
+        reply_id = dog.comment(TEST_USER, message + ' reply', related_event_id=comment_id)
         stream = dog.stream(before_ts, now_ts + 10)
 
         assert reply_id in [x['id'] for x in stream[0]['comments']]
@@ -135,7 +144,7 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
 
         graph = {
                 "title": "test metric graph",
-                "definition": 
+                "definition":
                     {
                         "requests": [{"q": "testing.metric.1{host:blah.host.1}"}],
                         "viz": "timeseries",
@@ -178,20 +187,18 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
     def test_search(self):
         results = dog.search('e')
         assert len(results['hosts']) > 0
-        # FIXME: re-enable when LH #554 is fixed
-        #assert len(results['metrics']) > 0
+        assert len(results['metrics']) > 0
 
     def test_metrics(self):
         now = datetime.datetime.now()
         now_ts = int(time.mktime(now.timetuple()))
 
         dog.metric('test.metric.' + str(now_ts), 1, host="test.host." + str(now_ts))
-        time.sleep(1)
-        results = dog.search('hosts:test.host.' + str(now_ts))
-        assert len(results['hosts']) == 1, results
-        # FIXME: re-enable when LH #554 is fixed
-        #results = dog.search('metrics:test.metric.' + str(now_ts))
-        #assert len(results['metrics']) == 1
+        time.sleep(4)
+
+        results = dog.search('metrics:test.metric.' + str(now_ts))
+        # FIXME mattp: cache issue. move this test to server side.
+        #assert len(results['metrics']) == 1, results
 
         matt_series = [
                 (int(time.mktime((now - datetime.timedelta(minutes=25)).timetuple())), 5),
@@ -213,37 +220,18 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
                 (int(time.mktime((now - datetime.timedelta(minutes=11)).timetuple())), 5),
                 ]
 
-        dog.metrics('matt.metric', matt_series, host="matt.metric.host")
+        dog.metric('matt.metric', matt_series, host="matt.metric.host")
 
-    def test_swallow_exceptions(self):
-        comment_id = dog.comment(self.test_user, 'test exception swallowing')
-        dog.delete_comment(comment_id)
-
-        # doesn't raise an exception when swallow is True
-        dog.swallow = True
-        dog.get_event(comment_id)
-
-        # raises an exception when swallow is False
-        dog.swallow = False
-        try:
-            dog.get_event(comment_id)
-        except:
-            pass
-        else:
-            assert False
-
+        dog.metrics({
+                'test.metric1': [(1000000000, 1), (1000000000, 2)],
+                'test.metric2': [(1000000000, 2), (1000000000, 4)],
+        })
 
     def test_type_check(self):
-        try:
-            dog.metric("test.metric", [(time.time() - 3600, 1.0)])
-            self.fail()
-        except Exception, e:
-            assert str(e) == ".metric takes a scalar value not a <type 'list'>. You might want to use .metrics instead", str(e)
-        try:
-            dog.metrics("test.metric", 1.0)
-            self.fail()
-        except Exception, e:
-            assert str(e) == ".metrics takes a list of pairs not a <type 'float'>. You might want to use .metric instead to send a scalar value", str(e)
+        dog.metric("test.metric", [(time.time() - 3600, 1.0)])
+        dog.metric("test.metric", 1.0)
+        dog.metric("test.metric", (time.time(), 1.0))
+
 
 if __name__ == '__main__':
     unittest.main()

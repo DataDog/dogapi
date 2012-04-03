@@ -3,6 +3,9 @@ import os
 import sys
 from UserDict import IterableUserDict
 
+from dogapi import DogHttpApi
+
+
 def report_errors(res):
     if 'errors' in res:
         for e in res['errors']:
@@ -18,7 +21,17 @@ def report_warnings(res):
     return False
 
 class CommandLineClient(object):
-    pass
+    def __init__(self, config):
+        self.config = config
+        self._dog = None
+
+    @property
+    def dog(self):
+        if not self._dog:
+            self._dog = DogHttpApi(self.config['apikey'], self.config['appkey'], swallow=False, json_responses=True)
+        return self._dog
+        
+
 
 class DogshellConfig(IterableUserDict):
 
