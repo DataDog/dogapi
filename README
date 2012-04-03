@@ -1,4 +1,6 @@
-Python client for Datadog API v1.0.0
+DataDog API Python Client v1.0.0
 
-Documentation about the python client is available at: http://pydoc.datadoghq.com.
-Documentation about the REST API itself is in the wiki: https://github.com/datadog/dogapi/wiki
+- Library Documentation: http://pydoc.datadoghq.com
+- API Documetation: http://api.datadoghq.com/
+- DataDogHQ: http://datadoghq.com
+
