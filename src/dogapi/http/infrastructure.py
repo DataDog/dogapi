@@ -5,13 +5,18 @@ __all__ = [
 class InfrastructureApi(object):
     def search(self, query):
         """
-        Search datadog for hosts and metrics by name.
+        Search datadog for hosts and metrics by name. The search *query* can be
+        faceted to limit the results (e.g. ``"host:foo"``, or ``"metric:bar"``)
+        or un-faceted, which will return results of all types (e.g. ``"baz"``).
+        Return a dictionary mapping each queried facet to a list of name
+        strings.
 
-        :param query: search query can either be faceted to limit the results (e.g. ``"host:foo"``, or ``"metric:bar"``) or un-faceted, which will return results of all types (e.g. ``"baz"``)
-        :type query: string
-
-        :return: a dictionary maping each queried facet to a list of name strings
-        :rtype: dictionary
+        >>> dog_http_api.search("cassandra")
+        { "results": {
+            "hosts": ["cassandraHostA", "cassandraHostB", ...],
+            "metrics": ["cassandra.load", "cassandra.requests", ...]
+          }
+        }
         """
         response = self.http_request('GET', '/search', q=query)
         if self.json_responses:
@@ -23,13 +28,13 @@ class InfrastructureApi(object):
         """
         Get a list of tags for your org and their member hosts.
 
-        :return: [ { 'tag1': [ 'host1', 'host2', ... ] }, ... ]
-        :rtype: list
+        >>> dog_http_api.all_tags()
+        [ { 'tag1': [ 'host1', 'host2', ... ] }, ... ]
         """
         if self.api_key is None or self.application_key is None:
             self._report_error("Tag API requires api and application keys")
             return
-        
+
         response = self.http_request('GET', '/tags/hosts')
         if self.json_responses:
             return response
@@ -40,12 +45,11 @@ class InfrastructureApi(object):
         """
         Get a list of tags for the specified host by name or id.
 
-        :param host_id: id or name of the host
-        :type host_id: integer or string
-
-        :return: tags for the host
-        :rtype: list
-        """        
+        >>> dog_http_api.host_tags('web.example.com')
+        ['web', 'env:production']
+        >>> dog_http_api.host_tags(1234)
+        ['database', 'env:test']
+        """
         response = self.http_request('GET', '/tags/hosts/' + str(host_id))
         if self.json_responses:
             return response
@@ -56,11 +60,8 @@ class InfrastructureApi(object):
         """add_tags(host_id, tag1, [tag2, [...]])
         Add one or more tags to a host.
 
-        :param host_id: id or name of the host
-        :type host_id: integer or string
-
-        :param tagN: tag name
-        :type tagN: string
+        >>> dog_http_api.add_tags(host_id, 'env:test')
+        >>> dog_http_api.add_tags(host_id, 'env:test', 'database')
         """
         body = {
             'tags': tags,
@@ -75,11 +76,8 @@ class InfrastructureApi(object):
         """change_tags(host_id, tag1, [tag2, [...]])
         Replace a host's tags with one or more new tags.
 
-        :param host_id: id or name of the host
-        :type host_id: integer or string
-
-        :param tagN: tag name
-        :type tagN: string
+        >>> dog_http_api.change_tags(host_id, 'env:test')
+        >>> dog_http_api.change_tags(host_id, 'env:test', 'database')
         """
         body = {
             'tags': tags
@@ -94,8 +92,7 @@ class InfrastructureApi(object):
         """
         Remove all tags from a host.
 
-        :param host_id: id or name of the host
-        :type host_id: integer or string
+        >>> dog_http_api.detach_tags(123)
         """
         response = self.http_request('DELETE', '/tags/hosts/' + str(host_id))
         if self.json_responses:

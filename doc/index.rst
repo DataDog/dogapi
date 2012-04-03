@@ -17,11 +17,9 @@ DogHttpApi is a Python client library for DataDog's `HTTP API <http://api.datado
 
 
 .. autoclass:: dogapi.http.DogHttpApi
-
     :members:
-
-.. autoclass:: dogapi.http.dashes.DashApi
-   :members:
+    :inherited-members:
+    :exclude-members: __init__
 
 DogStatsApi
 ===========

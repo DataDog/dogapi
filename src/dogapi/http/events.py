@@ -5,32 +5,39 @@ __all__ = [
 class EventApi(object):
     def stream(self, start, end, priority=None, sources=None, tags=None):
         """
-        Get an event stream, optionally filtered.
+        Get the events that occurred between the *start* and *end* POSIX timestamps,
+        optional filtered by *priority* ("low" or "normal"), *sources* and
+        *tags*.
 
-        :param start: start date for the stream query (POSIX timestamp)
-        :type start: integer
+        See the `event API documentation <http://api.datadoghq.com/event>`_ for the
+        event data format.
 
-        :param end: end date for the stream query (POSIX timestamp)
-        :type end: integer
-
-        :param priority: show only events of the given priority ("low" or "normal")
-        :type priority: string
-
-        :param sources: show only events for the give sources (see
-                        https://github.com/DataDog/dogapi/wiki/Event
-                        for an up-to-date list of available sources)
-        :type sources: list of strings
-
-        :param tags: show only events for the given tags
-        :type tags: list of strings
-
-        :return: list of events (see https://github.com/DataDog/dogapi/wiki/Event for structure)
-        :rtype: decoded JSON
+        >>> dog_http_api.stream(1313769783, 131378000, sources=["nagios"])
+        { "events": [
+            {
+              "id": "event-1",
+              "title": "my first event",
+              "priority": "normal",
+              "handle": "alq@datadoghq.com",
+              "date_happened": 1313769783,
+              "source": "nagios",
+              "alert_type": "ok",
+              "is_aggregate": true,
+              "children": [
+                {
+                  "id": "event-100",
+                  "date_happened": 123459833,
+                  "alert_type": "error"
+                }, ...
+              ]
+            }, ...
+          ]
+        }
         """
         params = {
             'start': start,
             'end': end,
-        }        
+        }
         if priority:
             params['priority'] = priority
         if sources:
@@ -46,14 +53,30 @@ class EventApi(object):
 
     def get_event(self, id):
         """
-        Get details for an individual event.
+        Get details for an individual event with the given *id*.
 
-        :param id: numeric event id
-        :type id: integer
+        See the `event API documentation <http://api.datadoghq.com/event>`_ for the
+        event data format.
 
-        :return: event details (see https://github.com/DataDog/dogapi/wiki/Event for structure)
-        :rtype: decoded JSON
-        """        
+        >>> dog_http_api.get_event("event-1")
+        {
+          "id": "event-1",
+          "title": "my first event",
+          "priority": "normal",
+          "handle": "alq@datadoghq.com",
+          "date_happened": 1313769783,
+          "source": "nagios",
+          "alert_type": "ok",
+          "is_aggregate": true,
+          "children": [
+            {
+              "id": "event-100",
+              "date_happened": 123459833,
+              "alert_type": "error"
+            }, ...
+          ]
+        }
+        """
         response = self.http_request('GET', '/events/' + str(id))
         if self.json_responses:
             return response
@@ -119,7 +142,7 @@ class EventApi(object):
 
         if device_name is not None:
             body['device_name'] = device_name
-        
+
         body.update(kwargs)
 
         response = self.http_request('POST', '/events', body)
@@ -138,25 +161,11 @@ class EventApi(object):
 
     def comment(self, handle, message, comment_id=None, related_event_id=None):
         """
-        Post or edit a comment.
+        Post a comment *message* as the user with *handle*. Edit a comment by including it's *comment_id*.
+        Reply to a related event by setting the *related_event_id*.
 
-        :param handle: user handle to post the comment as
-        :type handle: string
-
-        :param message: comment message
-        :type message: string
-
-        :param comment_id: if set, comment will be updated instead of creating a new comment
-        :type comment_id: integer
-
-        :param related_event_id: if set, comment will be posted as a reply to the specified comment or event
-        :type related_event_id: integer
-
-        :return: comment id
-        :rtype: integer
-
-        :raises:  Exception on failure
-        """        
+        >>> dog_http_api.comment("matt", "Hey! Something strange is going on.")
+        """
         body = {
             'handle':  handle,
             'message': message,
@@ -170,7 +179,7 @@ class EventApi(object):
         else:
             return response['comment']['id']
 
-    def update_comment(self, handle, message, comment_id):        
+    def update_comment(self, handle, message, comment_id):
         body = {
             'handle':  handle,
             'message': message,
@@ -184,12 +193,9 @@ class EventApi(object):
 
     def delete_comment(self, comment_id):
         """
-        Delete a comment.
+        Delete a comment with the given *comment_id*.
 
-        :param comment_id: comment to delete
-        :type comment_id: integer
-
-        :raises: Exception on error
+        >>> dog_http_api.delete_comment('1234')
         """
         response = self.http_request('DELETE', '/comments/' + str(comment_id))
         if self.json_responses:

@@ -18,24 +18,13 @@ class HttpMetricApi(object):
 
     def metric(self, name, points, host=None, device=None, metric_type=MetricType.Gauge):
         """
-        Submit a series of data points to the metric API.
+        Submit a point or series of *points* to the metric API, optionally specifying a *host*
+        or *device*. Points can either be a value,
+        a tuple of POSIX timestamps and a value, or a list of timestamp value pairs.
 
-        :param name: name of the metric (e.g. ``"system.load.1"``)
-        :type name: string
-
-        :param values: data series. list of (POSIX timestamp, intever value) tuples.
-                (e.g. ``[(1317652676, 15), (1317652706, 18), ...]``)
-        :type values: list
-
-        :param host: optional host to scope the metric (e.g.
-        ``"hostA.example.com"``). defaults to local hostname. to submit without
-        a host, explicitly set host=None.
-        :type host: string
-
-        :param device: optional device to scope the metric (e.g. ``"eth0"``)
-        :type device: string
-
-        :raises: Exception on failure
+        >>> dog_http_api.metric('my.value', 123.4, host="my.custom.host")
+        >>> dog_http_api.metric('my.pair', (1317652676, 15), device="eth0")
+        >>> dog_http_api.metric('my.series', [(1317652676, 15), (1317652800, 16))
         """
         if host is None:
             host = self._default_host
@@ -56,21 +45,10 @@ class HttpMetricApi(object):
 
     def metrics(self, metrics):
         """
-        Submit a series of metrics with 1 or more data points to the metric
-        API.
+        Submit a list of *metrics* with 1 or more data points to the metric API. Each metric is a dictionary
+        that includes the fields metric_name, points and optionally, host and device to scope the metric.
 
-        :param values A dictionary of names to a list values, in the form of {name: [(POSIX timestamp, integer value), ...], name2: [(POSIX timestamp, integer value), ...]}
-        :type values: dict
-
-        :param host: optional host to scope the metric (e.g.
-        ``"hostA.example.com"``). to submit without a host, explicitly set
-        host=None.
-        :type host: string
-
-        :param device: optional device to scope the metric (e.g. ``"eth0"``)
-        :type device: string
-
-        :raises: Exception on failure
+        >>> dog_http_api.metrics([{'metric':'my.metric', 'points':[(1317652676, 15)]}])
         """
         logger.debug("Submitting metrics to the api")
         return self._submit_metrics(metrics)
