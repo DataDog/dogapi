@@ -16,7 +16,7 @@ TEST_USER = os.environ.get('DATADOG_TEST_USER')
 API_KEY = os.environ.get('DATADOG_API_KEY')
 APP_KEY = os.environ.get('DATADOG_APP_KEY')
 
-# Our 
+# Our
 dog = None
 
 class TestDatadog(unittest.TestCase):
@@ -100,15 +100,16 @@ class TestDatadog(unittest.TestCase):
         """Pretend to send git commits"""
         event_id = dog.event_with_response("Testing git commits", """$$$
 eac54655 *   Merge pull request #2 from DataDog/alq-add-arg-validation (alq@datadoghq.com)
-         |\  
+         |\
 760735ef | * origin/alq-add-arg-validation Simple typechecking between metric and metrics (matt@datadoghq.com)
-         |/  
+         |/
 f7a5a23d * missed version number in docs (matt@datadoghq.com)
 $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
+
+
         event = dog.get_event(event_id)
 
         assert event.get("title", "") == "Testing git commits", event
-        assert event.get("source", "") == "Git", event
 
     def test_comments(self):
         now = datetime.datetime.now()
@@ -143,7 +144,7 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
 
         graph = {
                 "title": "test metric graph",
-                "definition": 
+                "definition":
                     {
                         "requests": [{"q": "testing.metric.1{host:blah.host.1}"}],
                         "viz": "timeseries",
