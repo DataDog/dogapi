@@ -9,17 +9,26 @@ The :mod:`dogapi` module provides :class:`DogHttpApi` - a simple wrapper around
 DataDog's HTTP API - and :class:`~dogapi.stats.DogStatsApi` - a tool for collecting metrics
 in high performance applications.
 
+
+DogHttpApi
+==========
+
+DogHttpApi is a Python client library for DataDog's `HTTP API <http://api.datadoqhq.com>`_.
+
+
+.. autoclass:: dogapi.http.DogHttpApi
+
+    :members:
+
+.. autoclass:: dogapi.http.dashes.DashApi
+   :members:
+
 DogStatsApi
 ===========
 
-DogStatsApi is a tool for collecting application metrics without hindering
-performance. It collects metrics in the application thread with very little overhead
-(it just writes them to a `Queue <http://docs.python.org/library/queue.html>`_
-with an aggressive timeout). The aggregation and network access is performed in another
-thread to ensure the instrumentation doesn't block your application's real work.
+.. automodule:: dogapi.stats.dog_stats_api
 
-
-.. class:: dogapi.stats.DogStatsApi
+.. autoclass::  dogapi.stats.DogStatsApi
 
     .. method:: start(api_key=api_key, flush_interval=10, flush_in_thread=True, flush_in_greenlet=False)
 
@@ -36,46 +45,16 @@ thread to ensure the instrumentation doesn't block your application's real work.
         >>> from gevent import monkey; monkey.patch_all()
         >>> dog_stats_api.start(api_key='my_api_key', flush_in_greelet=True)
 
-    .. method:: gauge(metric_name, value, timestamp=None)
+    .. automethod:: gauge
 
-        Record the instantaneous *value* of a metric. They most recent value in
-        a given flush interval will be recorded.
+    .. automethod:: increment
 
-        >>> dog_stats_api.gauge('process.uptime', time.time() - process_start_time)
-        >>> dog_stats_api.gauge('cache.bytes.free', cache.get_free_bytes())
+    .. automethod:: histogram
 
-    .. method:: increment(metric_name, value=1, timestamp=None)
+    .. automethod:: timed
 
-        Increment the counter value of the given metric.
 
-        >>> dog_stats_api.increment('home.page.hits')
-        >>> dog_stats_api.increment('bytes.processed', file.size())
-
-    .. method:: histogram(metric_name, value, timestamp=None)
-
-        Sample a histogram value. Histograms will produce metrics that
-        describe the distribution of the recorded values, namely the minimum,
-        maximum, average, count and the 75th, 85th, 95th and 99th percentiles.
-
-        >>> dog_stats_api.histogram('uploaded_file.size', uploaded_file.size())
-
-    .. method:: timed (metric_name)
-
-        A decorator that will track the distribution of a function's run time.
-        ::
-
-            @dog_stats_api.timed('user.query.time')
-            def get_user(user_id):
-                # Do what you need to ...
-                pass
-
-            # Is equivalent to ...
-            start = time.time()
-            try:
-                get_user(user_id)
-            finally:
-                dog_stats_api.histogram('user.query.time', time.time() - start)
-
+.. module:: dogapi
 .. data:: dog_stats_api
 
     A global :class:`~dogapi.stats.DogStatsApi` instance that is easily shared

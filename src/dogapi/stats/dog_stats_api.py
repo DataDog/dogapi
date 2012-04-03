@@ -1,6 +1,9 @@
 """
-DogStatsAPI collects metrics and asynchronously flushes them to DataDog's
-HTTP API.
+DogStatsApi is a tool for collecting application metrics without hindering
+performance. It collects metrics in the application thread with very little overhead
+(it just writes them to a `Queue <http://docs.python.org/library/queue.html>`_
+with an aggressive timeout). The aggregation and network access is performed in another
+thread to ensure the instrumentation doesn't block your application's real work.
 """
 
 import logging
@@ -74,39 +77,49 @@ class DogStatsApi(object):
 
     def gauge(self, metric_name, value, timestamp=None):
         """
-        Record the instantaneous value of the given gauge.
+        Record the instantaneous *value* of a metric. They most recent value in
+        a given flush interval will be recorded.
 
-        :param metric_name: The name of the gauge (e.g. 'my.app.users.online')
-        :param value: The integer or floating point value of the gauge.
-        :param timestamp: The time the value was recorded. Defaults to now.
+        >>> dog_stats_api.gauge('process.uptime', time.time() - process_start_time)
+        >>> dog_stats_api.gauge('cache.bytes.free', cache.get_free_bytes())
         """
         self._queue_metric(metric_name, value, MetricType.Gauge, timestamp)
 
     def increment(self, metric_name, value=1, timestamp=None):
         """
-        Increment the given counter.
+        Increment the counter value of the given metric.
 
-        :param metric_name: The name of the counter (e.g. 'home.page.request.count')
-        :param value: The value to increment to by. Defaults to one.
-        :param timestamp: The time the counter was incremented. Defaults to now.
+        >>> dog_stats_api.increment('home.page.hits')
+        >>> dog_stats_api.increment('bytes.processed', file.size())
         """
         self._queue_metric(metric_name, value, MetricType.Counter, timestamp)
 
     def histogram(self, metric_name, value, timestamp=None):
         """
-        Sample a value of the given histogram
+        Sample a histogram value. Histograms will produce metrics that
+        describe the distribution of the recorded values, namely the minimum,
+        maximum, average, count and the 75th, 85th, 95th and 99th percentiles.
 
-        :param metric_name: The name of the histogram (e.g. 'home.page.query.time')
-        :param value: The integer or floating value to sample.
-        :param timestamp: The time the value was sampled. Defaults to now.
+        >>> dog_stats_api.histogram('uploaded_file.size', uploaded_file.size())
         """
         self._queue_metric(metric_name, value, MetricType.Histogram, timestamp)
 
     def timed(self, metric_name):
         """
-        A decorator that will sample the run time of a function in a histogram.
+        A decorator that will track the distribution of a function's run time.
+        ::
 
-        :param metric_name: The name of the histogram metric.
+            @dog_stats_api.timed('user.query.time')
+            def get_user(user_id):
+                # Do what you need to ...
+                pass
+
+            # Is equivalent to ...
+            start = time.time()
+            try:
+                get_user(user_id)
+            finally:
+                dog_stats_api.histogram('user.query.time', time.time() - start)
         """
         def wrapper(func):
             def wrapped(*args, **kwargs):
