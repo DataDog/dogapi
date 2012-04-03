@@ -67,15 +67,15 @@ DogStatsApi
 Here's an example that put's it all together. ::
 
     # Import the dog stats instance.
-    from dogapi import dog_stats_api
+    from dogapi import dog_stats_api as dog
 
     # Begin flushing asynchronously with the given api key. After this is done
     # once in your application, other modules can import and use dog_stats_api
     # without any further configuration.
-    dog_stats_api.start(api_key='my_api_key')
+    dog.start(api_key='my_api_key')
 
 
-    @dog_stats_api.timed('home_page.render.time')
+    @dog.timed('home_page.render.time')
     def render_home_page(user_id):
         """ Render the home page for the given user. """
 
@@ -83,9 +83,9 @@ Here's an example that put's it all together. ::
         # and record metrics on our cache hits and misses.
         user = user_cache.get(user_id)
         if user:
-            dog_stats_api.increment('user_cache.hit')
+            dog.increment('user_cache.hit')
         else:
-            dog_stats_api.increment('user_cache.miss')
+            dog.increment('user_cache.miss')
             user = user_database.get(user_id)
 
         return render('home.html', user_id)
