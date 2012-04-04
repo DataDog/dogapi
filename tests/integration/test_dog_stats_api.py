@@ -1,6 +1,10 @@
 #
 # Integration tests.
 #
+import os
+import time
+
+import dogapi
 
 API_KEY = os.environ.get('DATADOG_API_KEY')
 APP_KEY = os.environ.get('DATADOG_APP_KEY')
@@ -8,7 +12,7 @@ APP_KEY = os.environ.get('DATADOG_APP_KEY')
 class TestIntegrationDogStatsAPI(object):
 
     def test_flushing_in_thread(self):
-        dog = DogStatsApi()
+        dog = dogapi.DogStatsApi()
         dog.start(roll_up_interval=1,
                   flush_interval=1,
                   api_key=API_KEY)
