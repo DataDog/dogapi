@@ -171,7 +171,7 @@ class TestUnitDogStatsAPI(object):
         dog.flush(120.0)
 
         # Assert they've been properly flushed.
-        metrics = reporter.metrics
+        metrics = self.sort_metrics(reporter.metrics)
         nt.assert_equal(len(metrics), 2)
 
         (first, second) = metrics
@@ -240,6 +240,26 @@ class TestUnitDogStatsAPI(object):
         metric = reporter.metrics[0]
         nt.assert_equal(metric['device'], 'dev')
         nt.assert_equal(metric['host'], 'host')
+
+    def test_tags(self):
+        dog = DogStatsApi()
+        dog.start(roll_up_interval=10, flush_in_thread=False)
+        reporter = dog.reporter = MemoryReporter()
+
+        # Post the same metric with different tags.
+        dog.gauge('gauge', 10, timestamp=100.0)
+        dog.gauge('gauge', 15, timestamp=100.0, tags=['env:production', 'db'])
+        dog.gauge('gauge', 20, timestamp=100.0, tags=['env:staging', 'db'])
+
+        dog.increment('counter', timestamp=100.0)
+        dog.increment('counter', timestamp=100.0, tags=['env:production', 'db'])
+        dog.increment('counter', timestamp=100.0, tags=['env:staging', 'db'])
+
+        dog.flush(200.0)
+
+        metrics = self.sort_metrics(reporter.metrics)
+        nt.assert_equal(len(metrics), 6)
+
 
 #
 # Integration tests.

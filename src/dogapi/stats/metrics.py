@@ -15,10 +15,11 @@ class Metric(object):
     and performs roll-ups within those intervals.
     """
 
-    def __init__(self, name, roll_up_interval):
+    def __init__(self, name, tags, roll_up_interval):
         """ Create a metric. """
-        self._name = name
         self._roll_up_interval = roll_up_interval
+        self._name = name
+        self._tags = tags
 
     def add_point(self, timestamp, value):
         """ Add a point to the given metric. """
@@ -42,8 +43,8 @@ class Metric(object):
 class Gauge(Metric):
     """ A gauge metric. """
 
-    def __init__(self, name, roll_up_interval):
-        super(Gauge, self).__init__(name, roll_up_interval)
+    def __init__(self, name, tags, roll_up_interval):
+        super(Gauge, self).__init__(name, tags, roll_up_interval)
         self._intervals = defaultdict(lambda: None)
 
     def add_point(self, timestamp, value):
@@ -52,14 +53,17 @@ class Gauge(Metric):
 
     def flush(self, timestamp):
         past_intervals = self._pop_past_intervals(timestamp)
-        return [(ts, gauge, self._name) for ts, gauge in past_intervals]
+        metrics = []
+        for timestamp, gauge in past_intervals:
+            metrics.append((timestamp, gauge, self._name, self._tags))
+        return metrics
 
 
 class Counter(Metric):
     """ A counter metric. """
 
-    def __init__(self, name, roll_up_interval):
-        super(Counter, self).__init__(name, roll_up_interval)
+    def __init__(self, name, tags, roll_up_interval):
+        super(Counter, self).__init__(name, tags, roll_up_interval)
         self._intervals = {}
 
     def add_point(self, timestamp, value):
@@ -69,14 +73,14 @@ class Counter(Metric):
 
     def flush(self, timestamp):
         past_intervals = self._pop_past_intervals(timestamp)
-        return [(ts, count, self._name) for ts, count in past_intervals]
+        return [(ts, count, self._name, self._tags) for ts, count in past_intervals]
 
 
 class Histogram(Metric):
     """ A histogram metric. """
 
-    def __init__(self, name, roll_up_interval, sample_size=1000):
-        super(Histogram, self).__init__(name, roll_up_interval)
+    def __init__(self, name, tags, roll_up_interval, sample_size=1000):
+        super(Histogram, self).__init__(name, tags, roll_up_interval)
         # Each interval stores a dictionary of running stats of the
         # histogram, like max, min, samples and so on.
         self._intervals = defaultdict(lambda: {})
@@ -136,14 +140,14 @@ class Histogram(Metric):
             max_ = bucket['max']
             avg = float(bucket['sum']) / count
 
-            metrics.append((i, avg,   self._avg_name))
-            metrics.append((i, count, self._count_name))
-            metrics.append((i, min_,  self._min_name))
-            metrics.append((i, max_,  self._max_name))
+            metrics.append((i, avg,   self._avg_name,  self._tags))
+            metrics.append((i, count, self._count_name, self._tags))
+            metrics.append((i, min_,  self._min_name, self._tags))
+            metrics.append((i, max_,  self._max_name, self._tags))
             percentiles = self._get_percentiles(bucket['samples'])
             for p, value in percentiles.items():
                 name = self._percentile_names[p]
-                metrics.append((i, value, name))
+                metrics.append((i, value, name, self._tags))
         return metrics
 
 
@@ -156,23 +160,24 @@ class MetricsAggregator(object):
         self._metrics = {}
         self._roll_up_interval = roll_up_interval
 
-    def increment(self, metric, timestamp, value=1):
+    def increment(self, metric, tags, timestamp, value=1):
         """ Increment the given counter. """
-        self._add_point(metric, timestamp, value, Counter)
+        self._add_point(metric, tags, timestamp, value, Counter)
 
-    def gauge(self, metric, timestamp, value):
+    def gauge(self, metric, tags, timestamp, value):
         """ Record a gauge metric. """
-        self._add_point(metric, timestamp, value, Gauge)
+        self._add_point(metric, tags, timestamp, value, Gauge)
 
-    def histogram(self, metric, timestamp, value):
+    def histogram(self, metric, tags, timestamp, value):
         """ Sample a histogram point. """
-        self._add_point(metric, timestamp, value, Histogram)
+        self._add_point(metric, tags, timestamp, value, Histogram)
 
-    def _add_point(self, metric, timestamp, value, metric_class):
+    def _add_point(self, metric, tags, timestamp, value, metric_class):
         # FIXME mattp: overwrite metric if we add a different type?
-        if metric not in self._metrics:
-            self._metrics[metric] = metric_class(metric, self._roll_up_interval)
-        self._metrics[metric].add_point(timestamp, value)
+        key = (metric, tuple(sorted(tags or [])))
+        if key not in self._metrics:
+            self._metrics[key] = metric_class(metric, tags, self._roll_up_interval)
+        self._metrics[key].add_point(timestamp, value)
 
     def flush(self, timestamp):
         """ Flush all metrics up to the given timestamp. """

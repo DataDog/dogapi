@@ -17,6 +17,7 @@ from dogapi.stats.metrics import MetricsAggregator
 from dogapi.stats.reporters import HttpReporter
 
 
+# Loggers
 log = logging.getLogger('dd.dogapi')
 stat_log = logging.getLogger('dd.dogapi.stats')
 
@@ -75,7 +76,7 @@ class DogStatsApi(object):
         elif flush_in_thread:
             self._start_flush_thread()
 
-    def gauge(self, metric_name, value, timestamp=None):
+    def gauge(self, metric_name, value, timestamp=None, tags=None):
         """
         Record the instantaneous *value* of a metric. They most recent value in
         a given flush interval will be recorded.
@@ -83,18 +84,18 @@ class DogStatsApi(object):
         >>> dog_stats_api.gauge('process.uptime', time.time() - process_start_time)
         >>> dog_stats_api.gauge('cache.bytes.free', cache.get_free_bytes())
         """
-        self._queue_metric(metric_name, value, MetricType.Gauge, timestamp)
+        self._queue_metric(metric_name, value, MetricType.Gauge, timestamp, tags)
 
-    def increment(self, metric_name, value=1, timestamp=None):
+    def increment(self, metric_name, value=1, timestamp=None, tags=None):
         """
         Increment the counter value of the given metric.
 
         >>> dog_stats_api.increment('home.page.hits')
         >>> dog_stats_api.increment('bytes.processed', file.size())
         """
-        self._queue_metric(metric_name, value, MetricType.Counter, timestamp)
+        self._queue_metric(metric_name, value, MetricType.Counter, timestamp, tags)
 
-    def histogram(self, metric_name, value, timestamp=None):
+    def histogram(self, metric_name, value, timestamp=None, tags=None):
         """
         Sample a histogram value. Histograms will produce metrics that
         describe the distribution of the recorded values, namely the minimum,
@@ -102,9 +103,9 @@ class DogStatsApi(object):
 
         >>> dog_stats_api.histogram('uploaded_file.size', uploaded_file.size())
         """
-        self._queue_metric(metric_name, value, MetricType.Histogram, timestamp)
+        self._queue_metric(metric_name, value, MetricType.Histogram, timestamp, tags)
 
-    def timed(self, metric_name):
+    def timed(self, metric_name, tags=None):
         """
         A decorator that will track the distribution of a function's run time.
         ::
@@ -125,7 +126,7 @@ class DogStatsApi(object):
             def wrapped(*args, **kwargs):
                 start = time.time()
                 result = func(*args, **kwargs)
-                self.histogram(metric_name, time.time() - start)
+                self.histogram(metric_name, time.time() - start, tags=tags)
                 return result
             return wrapped
         return wrapper
@@ -156,25 +157,28 @@ class DogStatsApi(object):
         for raw_metric in raw_metrics:
             name = raw_metric['metric']
             type_ = raw_metric['type']
+            tags = raw_metric['tags']
             aggregator = self._metrics_aggregator.get_aggregator_function(type_)
             # Aggregate them.
             for timestamp, value in raw_metric['points']:
-                aggregator(name, timestamp, value)
+                aggregator(name, tags, timestamp, value)
 
         # Get rolled up metrics
         rolled_up_metrics = self._metrics_aggregator.flush(flush_time)
 
         metrics = []
-        for timestamp, value, name in rolled_up_metrics:
+        for timestamp, value, name, tags in rolled_up_metrics:
             metric = {
                 'metric' : name,
                 'points' : [[timestamp, value]],
                 'type':    MetricType.Gauge,
                 'host':    self.host,
-                'device':  self.device
+                'device':  self.device,
+                'tags'  :  tags
             }
             metrics.append(metric)
-            stat_log.info("Metric (%s, %s, %s)" % (name, value, timestamp))
+            stat_log.info("Metric (%s, %s, %s, %s)" %
+                        (name, value, timestamp, str(tags)))
         return metrics
 
     def _start_flush_thread(self):
@@ -224,12 +228,13 @@ class DogStatsApi(object):
         log.info("Starting flush greenlet with interval %s." % self.flush_interval)
         gevent.spawn(flush)
 
-    def _queue_metric(self, metric_name, value, metric_type, timestamp=None):
+    def _queue_metric(self, metric_name, value, metric_type, timestamp=None, tags=None):
         """ Queue the given metric for aggregation. """
         metric = {
-            'metric':   metric_name,
-            'points':   [[timestamp or time.time(), value]],
-            'type':     metric_type
+            'metric': metric_name,
+            'points': [[timestamp or time.time(), value]],
+            'type':   metric_type,
+            'tags':   tags
         }
         # If the metrics queue is full, don't block.
         try:
