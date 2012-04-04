@@ -1,6 +1,20 @@
-DataDog API Python Client v1.0.0
+DogApi
+======
+
+A Python client for the DataDog API.
 
 - Library Documentation: http://pydoc.datadoghq.com
-- API Documetation: http://api.datadoghq.com/
+- HTTP API Documetation: http://api.datadoghq.com/
 - DataDogHQ: http://datadoghq.com
 
+
+Change Log
+----------
+
+- 1.0.0
+    - Release date: 2012.04.21
+    - This release is a backwards incompatible rewrite of the library.
+    - The API wrapper was renamed from SimpleClient to DogHttpApi. It's
+      interface was also updated. Check the docs for changes.
+    - Added DogStatsApi, a tool for collecting metrics with little application
+      overhead.
