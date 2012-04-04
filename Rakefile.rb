@@ -21,11 +21,25 @@ task :build do
   sh "python setup.py egg_info -b '_#{build_number}' bdist_egg"
 end
 
-task :test do
-  # Testing greenlet flush requires another process, so run them seperately.
-  sh 'nosetests --exclude ".*greenlet.*" --exclude ".*performance.*"'
-  sh "PYTHONPATH=src:$PYTHONPATH python src/dogapi/stats/test_stats_api_greenlet.py"
+namespace :test do
+
+  desc "Run integration tests."
+  task :integration do
+    sh 'nosetests --exclude ".*greenlet.*" tests/integration'
+    sh "PYTHONPATH=src:$PYTHONPATH python tests/integration/test_stats_api_greenlet.py"
+  end
+
+  desc "Run unit tests."
+  task :unit do
+    # Testing greenlet flush requires another process, so run them seperately.
+    sh 'nosetests tests/unit'
+  end
+
 end
+
+desc "Run all tests."
+task :test => ['test:unit', 'test:integration']
+
 
 def build_number
   ENV['BUILD_NUMBER'] || 'dev'
