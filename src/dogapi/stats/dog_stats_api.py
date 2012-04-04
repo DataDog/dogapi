@@ -79,16 +79,18 @@ class DogStatsApi(object):
     def gauge(self, metric_name, value, timestamp=None, tags=None):
         """
         Record the instantaneous *value* of a metric. They most recent value in
-        a given flush interval will be recorded.
+        a given flush interval will be recorded. Optionally, specify a set of
+        tags to associate with the metric.
 
         >>> dog_stats_api.gauge('process.uptime', time.time() - process_start_time)
-        >>> dog_stats_api.gauge('cache.bytes.free', cache.get_free_bytes())
+        >>> dog_stats_api.gauge('cache.bytes.free', cache.get_free_bytes(), tags=['version:1.0'])
         """
         self._queue_metric(metric_name, value, MetricType.Gauge, timestamp, tags)
 
     def increment(self, metric_name, value=1, timestamp=None, tags=None):
         """
-        Increment the counter value of the given metric.
+        Increment the counter by the given *value*. Optionally, specify a list of
+        *tags* to associate with the metric.
 
         >>> dog_stats_api.increment('home.page.hits')
         >>> dog_stats_api.increment('bytes.processed', file.size())
@@ -100,7 +102,9 @@ class DogStatsApi(object):
         Sample a histogram value. Histograms will produce metrics that
         describe the distribution of the recorded values, namely the minimum,
         maximum, average, count and the 75th, 85th, 95th and 99th percentiles.
+        Optionally, specify a list of *tags* to associate with the metric.
 
+        >>> dog_stats_api.histogram('uploaded_file.size', uploaded_file.size())
         >>> dog_stats_api.histogram('uploaded_file.size', uploaded_file.size())
         """
         self._queue_metric(metric_name, value, MetricType.Histogram, timestamp, tags)
@@ -108,6 +112,7 @@ class DogStatsApi(object):
     def timed(self, metric_name, tags=None):
         """
         A decorator that will track the distribution of a function's run time.
+        Optionally specify a list of tags to associate with the metric.
         ::
 
             @dog_stats_api.timed('user.query.time')
