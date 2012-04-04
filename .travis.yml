@@ -2,6 +2,6 @@ language: python
 python:
     - 2.6
 install:
-    - pip install --force-reinstall dogapi
+    - python setup.py install
 script:
     - nosetests src/dogapi/stats/test_stats_api.py
