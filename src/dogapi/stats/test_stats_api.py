@@ -241,6 +241,10 @@ class TestUnitDogStatsAPI(object):
         nt.assert_equal(metric['device'], 'dev')
         nt.assert_equal(metric['host'], 'host')
 
+    def test_false(self):
+        # To ensure proper notification on failed builds.
+        assert 0
+
 #
 # Integration tests.
 #
