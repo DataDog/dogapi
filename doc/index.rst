@@ -10,9 +10,24 @@ DataDog's HTTP API - and :class:`~dogapi.stats.DogStatsApi` - a tool for collect
 in high performance applications.
 
 
+Installation
+============
+
+The module can be downloaded from PyPI and installed in one step with
+easy_install:
+
+    >>> easy_install dogapi
+
+Or with pip:
+
+    >>> pip install dogapi
+
+To install from source, `download <https://github.com/DataDog/dogapi/tags>`_ a distribution and run:
+
+   >>> python setup.py install
+
 DogHttpApi
 ==========
-
 DogHttpApi is a Python client library for DataDog's `HTTP API <http://api.datadoghq.com>`_.
 
 
@@ -90,7 +105,14 @@ Here's an example that put's it all together. ::
 
         return render('home.html', user_id)
 
-Contact
-=======
+Source
+======
 
-If you have any questions or suggestions, get in touch at datadoghq.com.
+The DogApi source is freely available on Github. Check it out `here
+<https://github.com/DataDog/dogapi>`_.
+
+Get in Touch
+============
+
+If you'd like to suggest a feature or report a bug, please add an issue `here <https://github.com/DataDog/dogapi/issues>`_. If you want to talk about DataDog in general, reach out at `datadoghq.com <http://datadoghq.com>`_.
+
