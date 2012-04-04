@@ -13,7 +13,7 @@ in high performance applications.
 DogHttpApi
 ==========
 
-DogHttpApi is a Python client library for DataDog's `HTTP API <http://api.datadoqhq.com>`_.
+DogHttpApi is a Python client library for DataDog's `HTTP API <http://api.datadoghq.com>`_.
 
 
 .. autoclass:: dogapi.http.DogHttpApi
