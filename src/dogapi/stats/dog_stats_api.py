@@ -41,7 +41,8 @@ class DogStatsApi(object):
                     metric_timeout=0.01,
                     use_ec2_instance_ids=False,
                     flush_in_thread=True,
-                    flush_in_greenlet=False):
+                    flush_in_greenlet=False,
+                    disabled=False):
         """
         Configure the DogStatsApi instance and optionally, begin auto-flusing metrics.
 
@@ -54,6 +55,7 @@ class DogStatsApi(object):
         self.roll_up_interval = roll_up_interval
         self.device = device
         self.metric_timeout = metric_timeout
+        self._disabled = disabled
 
         self.host = host or socket.gethostname()
         if use_ec2_instance_ids:
@@ -70,10 +72,12 @@ class DogStatsApi(object):
         self._is_auto_flushing = False
         self._is_flush_in_progress = False
         self.flush_count = 0
-        if flush_in_greenlet:
-            self._start_flush_greenlet()
-        elif flush_in_thread:
-            self._start_flush_thread()
+        if not self._disabled:
+            log.info("Starting dogapi in disabled mode. No metrics will flush.")
+            if flush_in_greenlet:
+                self._start_flush_greenlet()
+            elif flush_in_thread:
+                self._start_flush_thread()
 
     def gauge(self, metric_name, value, timestamp=None):
         """
@@ -226,6 +230,10 @@ class DogStatsApi(object):
 
     def _queue_metric(self, metric_name, value, metric_type, timestamp=None):
         """ Queue the given metric for aggregation. """
+        # Do nothing if we don't want to collect metrics.
+        if self._disabled:
+            return False
+
         metric = {
             'metric':   metric_name,
             'points':   [[timestamp or time.time(), value]],

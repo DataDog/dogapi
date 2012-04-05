@@ -241,3 +241,13 @@ class TestUnitDogStatsAPI(object):
         nt.assert_equal(metric['device'], 'dev')
         nt.assert_equal(metric['host'], 'host')
 
+    def test_disabled_mode(self):
+        dog = DogStatsApi()
+        reporter = dog.reporter = MemoryReporter()
+        dog.start(disabled=True, flush_interval=1, roll_up_interval=1)
+        dog.gauge('testing', 1, timestamp=1000)
+        dog.gauge('testing', 2, timestamp=1000)
+        dog.flush(2000.0)
+        assert not reporter.metrics
+
+
