@@ -72,8 +72,9 @@ class DogStatsApi(object):
         self._is_auto_flushing = False
         self._is_flush_in_progress = False
         self.flush_count = 0
-        if not self._disabled:
-            log.info("Starting dogapi in disabled mode. No metrics will flush.")
+        if self._disabled:
+            log.info("dogapi is disabled. No metrics will flush.")
+        else:
             if flush_in_greenlet:
                 self._start_flush_greenlet()
             elif flush_in_thread:
