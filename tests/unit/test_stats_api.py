@@ -5,6 +5,7 @@ Tests for the DogStatsAPI class.
 import os
 import random
 import time
+import threading
 
 import nose.tools as nt
 
@@ -250,4 +251,44 @@ class TestUnitDogStatsAPI(object):
         dog.flush(2000.0)
         assert not reporter.metrics
 
+    def test_threadsafe_correctness(self):
+        # A test to ensure we flush the expected values
+        # when we have lots of threads writing to dog api
+        dog = DogStatsApi()
+        dog.start(flush_interval=1, roll_up_interval=1)
+        reporter = dog.reporter = MemoryReporter()
+
+        class MetricProducer(threading.Thread):
+
+            def id(self):
+                return threading.current_thread().ident
+
+            def run(self):
+                print 'running %s' % self.id()
+                self.produced = []
+                end_time = time.time() + random.randint(0, 5)
+                while time.time() < end_time:
+                    m = 'metric.%s.%s' % (time.time(), self.id())
+                    self.produced.append(m)
+                    dog.gauge(m, 1)
+                    time.sleep(0.05)
+
+        # Start writing to dog api in a bunch of threads.
+        num_threads = 10
+        threads = [MetricProducer() for i in xrange(num_threads)]
+        [t.start() for t in threads]
+        print 'waiting for threads to finish'
+        [t.join() for t in threads]
+        # Also write a few metrics in the main thread.
+        expected = ['m.%s' % i for i in range(100)]
+        for e in expected:
+            dog.gauge(e, 1)
+        # Let the roll-up/flush interval catch up.
+        time.sleep(3)
+        for t in threads:
+            expected += t.produced
+        expected.sort()
+        metrics = reporter.metrics
+        metric_names = sorted([m['metric'] for m in metrics])
+        nt.assert_equal(metric_names, expected)
 
