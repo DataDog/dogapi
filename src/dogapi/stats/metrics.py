@@ -1,11 +1,12 @@
 """
-Metric roll-up classes. These classes are not thread-safe.
+Metric roll-up classes.
 """
 
 
 from collections import defaultdict
 import random
 import time
+import threading
 
 
 class Metric(object):
@@ -18,6 +19,7 @@ class Metric(object):
         """ Create a metric. """
         self._name = name
         self._roll_up_interval = roll_up_interval
+        self._lock = threading.RLock()
 
     def add_point(self, timestamp, value):
         """ Add a point to the given metric. """
@@ -35,7 +37,8 @@ class Metric(object):
         """ Return all intervals that are before the given timestamp. """
         ts_interval = self._get_interval(timestamp)
         past_timestamps = sorted([i for i in self._intervals if i < ts_interval])
-        return [(ts, self._intervals.pop(ts)) for ts in past_timestamps]
+        with self._lock:
+            return [(ts, self._intervals.pop(ts)) for ts in past_timestamps]
 
 
 class Gauge(Metric):
@@ -47,6 +50,7 @@ class Gauge(Metric):
 
     def add_point(self, timestamp, value):
         interval = self._get_interval(timestamp)
+        # This should be thread-safe.
         self._intervals[interval] = value
 
     def flush(self, timestamp):
@@ -63,8 +67,9 @@ class Counter(Metric):
 
     def add_point(self, timestamp, value):
         interval = self._get_interval(timestamp)
-        count = self._intervals.get(interval, 0)
-        self._intervals[interval] = count + value
+        with self._lock:
+            count = self._intervals.get(interval, 0)
+            self._intervals[interval] = count + value
 
     def flush(self, timestamp):
         past_intervals = self._pop_past_intervals(timestamp)
@@ -95,25 +100,26 @@ class Histogram(Metric):
     def add_point(self, timestamp, value):
         # Not thread-safe!
         interval = self._get_interval(timestamp)
-        bucket = self._intervals[interval]
+        with self._lock:
+            bucket = self._intervals[interval]
 
-        # Update the min, max and so on.
-        bucket['max'] = max(bucket.get('max', float("-inf")), value)
-        bucket['min'] = min(bucket.get('min', float("inf")), value)
-        bucket['count'] = bucket.get('count', 0) + 1
-        bucket['sum'] = bucket.get('sum', 0) + value
+            # Update the min, max and so on.
+            bucket['max'] = max(bucket.get('max', float("-inf")), value)
+            bucket['min'] = min(bucket.get('min', float("inf")), value)
+            bucket['count'] = bucket.get('count', 0) + 1
+            bucket['sum'] = bucket.get('sum', 0) + value
 
-        # And sample a value for percentiles.
-        samples = bucket.get('samples', [])
-        if len(samples) < self._sample_size:
-            samples.append(value)
-        else:
-            index = random.randint(0, self._sample_size - 1)
-            samples[index] = value
-        bucket['samples'] = samples
+            # And sample a value for percentiles.
+            samples = bucket.get('samples', [])
+            if len(samples) < self._sample_size:
+                samples.append(value)
+            else:
+                index = random.randint(0, self._sample_size - 1)
+                samples[index] = value
+            bucket['samples'] = samples
 
-        # And put our bucket back.
-        self._intervals[interval] = bucket
+            # And put our bucket back.
+            self._intervals[interval] = bucket
 
     def _get_percentiles(self, samples):
         samples.sort()
