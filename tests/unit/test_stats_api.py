@@ -257,6 +257,24 @@ class TestUnitDogStatsAPI(object):
         dog.flush(2000.0)
         assert not reporter.metrics
 
+    def test_stop(self):
+        dog = DogStatsApi()
+        reporter = dog.reporter = MemoryReporter()
+        dog.start(flush_interval=1, roll_up_interval=1)
+        for i in range(10):
+            dog.gauge('metric', i)
+        time.sleep(2)
+        flush_count = dog.flush_count
+        assert flush_count
+        dog.stop()
+        for i in range(10):
+            dog.gauge('metric', i)
+        time.sleep(2)
+        for i in range(10):
+            dog.gauge('metric', i)
+        time.sleep(2)
+        assert dog.flush_count in [flush_count, flush_count+1]
+
     def test_threadsafe_correctness(self):
         # A test to ensure we flush the expected values
         # when we have lots of threads writing to dog api

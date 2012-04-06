@@ -73,6 +73,15 @@ class DogStatsApi(object):
             elif flush_in_thread:
                 self._start_flush_thread()
 
+    def stop(self):
+        if not self._is_auto_flushing:
+            return True
+        if self._flush_thread:
+            self._flush_thread.end()
+            self._is_auto_flushing = False
+            return True
+
+
     def gauge(self, metric_name, value, timestamp=None):
         """
         Record the instantaneous *value* of a metric. They most recent value in
