@@ -265,30 +265,48 @@ class TestUnitDogStatsAPI(object):
 
             def run(self):
                 print 'running %s' % self.id()
-                self.produced = []
+                self.gauges = []
+                self.count = 0
                 end_time = time.time() + random.randint(0, 5)
                 while time.time() < end_time:
-                    m = 'metric.%s.%s' % (time.time(), self.id())
-                    self.produced.append(m)
+                    m = 'gauge.%s.%s' % (time.time(), self.id())
+                    self.gauges.append(m)
                     dog.gauge(m, 1)
-                    time.sleep(0.05)
+                    # Also, increment a counter and ensure it works ok.
+                    dog.increment('metric.count')
+                    self.count += 1
+                    time.sleep(0.01)
 
         # Start writing to dog api in a bunch of threads.
         num_threads = 10
         threads = [MetricProducer() for i in xrange(num_threads)]
         [t.start() for t in threads]
+        # Also write a few metrics in the main thread.
+        expected_gauges = ['gauge.%s' % i for i in range(100)]
+        for g in expected_gauges:
+            dog.gauge(g, 1)
         print 'waiting for threads to finish'
         [t.join() for t in threads]
-        # Also write a few metrics in the main thread.
-        expected = ['m.%s' % i for i in range(100)]
-        for e in expected:
-            dog.gauge(e, 1)
-        # Let the roll-up/flush interval catch up.
-        time.sleep(3)
-        for t in threads:
-            expected += t.produced
-        expected.sort()
-        metrics = reporter.metrics
-        metric_names = sorted([m['metric'] for m in metrics])
-        nt.assert_equal(metric_names, expected)
 
+        # Wait for the flush/ roll up to complete.
+        time.sleep(3)
+
+        metrics = reporter.metrics
+        metric_names = sorted((m['metric'] for m in metrics))
+
+        #
+        # Make sure we have the correct number of gauges.
+        #
+        for t in threads:
+            expected_gauges += t.gauges
+        expected_gauges.sort()
+        gauges = [m for m in metric_names if 'gauge' in m]
+        nt.assert_equal(gauges, expected_gauges)
+
+        # assert the count is correct
+        expected_count = sum((t.count for t in threads))
+        actual_count = (sum((m['points'][0][1] for m in metrics if
+                                    m['metric'] == 'metric.count')))
+        nt.assert_equal(actual_count, expected_count)
+        print actual_count
+        assert False
