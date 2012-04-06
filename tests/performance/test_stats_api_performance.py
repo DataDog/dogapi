@@ -19,7 +19,7 @@ class NullReporter(object):
 def measure_thousands_of_metrics():
     dog = DogStatsApi()
     dog.start(api_key='apikey_3', api_host="https://app.datad0g.com")
-    for i in range(10):
+    for i in range(100):
         for j in xrange(1000):
             name = j % 100
             dog.gauge('gauge.%s' % name, j)
