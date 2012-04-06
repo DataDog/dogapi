@@ -2,6 +2,7 @@
 Tests for the DogStatsAPI class.
 """
 
+import logging
 import os
 import random
 import time
@@ -10,6 +11,11 @@ import threading
 import nose.tools as nt
 
 from dogapi import DogStatsApi
+
+
+# Silence the logger.
+logger = logging.getLogger('dd.dogapi.stats')
+logger.setLevel(logging.ERROR)
 
 
 #
@@ -308,5 +314,3 @@ class TestUnitDogStatsAPI(object):
         actual_count = (sum((m['points'][0][1] for m in metrics if
                                     m['metric'] == 'metric.count')))
         nt.assert_equal(actual_count, expected_count)
-        print actual_count
-        assert False
