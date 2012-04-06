@@ -1,5 +1,5 @@
 """
-Metric roll-up classes.
+Metric roll-up classes. These classes are not thread-safe.
 """
 
 
@@ -7,7 +7,6 @@ from collections import defaultdict
 import random
 import time
 
-from dogapi.constants import MetricType
 
 class Metric(object):
     """
@@ -94,6 +93,7 @@ class Histogram(Metric):
             self._percentile_names[p] = "%s.%spercentile" % (self._name, pint)
 
     def add_point(self, timestamp, value):
+        # Not thread-safe!
         interval = self._get_interval(timestamp)
         bucket = self._intervals[interval]
 
@@ -181,14 +181,3 @@ class MetricsAggregator(object):
         for metric in self._metrics.values():
             metrics += metric.flush(timestamp)
         return metrics
-
-    def get_aggregator_function(self, metric_type):
-        if metric_type == MetricType.Gauge:
-            return self.gauge
-        elif metric_type == MetricType.Counter:
-            return self.increment
-        elif metric_type == MetricType.Histogram:
-            return self.histogram
-        else:
-            raise Exception('unknown metric type: %s' % metric_type)
-
