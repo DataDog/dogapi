@@ -6,7 +6,6 @@ Metric roll-up classes.
 from collections import defaultdict
 import random
 import time
-import threading
 
 
 class Metric(object):
@@ -43,12 +42,9 @@ class Counter(Metric):
     def __init__(self, name):
         self.name = name
         self.count = 0
-        self.interval = None
-        self.lock = threading.RLock()
 
     def add_point(self, value):
-        with self.lock:
-            self.count += value
+        self.count += value
 
     def flush(self, timestamp):
         return [(timestamp, self.count, self.name)]
@@ -64,20 +60,18 @@ class Histogram(Metric):
         self.sum = 0
         self.count = 0
         self.sample_size = sample_size
-        self.samples = [None] * self.sample_size
+        self.samples = []
         self.percentiles = [0.75, 0.85, 0.95, 0.99]
-        self.lock = threading.RLock()
 
     def add_point(self, value):
         self.max = self.max if self.max > value else value
         self.min = self.min if self.min < value else value
-        with self.lock:
-            self.sum += value
-            if self.count < self.sample_size:
-                self.samples[self.count] = value
-            else:
-                self.samples[random.randrange(0, self.sample_size)] = value
-            self.count += 1
+        self.sum += value
+        if self.count < self.sample_size:
+            self.samples.append(value)
+        else:
+            self.samples[random.randrange(0, self.sample_size)] = value
+        self.count += 1
 
     def flush(self, timestamp):
         if not self.count:
@@ -88,9 +82,10 @@ class Histogram(Metric):
             (timestamp, self.count, '%s.count' % self.name),
             (timestamp, float(self.sum) / self.count, '%s.avg' % self.name)
         ]
-        samples = sorted(self.samples[:self.count])
+        length = len(self.samples)
+        self.samples.sort()
         for p in self.percentiles:
-            val = samples[int(round(p * len(samples) - 1))]
+            val = self.samples[int(round(p * length - 1))]
             name = '%s.%spercentile' % (self.name, int(p * 100))
             metrics.append((timestamp, val, name))
         return metrics
