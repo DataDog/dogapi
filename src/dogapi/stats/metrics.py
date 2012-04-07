@@ -64,7 +64,7 @@ class Histogram(Metric):
         self.sum = 0
         self.count = 0
         self.sample_size = sample_size
-        self.samples = []
+        self.samples = [None] * self.sample_size
         self.percentiles = [0.75, 0.85, 0.95, 0.99]
         self.lock = threading.RLock()
 
@@ -73,9 +73,8 @@ class Histogram(Metric):
         self.min = self.min if self.min < value else value
         with self.lock:
             self.sum += value
-
             if self.count < self.sample_size:
-                self.samples.append(value)
+                self.samples[self.count] = value
             else:
                 self.samples[random.randint(0, self.sample_size - 1)] = value
             self.count += 1
@@ -89,9 +88,9 @@ class Histogram(Metric):
             (timestamp, self.count, '%s.count' % self.name),
             (timestamp, float(self.sum) / self.count, '%s.avg' % self.name)
         ]
-        self.samples.sort()
+        samples = sorted(self.samples[:self.count])
         for p in self.percentiles:
-            val = self.samples[int(round(p * len(self.samples) - 1))]
+            val = samples[int(round(p * len(samples) - 1))]
             name = '%s.%spercentile' % (self.name, int(p * 100))
             metrics.append((timestamp, val, name))
         return metrics
