@@ -78,6 +78,7 @@ def profile_cpu_bound_program():
 def measure_thousands_of_metrics():
     dog = DogStatsApi()
     dog.start(api_key='apikey_3', api_host="https://app.datad0g.com")
+    yappi.start()
     for i in range(100):
         for j in xrange(1000):
             name = j % 100
@@ -85,12 +86,11 @@ def measure_thousands_of_metrics():
             dog.increment('gauge.%s' % name, j)
             dog.histogram('histogram.%s' % name, j)
         print 'run %s' % i
+    yappi.print_stats(sort_type=yappi.SORTTYPE_TSUB, sort_order=yappi.SORTORDER_DESC)
 
-def profile_yappi():
-    profile_cpu_bound_program()
 
 
 
 if __name__ == '__main__':
-    profile_yappi()
+    measure_thousands_of_metrics()
 
