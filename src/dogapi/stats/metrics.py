@@ -76,7 +76,7 @@ class Histogram(Metric):
             if self.count < self.sample_size:
                 self.samples[self.count] = value
             else:
-                self.samples[random.randint(0, self.sample_size - 1)] = value
+                self.samples[random.randrange(0, self.sample_size)] = value
             self.count += 1
 
     def flush(self, timestamp):
