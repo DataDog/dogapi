@@ -69,8 +69,8 @@ class Histogram(Metric):
         self.lock = threading.RLock()
 
     def add_point(self, value):
-        self.max = max(value, self.max)
-        self.min = min(value, self.min)
+        self.max = self.max if self.max > value else value
+        self.min = self.min if self.min < value else value
         with self.lock:
             self.sum += value
 
