@@ -25,7 +25,7 @@ class DogStatsApi(object):
 
     def __init__(self):
         """ Initialize a dogstats object. """
-        self._metrics = []
+        pass
 
     def start(self, api_key=None,
                     flush_interval=10,
