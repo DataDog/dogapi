@@ -18,7 +18,6 @@ from dogapi.stats.reporters import HttpReporter
 
 
 log = logging.getLogger('dd.dogapi')
-stat_log = logging.getLogger('dd.dogapi.stats')
 
 
 class DogStatsApi(object):
@@ -176,7 +175,6 @@ class DogStatsApi(object):
                 'device':  self.device
             }
             metrics.append(metric)
-            stat_log.info("Metric (%s, %s, %s)" % (name, value, timestamp))
         return metrics
 
     def _start_flush_thread(self):
