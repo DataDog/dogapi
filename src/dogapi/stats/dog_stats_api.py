@@ -19,19 +19,13 @@ from dogapi.stats.reporters import HttpReporter
 
 # Loggers
 log = logging.getLogger('dd.dogapi')
-stat_log = logging.getLogger('dd.dogapi.stats')
 
 
 class DogStatsApi(object):
 
     def __init__(self):
         """ Initialize a dogstats object. """
-        self.max_queue_size = 200000
-        self.metric_timeout = 0.01
-
-        # We buffer metrics in a thread safe queue, so that there is no conflict
-        # if we are flushing metrics in another thread.
-        self._metrics_queue = Queue.Queue(self.max_queue_size)
+        pass
 
     def start(self, api_key=None,
                     flush_interval=10,
@@ -39,10 +33,10 @@ class DogStatsApi(object):
                     host=None,
                     device=None,
                     api_host=None,
-                    metric_timeout=0.01,
                     use_ec2_instance_ids=False,
                     flush_in_thread=True,
-                    flush_in_greenlet=False):
+                    flush_in_greenlet=False,
+                    disabled=False):
         """
         Configure the DogStatsApi instance and optionally, begin auto-flusing metrics.
 
@@ -54,14 +48,14 @@ class DogStatsApi(object):
         self.flush_interval = flush_interval
         self.roll_up_interval = roll_up_interval
         self.device = device
-        self.metric_timeout = metric_timeout
+        self._disabled = disabled
 
         self.host = host or socket.gethostname()
         if use_ec2_instance_ids:
             self.host = get_ec2_instance_id()
 
         # Initialize the metrics aggregator.
-        self._metrics_aggregator = MetricsAggregator(self.roll_up_interval)
+        self._aggregator = MetricsAggregator(self.roll_up_interval)
 
         # The reporter is responsible for sending metrics off to their final destination.
         # It's abstracted to support easy unit testing and in the near future, forwarding
@@ -71,10 +65,22 @@ class DogStatsApi(object):
         self._is_auto_flushing = False
         self._is_flush_in_progress = False
         self.flush_count = 0
-        if flush_in_greenlet:
-            self._start_flush_greenlet()
-        elif flush_in_thread:
-            self._start_flush_thread()
+        if self._disabled:
+            log.info("dogapi is disabled. No metrics will flush.")
+        else:
+            if flush_in_greenlet:
+                self._start_flush_greenlet()
+            elif flush_in_thread:
+                self._start_flush_thread()
+
+    def stop(self):
+        if not self._is_auto_flushing:
+            return True
+        if self._flush_thread:
+            self._flush_thread.end()
+            self._is_auto_flushing = False
+            return True
+
 
     def gauge(self, metric_name, value, timestamp=None, tags=None):
         """
@@ -85,7 +91,7 @@ class DogStatsApi(object):
         >>> dog_stats_api.gauge('process.uptime', time.time() - process_start_time)
         >>> dog_stats_api.gauge('cache.bytes.free', cache.get_free_bytes(), tags=['version:1.0'])
         """
-        self._queue_metric(metric_name, value, MetricType.Gauge, timestamp, tags)
+        self._aggregator.gauge(metric_name, tags, timestamp or time.time(), value)
 
     def increment(self, metric_name, value=1, timestamp=None, tags=None):
         """
@@ -95,7 +101,7 @@ class DogStatsApi(object):
         >>> dog_stats_api.increment('home.page.hits')
         >>> dog_stats_api.increment('bytes.processed', file.size())
         """
-        self._queue_metric(metric_name, value, MetricType.Counter, timestamp, tags)
+        self._aggregator.increment(metric_name, tags, timestamp or time.time(), value)
 
     def histogram(self, metric_name, value, timestamp=None, tags=None):
         """
@@ -107,7 +113,7 @@ class DogStatsApi(object):
         >>> dog_stats_api.histogram('uploaded_file.size', uploaded_file.size())
         >>> dog_stats_api.histogram('uploaded_file.size', uploaded_file.size())
         """
-        self._queue_metric(metric_name, value, MetricType.Histogram, timestamp, tags)
+        self._aggregator.histogram(metric_name, tags, timestamp or time.time(), value)
 
     def timed(self, metric_name, tags=None):
         """
@@ -142,11 +148,14 @@ class DogStatsApi(object):
         """
         if self._is_flush_in_progress:
             log.debug("A flush is already in progress. Skipping this one.")
-            return
+            return False
+        elif self._disabled:
+            log.info("Not flushing because we're disabled.")
+            return False
+
         try:
             self._is_flush_in_progress = True
-            raw_metrics = self._dequeue_metrics()
-            metrics = self._aggregate_metrics(raw_metrics, timestamp)
+            metrics = self._get_aggregate_metrics(timestamp or time.time())
             count = len(metrics)
             if count:
                 self.flush_count += 1
@@ -157,20 +166,11 @@ class DogStatsApi(object):
         finally:
             self._is_flush_in_progress = False
 
-    def _aggregate_metrics(self, raw_metrics, flush_time=None):
-        flush_time = flush_time or time.time()
-        for raw_metric in raw_metrics:
-            name = raw_metric['metric']
-            type_ = raw_metric['type']
-            tags = raw_metric['tags']
-            aggregator = self._metrics_aggregator.get_aggregator_function(type_)
-            # Aggregate them.
-            for timestamp, value in raw_metric['points']:
-                aggregator(name, tags, timestamp, value)
-
+    def _get_aggregate_metrics(self, flush_time=None):
         # Get rolled up metrics
-        rolled_up_metrics = self._metrics_aggregator.flush(flush_time)
+        rolled_up_metrics = self._aggregator.flush(flush_time)
 
+        # FIXME: emit a dictionary from the aggregator
         metrics = []
         for timestamp, value, name, tags in rolled_up_metrics:
             metric = {
@@ -182,8 +182,6 @@ class DogStatsApi(object):
                 'tags'  :  tags
             }
             metrics.append(metric)
-            stat_log.info("Metric (%s, %s, %s, %s)" %
-                        (name, value, timestamp, str(tags)))
         return metrics
 
     def _start_flush_thread(self):
@@ -233,46 +231,4 @@ class DogStatsApi(object):
         log.info("Starting flush greenlet with interval %s." % self.flush_interval)
         gevent.spawn(flush)
 
-    def _queue_metric(self, metric_name, value, metric_type, timestamp=None, tags=None):
-        """ Queue the given metric for aggregation. """
-        metric = {
-            'metric': metric_name,
-            'points': [[timestamp or time.time(), value]],
-            'type':   metric_type,
-            'tags':   tags
-        }
-        # If the metrics queue is full, don't block.
-        try:
-            self._metrics_queue.put(metric, True, self.metric_timeout)
-        except Queue.Full:
-            # This check has a race condition, but if we're in the
-            # ballpark of the max queue size, it's true enough.
-            if self._metrics_queue.full():
-                log.error("Metrics queue is full with size %s" % self.max_queue_size)
-            else:
-                log.error("Hit metric timeout of %s. Dropping point." % self.metric_timeout)
-
-    def _dequeue_metrics(self):
-        """ Pop all metrics off of the queue. """
-        metrics = []
-        loops = 0
-        log.debug("Dequeuing metrics. Size: %s" % self._metrics_queue.qsize())
-        while True:
-            loops += 1
-            # FIXME mattp: is this performant enough? If we're flushing
-            # manually or in a greenlet, we could skip this step and queue
-            # directly onto the aggregator.
-            try:
-                metrics.append(self._metrics_queue.get(False, self.metric_timeout * 2))
-            except Queue.Empty:
-                # Only break if the queue is actually close to empty. Let the
-                if self._metrics_queue.empty():
-                    break
-            # Ensure that we aren't popping metrics for a dangerously long time.
-            if loops >= self.max_queue_size:
-                log.info("Maximum flush size hit %s" % self.max_queue_size)
-                break
-        log.debug("Finished dequeueing metrics. Size: %s" %
-                                        self._metrics_queue.qsize())
-        return metrics
 

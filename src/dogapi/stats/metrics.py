@@ -7,7 +7,6 @@ from collections import defaultdict
 import random
 import time
 
-from dogapi.constants import MetricType
 
 class Metric(object):
     """
@@ -15,13 +14,7 @@ class Metric(object):
     and performs roll-ups within those intervals.
     """
 
-    def __init__(self, name, tags, roll_up_interval):
-        """ Create a metric. """
-        self._roll_up_interval = roll_up_interval
-        self._name = name
-        self._tags = tags
-
-    def add_point(self, timestamp, value):
+    def add_point(self, value):
         """ Add a point to the given metric. """
         raise NotImplementedError()
 
@@ -29,127 +22,79 @@ class Metric(object):
         """ Flush all metrics up to the given timestamp. """
         raise NotImplementedError()
 
-    def _get_interval(self, timestamp):
-        """ Return the interval into which the given timestamp fits. """
-        return timestamp - timestamp % self._roll_up_interval
-
-    def _pop_past_intervals(self, timestamp):
-        """ Return all intervals that are before the given timestamp. """
-        ts_interval = self._get_interval(timestamp)
-        past_timestamps = sorted([i for i in self._intervals if i < ts_interval])
-        return [(ts, self._intervals.pop(ts)) for ts in past_timestamps]
-
 
 class Gauge(Metric):
     """ A gauge metric. """
 
-    def __init__(self, name, tags, roll_up_interval):
-        super(Gauge, self).__init__(name, tags, roll_up_interval)
-        self._intervals = defaultdict(lambda: None)
+    def __init__(self, name, tags):
+        self.name = name
+        self.tags = tags
+        self.value = None
 
-    def add_point(self, timestamp, value):
-        interval = self._get_interval(timestamp)
-        self._intervals[interval] = value
+    def add_point(self, value):
+        self.value = value
 
     def flush(self, timestamp):
-        past_intervals = self._pop_past_intervals(timestamp)
-        metrics = []
-        for timestamp, gauge in past_intervals:
-            metrics.append((timestamp, gauge, self._name, self._tags))
-        return metrics
-
+        return [(timestamp, self.value, self.name, self.tags)]
 
 class Counter(Metric):
     """ A counter metric. """
 
-    def __init__(self, name, tags, roll_up_interval):
-        super(Counter, self).__init__(name, tags, roll_up_interval)
-        self._intervals = {}
+    def __init__(self, name, tags):
+        self.name = name
+        self.tags = tags
+        self.count = 0
 
-    def add_point(self, timestamp, value):
-        interval = self._get_interval(timestamp)
-        count = self._intervals.get(interval, 0)
-        self._intervals[interval] = count + value
+    def add_point(self, value):
+        self.count += value
 
     def flush(self, timestamp):
-        past_intervals = self._pop_past_intervals(timestamp)
-        return [(ts, count, self._name, self._tags) for ts, count in past_intervals]
+        return [(timestamp, self.count, self.name, self.tags)]
 
 
 class Histogram(Metric):
     """ A histogram metric. """
 
-    def __init__(self, name, tags, roll_up_interval, sample_size=1000):
-        super(Histogram, self).__init__(name, tags, roll_up_interval)
-        # Each interval stores a dictionary of running stats of the
-        # histogram, like max, min, samples and so on.
-        self._intervals = defaultdict(lambda: {})
-        self._sample_size = sample_size
-        self._percentiles = [0.75, 0.85, 0.95, 0.99]
+    def __init__(self, name, tags):
+        self.name = name
+        self.tags = tags
+        self.max = float("-inf")
+        self.min = float("inf")
+        self.sum = 0
+        self.count = 0
+        self.sample_size = 1000
+        self.samples = []
+        self.percentiles = [0.75, 0.85, 0.95, 0.99]
 
-        # The names of the metrics the histogram produces.
-        self._min_name = self._name + '.min'
-        self._max_name = self._name + '.max'
-        self._avg_name = self._name + '.avg'
-        self._count_name = self._name + '.count'
-        self._percentile_names = {}
-        for p in self._percentiles:
-            pint = int(p * 100)
-            self._percentile_names[p] = "%s.%spercentile" % (self._name, pint)
-
-    def add_point(self, timestamp, value):
-        interval = self._get_interval(timestamp)
-        bucket = self._intervals[interval]
-
-        # Update the min, max and so on.
-        bucket['max'] = max(bucket.get('max', float("-inf")), value)
-        bucket['min'] = min(bucket.get('min', float("inf")), value)
-        bucket['count'] = bucket.get('count', 0) + 1
-        bucket['sum'] = bucket.get('sum', 0) + value
-
-        # And sample a value for percentiles.
-        samples = bucket.get('samples', [])
-        if len(samples) < self._sample_size:
-            samples.append(value)
+    def add_point(self, value):
+        self.max = self.max if self.max > value else value
+        self.min = self.min if self.min < value else value
+        self.sum += value
+        if self.count < self.sample_size:
+            self.samples.append(value)
         else:
-            index = random.randint(0, self._sample_size - 1)
-            samples[index] = value
-        bucket['samples'] = samples
-
-        # And put our bucket back.
-        self._intervals[interval] = bucket
-
-    def _get_percentiles(self, samples):
-        samples.sort()
-        length = len(samples)
-        output = {}
-        if not length:
-            return output
-        for percentile in self._percentiles:
-            index = int(round(percentile * length - 1))
-            output[percentile] = samples[index]
-        return output
+            self.samples[random.randrange(0, self.sample_size)] = value
+        self.count += 1
 
     def flush(self, timestamp):
-        metrics = []
-        for i, bucket in self._pop_past_intervals(timestamp):
-            count = bucket['count']
-            if count <= 0:
-                raise Exception("no metrics: %s %s" % (self._name, i))
-            min_ = bucket['min']
-            max_ = bucket['max']
-            avg = float(bucket['sum']) / count
-
-            metrics.append((i, avg,   self._avg_name,  self._tags))
-            metrics.append((i, count, self._count_name, self._tags))
-            metrics.append((i, min_,  self._min_name, self._tags))
-            metrics.append((i, max_,  self._max_name, self._tags))
-            percentiles = self._get_percentiles(bucket['samples'])
-            for p, value in percentiles.items():
-                name = self._percentile_names[p]
-                metrics.append((i, value, name, self._tags))
+        if not self.count:
+            return []
+        metrics = [
+            (timestamp, self.min,       '%s.min'   % self.name, self.tags),
+            (timestamp, self.max,       '%s.max'   % self.name, self.tags),
+            (timestamp, self.count,     '%s.count' % self.name, self.tags),
+            (timestamp, self.average(), '%s.avg'   % self.name, self.tags)
+        ]
+        length = len(self.samples)
+        self.samples.sort()
+        for p in self.percentiles:
+            val = self.samples[int(round(p * length - 1))]
+            name = '%s.%spercentile' % (self.name, int(p * 100))
+            metrics.append((timestamp, val, name, self.tags))
         return metrics
 
+    def average(self):
+        return float(self.sum) / self.count
 
 class MetricsAggregator(object):
     """
@@ -173,27 +118,21 @@ class MetricsAggregator(object):
         self._add_point(metric, tags, timestamp, value, Histogram)
 
     def _add_point(self, metric, tags, timestamp, value, metric_class):
-        # FIXME mattp: overwrite metric if we add a different type?
+        interval = timestamp - timestamp % self._roll_up_interval
+        if interval not in self._metrics:
+            self._metrics[interval] = {}
         key = (metric, tuple(sorted(tags or [])))
-        if key not in self._metrics:
-            self._metrics[key] = metric_class(metric, tags, self._roll_up_interval)
-        self._metrics[key].add_point(timestamp, value)
+        if key not in self._metrics[interval]:
+            self._metrics[interval][key] = metric_class(metric, tags)
+        self._metrics[interval][key].add_point(value)
 
     def flush(self, timestamp):
         """ Flush all metrics up to the given timestamp. """
-        # remove empty metrics on flush?
+        interval = timestamp - timestamp % self._roll_up_interval
+        past_intervals = sorted((i for i in self._metrics if i < interval))
         metrics = []
-        for metric in self._metrics.values():
-            metrics += metric.flush(timestamp)
+        for i in past_intervals:
+            for m in self._metrics.pop(i).values():
+                metrics += m.flush(i)
         return metrics
-
-    def get_aggregator_function(self, metric_type):
-        if metric_type == MetricType.Gauge:
-            return self.gauge
-        elif metric_type == MetricType.Counter:
-            return self.increment
-        elif metric_type == MetricType.Histogram:
-            return self.histogram
-        else:
-            raise Exception('unknown metric type: %s' % metric_type)
 

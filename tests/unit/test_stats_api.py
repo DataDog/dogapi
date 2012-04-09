@@ -2,13 +2,20 @@
 Tests for the DogStatsAPI class.
 """
 
+import logging
 import os
 import random
 import time
+import threading
 
 import nose.tools as nt
 
 from dogapi import DogStatsApi
+
+
+# Silence the logger.
+logger = logging.getLogger('dd.dogapi.stats')
+logger.setLevel(logging.ERROR)
 
 
 #
@@ -289,3 +296,87 @@ class TestUnitDogStatsAPI(object):
         for metric in reporter.metrics:
             assert metric['tags'] # this is enough
 
+    def test_disabled_mode(self):
+        dog = DogStatsApi()
+        reporter = dog.reporter = MemoryReporter()
+        dog.start(disabled=True, flush_interval=1, roll_up_interval=1)
+        dog.gauge('testing', 1, timestamp=1000)
+        dog.gauge('testing', 2, timestamp=1000)
+        dog.flush(2000.0)
+        assert not reporter.metrics
+
+    def test_stop(self):
+        dog = DogStatsApi()
+        reporter = dog.reporter = MemoryReporter()
+        dog.start(flush_interval=1, roll_up_interval=1)
+        for i in range(10):
+            dog.gauge('metric', i)
+        time.sleep(2)
+        flush_count = dog.flush_count
+        assert flush_count
+        dog.stop()
+        for i in range(10):
+            dog.gauge('metric', i)
+        time.sleep(2)
+        for i in range(10):
+            dog.gauge('metric', i)
+        time.sleep(2)
+        assert dog.flush_count in [flush_count, flush_count+1]
+
+    def test_threadsafe_correctness(self):
+        # A test to ensure we flush the expected values
+        # when we have lots of threads writing to dog api
+        dog = DogStatsApi()
+        dog.start(flush_interval=1, roll_up_interval=1)
+        reporter = dog.reporter = MemoryReporter()
+
+        class MetricProducer(threading.Thread):
+
+            def id(self):
+                return threading.current_thread().ident
+
+            def run(self):
+                print 'running %s' % self.id()
+                self.gauges = []
+                self.count = 0
+                end_time = time.time() + random.randint(0, 5)
+                while time.time() < end_time:
+                    m = 'gauge.%s.%s' % (time.time(), self.id())
+                    self.gauges.append(m)
+                    dog.gauge(m, 1)
+                    # Also, increment a counter and ensure it works ok.
+                    dog.increment('metric.count')
+                    self.count += 1
+                    time.sleep(0.01)
+
+        # Start writing to dog api in a bunch of threads.
+        num_threads = 10
+        threads = [MetricProducer() for i in xrange(num_threads)]
+        [t.start() for t in threads]
+        # Also write a few metrics in the main thread.
+        expected_gauges = ['gauge.%s' % i for i in range(100)]
+        for g in expected_gauges:
+            dog.gauge(g, 1)
+        print 'waiting for threads to finish'
+        [t.join() for t in threads]
+
+        # Wait for the flush/ roll up to complete.
+        time.sleep(3)
+
+        metrics = reporter.metrics
+        metric_names = sorted((m['metric'] for m in metrics))
+
+        #
+        # Make sure we have the correct number of gauges.
+        #
+        for t in threads:
+            expected_gauges += t.gauges
+        expected_gauges.sort()
+        gauges = [m for m in metric_names if 'gauge' in m]
+        nt.assert_equal(gauges, expected_gauges)
+
+        # assert the count is correct
+        expected_count = sum((t.count for t in threads))
+        actual_count = (sum((m['points'][0][1] for m in metrics if
+                                    m['metric'] == 'metric.count')))
+        nt.assert_equal(actual_count, expected_count)

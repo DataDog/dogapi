@@ -1,3 +1,6 @@
+
+ENV['PYTHONPATH'] = './src:' + (ENV['PYTHONPATH'] or '')
+
 task :default => [:clean, :test, :build]
 task :clean => [:clean_pyc, :clean_build, :clean_dist]
 
@@ -26,13 +29,18 @@ namespace :test do
   desc "Run integration tests."
   task :integration do
     sh 'nosetests --exclude ".*greenlet.*" tests/integration'
+    # Testing greenlet flush requires another process, so run them seperately.
     sh "PYTHONPATH=src:$PYTHONPATH python tests/integration/test_stats_api_greenlet.py"
   end
 
   desc "Run unit tests."
   task :unit do
-    # Testing greenlet flush requires another process, so run them seperately.
     sh 'nosetests tests/unit'
+  end
+
+  desc "Run perf tests."
+  task :perf do
+    sh 'python tests/performance/*.py'
   end
 
 end
