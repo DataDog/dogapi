@@ -102,13 +102,11 @@ class MetricsAggregator(object):
     """
 
     def __init__(self, roll_up_interval=10):
-        self._metrics = {}
+        self._metrics = defaultdict(lambda: {})
         self._roll_up_interval = roll_up_interval
 
     def add_point(self, metric, tags, timestamp, value, metric_class):
         interval = timestamp - timestamp % self._roll_up_interval
-        if interval not in self._metrics:
-            self._metrics[interval] = {}
         key = (metric, tuple(sorted(tags or [])))
         if key not in self._metrics[interval]:
             self._metrics[interval][key] = metric_class(metric, tags)
