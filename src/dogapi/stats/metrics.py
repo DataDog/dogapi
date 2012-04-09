@@ -105,19 +105,7 @@ class MetricsAggregator(object):
         self._metrics = {}
         self._roll_up_interval = roll_up_interval
 
-    def increment(self, metric, tags, timestamp, value=1):
-        """ Increment the given counter. """
-        self._add_point(metric, tags, timestamp, value, Counter)
-
-    def gauge(self, metric, tags, timestamp, value):
-        """ Record a gauge metric. """
-        self._add_point(metric, tags, timestamp, value, Gauge)
-
-    def histogram(self, metric, tags, timestamp, value):
-        """ Sample a histogram point. """
-        self._add_point(metric, tags, timestamp, value, Histogram)
-
-    def _add_point(self, metric, tags, timestamp, value, metric_class):
+    def add_point(self, metric, tags, timestamp, value, metric_class):
         interval = timestamp - timestamp % self._roll_up_interval
         if interval not in self._metrics:
             self._metrics[interval] = {}

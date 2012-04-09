@@ -13,7 +13,7 @@ import Queue
 
 from dogapi.common import get_ec2_instance_id
 from dogapi.constants import MetricType
-from dogapi.stats.metrics import MetricsAggregator
+from dogapi.stats.metrics import MetricsAggregator, Counter, Gauge, Histogram
 from dogapi.stats.reporters import HttpReporter
 
 
@@ -91,7 +91,7 @@ class DogStatsApi(object):
         >>> dog_stats_api.gauge('process.uptime', time.time() - process_start_time)
         >>> dog_stats_api.gauge('cache.bytes.free', cache.get_free_bytes(), tags=['version:1.0'])
         """
-        self._aggregator.gauge(metric_name, tags, timestamp or time.time(), value)
+        self._aggregator.add_point(metric_name, tags, timestamp or time.time(), value, Gauge)
 
     def increment(self, metric_name, value=1, timestamp=None, tags=None):
         """
@@ -101,7 +101,7 @@ class DogStatsApi(object):
         >>> dog_stats_api.increment('home.page.hits')
         >>> dog_stats_api.increment('bytes.processed', file.size())
         """
-        self._aggregator.increment(metric_name, tags, timestamp or time.time(), value)
+        self._aggregator.add_point(metric_name, tags, timestamp or time.time(), value, Counter)
 
     def histogram(self, metric_name, value, timestamp=None, tags=None):
         """
@@ -113,7 +113,7 @@ class DogStatsApi(object):
         >>> dog_stats_api.histogram('uploaded_file.size', uploaded_file.size())
         >>> dog_stats_api.histogram('uploaded_file.size', uploaded_file.size())
         """
-        self._aggregator.histogram(metric_name, tags, timestamp or time.time(), value)
+        self._aggregator.add_point(metric_name, tags, timestamp or time.time(), value, Histogram)
 
     def timed(self, metric_name, tags=None):
         """
