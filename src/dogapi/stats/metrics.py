@@ -26,40 +26,43 @@ class Metric(object):
 class Gauge(Metric):
     """ A gauge metric. """
 
-    def __init__(self, name):
+    def __init__(self, name, tags):
         self.name = name
+        self.tags = tags
         self.value = None
 
     def add_point(self, value):
         self.value = value
 
     def flush(self, timestamp):
-        return [(timestamp, self.value, self.name)]
+        return [(timestamp, self.value, self.name, self.tags)]
 
 class Counter(Metric):
     """ A counter metric. """
 
-    def __init__(self, name):
+    def __init__(self, name, tags):
         self.name = name
+        self.tags = tags
         self.count = 0
 
     def add_point(self, value):
         self.count += value
 
     def flush(self, timestamp):
-        return [(timestamp, self.count, self.name)]
+        return [(timestamp, self.count, self.name, self.tags)]
 
 
 class Histogram(Metric):
     """ A histogram metric. """
 
-    def __init__(self, name, sample_size=1000):
+    def __init__(self, name, tags):
         self.name = name
+        self.tags = tags
         self.max = float("-inf")
         self.min = float("inf")
         self.sum = 0
         self.count = 0
-        self.sample_size = sample_size
+        self.sample_size = 1000
         self.samples = []
         self.percentiles = [0.75, 0.85, 0.95, 0.99]
 
@@ -77,18 +80,21 @@ class Histogram(Metric):
         if not self.count:
             return []
         metrics = [
-            (timestamp, self.min,   '%s.min' % self.name),
-            (timestamp, self.max,   '%s.max' % self.name),
-            (timestamp, self.count, '%s.count' % self.name),
-            (timestamp, float(self.sum) / self.count, '%s.avg' % self.name)
+            (timestamp, self.min,       '%s.min'   % self.name, self.tags),
+            (timestamp, self.max,       '%s.max'   % self.name, self.tags),
+            (timestamp, self.count,     '%s.count' % self.name, self.tags),
+            (timestamp, self.average(), '%s.avg'   % self.name, self.tags)
         ]
         length = len(self.samples)
         self.samples.sort()
         for p in self.percentiles:
             val = self.samples[int(round(p * length - 1))]
             name = '%s.%spercentile' % (self.name, int(p * 100))
-            metrics.append((timestamp, val, name))
+            metrics.append((timestamp, val, name, self.tags))
         return metrics
+
+    def average(self):
+        return float(self.sum) / self.count
 
 class MetricsAggregator(object):
     """
@@ -99,25 +105,26 @@ class MetricsAggregator(object):
         self._metrics = {}
         self._roll_up_interval = roll_up_interval
 
-    def increment(self, metric, timestamp, value=1):
+    def increment(self, metric, tags, timestamp, value=1):
         """ Increment the given counter. """
-        self._add_point(metric, timestamp, value, Counter)
+        self._add_point(metric, tags, timestamp, value, Counter)
 
-    def gauge(self, metric, timestamp, value):
+    def gauge(self, metric, tags, timestamp, value):
         """ Record a gauge metric. """
-        self._add_point(metric, timestamp, value, Gauge)
+        self._add_point(metric, tags, timestamp, value, Gauge)
 
-    def histogram(self, metric, timestamp, value):
+    def histogram(self, metric, tags, timestamp, value):
         """ Sample a histogram point. """
-        self._add_point(metric, timestamp, value, Histogram)
+        self._add_point(metric, tags, timestamp, value, Histogram)
 
-    def _add_point(self, metric, timestamp, value, metric_class):
+    def _add_point(self, metric, tags, timestamp, value, metric_class):
         interval = timestamp - timestamp % self._roll_up_interval
         if interval not in self._metrics:
             self._metrics[interval] = {}
-        if metric not in self._metrics[interval]:
-            self._metrics[interval][metric] = metric_class(metric)
-        self._metrics[interval][metric].add_point(value)
+        key = (metric, tuple(sorted(tags or [])))
+        if key not in self._metrics[interval]:
+            self._metrics[interval][key] = metric_class(metric, tags)
+        self._metrics[interval][key].add_point(value)
 
     def flush(self, timestamp):
         """ Flush all metrics up to the given timestamp. """

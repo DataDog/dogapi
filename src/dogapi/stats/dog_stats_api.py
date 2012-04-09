@@ -17,6 +17,7 @@ from dogapi.stats.metrics import MetricsAggregator
 from dogapi.stats.reporters import HttpReporter
 
 
+# Loggers
 log = logging.getLogger('dd.dogapi')
 
 
@@ -81,38 +82,43 @@ class DogStatsApi(object):
             return True
 
 
-    def gauge(self, metric_name, value, timestamp=None):
+    def gauge(self, metric_name, value, timestamp=None, tags=None):
         """
         Record the instantaneous *value* of a metric. They most recent value in
-        a given flush interval will be recorded.
+        a given flush interval will be recorded. Optionally, specify a set of
+        tags to associate with the metric.
 
         >>> dog_stats_api.gauge('process.uptime', time.time() - process_start_time)
-        >>> dog_stats_api.gauge('cache.bytes.free', cache.get_free_bytes())
+        >>> dog_stats_api.gauge('cache.bytes.free', cache.get_free_bytes(), tags=['version:1.0'])
         """
-        self._aggregator.gauge(metric_name, timestamp or time.time(), value)
+        self._aggregator.gauge(metric_name, tags, timestamp or time.time(), value)
 
-    def increment(self, metric_name, value=1, timestamp=None):
+    def increment(self, metric_name, value=1, timestamp=None, tags=None):
         """
-        Increment the counter value of the given metric.
+        Increment the counter by the given *value*. Optionally, specify a list of
+        *tags* to associate with the metric.
 
         >>> dog_stats_api.increment('home.page.hits')
         >>> dog_stats_api.increment('bytes.processed', file.size())
         """
-        self._aggregator.increment(metric_name, timestamp or time.time(), value)
+        self._aggregator.increment(metric_name, tags, timestamp or time.time(), value)
 
-    def histogram(self, metric_name, value, timestamp=None):
+    def histogram(self, metric_name, value, timestamp=None, tags=None):
         """
         Sample a histogram value. Histograms will produce metrics that
         describe the distribution of the recorded values, namely the minimum,
         maximum, average, count and the 75th, 85th, 95th and 99th percentiles.
+        Optionally, specify a list of *tags* to associate with the metric.
 
         >>> dog_stats_api.histogram('uploaded_file.size', uploaded_file.size())
+        >>> dog_stats_api.histogram('uploaded_file.size', uploaded_file.size())
         """
-        self._aggregator.histogram(metric_name, timestamp or time.time(), value)
+        self._aggregator.histogram(metric_name, tags, timestamp or time.time(), value)
 
-    def timed(self, metric_name):
+    def timed(self, metric_name, tags=None):
         """
         A decorator that will track the distribution of a function's run time.
+        Optionally specify a list of tags to associate with the metric.
         ::
 
             @dog_stats_api.timed('user.query.time')
@@ -131,7 +137,7 @@ class DogStatsApi(object):
             def wrapped(*args, **kwargs):
                 start = time.time()
                 result = func(*args, **kwargs)
-                self.histogram(metric_name, time.time() - start)
+                self.histogram(metric_name, time.time() - start, tags=tags)
                 return result
             return wrapped
         return wrapper
@@ -166,13 +172,14 @@ class DogStatsApi(object):
 
         # FIXME: emit a dictionary from the aggregator
         metrics = []
-        for timestamp, value, name in rolled_up_metrics:
+        for timestamp, value, name, tags in rolled_up_metrics:
             metric = {
                 'metric' : name,
                 'points' : [[timestamp, value]],
                 'type':    MetricType.Gauge,
                 'host':    self.host,
-                'device':  self.device
+                'device':  self.device,
+                'tags'  :  tags
             }
             metrics.append(metric)
         return metrics
@@ -223,4 +230,5 @@ class DogStatsApi(object):
 
         log.info("Starting flush greenlet with interval %s." % self.flush_interval)
         gevent.spawn(flush)
+
 
