@@ -96,6 +96,7 @@ class Histogram(Metric):
     def average(self):
         return float(self.sum) / self.count
 
+
 class MetricsAggregator(object):
     """
     A small class to handle the roll-ups of multiple metrics at once.
