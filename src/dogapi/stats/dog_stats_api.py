@@ -91,7 +91,8 @@ class DogStatsApi(object):
         >>> dog_stats_api.gauge('process.uptime', time.time() - process_start_time)
         >>> dog_stats_api.gauge('cache.bytes.free', cache.get_free_bytes(), tags=['version:1.0'])
         """
-        self._aggregator.add_point(metric_name, tags, timestamp or time.time(), value, Gauge)
+        if not self._disabled:
+            self._aggregator.add_point(metric_name, tags, timestamp or time.time(), value, Gauge)
 
     def increment(self, metric_name, value=1, timestamp=None, tags=None):
         """
@@ -101,7 +102,8 @@ class DogStatsApi(object):
         >>> dog_stats_api.increment('home.page.hits')
         >>> dog_stats_api.increment('bytes.processed', file.size())
         """
-        self._aggregator.add_point(metric_name, tags, timestamp or time.time(), value, Counter)
+        if not self._disabled:
+            self._aggregator.add_point(metric_name, tags, timestamp or time.time(), value, Counter)
 
     def histogram(self, metric_name, value, timestamp=None, tags=None):
         """
@@ -113,7 +115,8 @@ class DogStatsApi(object):
         >>> dog_stats_api.histogram('uploaded_file.size', uploaded_file.size())
         >>> dog_stats_api.histogram('uploaded_file.size', uploaded_file.size())
         """
-        self._aggregator.add_point(metric_name, tags, timestamp or time.time(), value, Histogram)
+        if not self._disabled:
+            self._aggregator.add_point(metric_name, tags, timestamp or time.time(), value, Histogram)
 
     def timed(self, metric_name, tags=None):
         """
