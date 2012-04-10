@@ -25,7 +25,8 @@ class DogStatsApi(object):
 
     def __init__(self):
         """ Initialize a dogstats object. """
-        pass
+        # Don't collect until start is called.
+        self._disabled = True
 
     def start(self, api_key=None,
                     flush_interval=10,
