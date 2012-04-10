@@ -150,14 +150,14 @@ class DogStatsApi(object):
         """
         Flush all metrics to their final destination.
         """
-        if self._is_flush_in_progress:
-            log.debug("A flush is already in progress. Skipping this one.")
-            return False
-        elif self._disabled:
-            log.info("Not flushing because we're disabled.")
-            return False
-
         try:
+            if self._is_flush_in_progress:
+                log.debug("A flush is already in progress. Skipping this one.")
+                return False
+            elif self._disabled:
+                log.info("Not flushing because we're disabled.")
+                return False
+
             self._is_flush_in_progress = True
             metrics = self._get_aggregate_metrics(timestamp or time.time())
             count = len(metrics)
@@ -167,6 +167,11 @@ class DogStatsApi(object):
                 self.reporter.flush(metrics)
             else:
                 log.info("No metrics to flush. Continuing.")
+        except:
+            try:
+                log.exception("Error flushing metrics")
+            except:
+                pass
         finally:
             self._is_flush_in_progress = False
 
