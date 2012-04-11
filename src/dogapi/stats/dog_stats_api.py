@@ -139,7 +139,8 @@ class DogStatsApi(object):
             def wrapped(*args, **kwargs):
                 start = time()
                 result = func(*args, **kwargs)
-                self.histogram(metric_name, time() - start, tags=tags)
+                end = time()
+                self.histogram(metric_name, end - start, end, tags=tags)
                 return result
             return wrapped
         return wrapper
