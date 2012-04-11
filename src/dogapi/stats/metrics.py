@@ -108,7 +108,7 @@ class MetricsAggregator(object):
 
     def add_point(self, metric, tags, timestamp, value, metric_class):
         interval = timestamp - timestamp % self._roll_up_interval
-        key = (metric, tuple(sorted(tags)) if tags else tuple())
+        key = (metric, tuple(sorted(tags)) if tags else tags)
         if key not in self._metrics[interval]:
             self._metrics[interval][key] = metric_class(metric, tags)
         self._metrics[interval][key].add_point(value)
