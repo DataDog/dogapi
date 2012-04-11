@@ -113,7 +113,6 @@ class DogStatsApi(object):
         Optionally, specify a list of *tags* to associate with the metric.
 
         >>> dog_stats_api.histogram('uploaded_file.size', uploaded_file.size())
-        >>> dog_stats_api.histogram('uploaded_file.size', uploaded_file.size())
         """
         if not self._disabled:
             self._aggregator.add_point(metric_name, tags, timestamp or time(), value, Histogram)
