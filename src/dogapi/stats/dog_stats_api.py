@@ -8,8 +8,7 @@ thread to ensure the instrumentation doesn't block your application's real work.
 
 import logging
 import socket
-import time
-import Queue
+from time import time
 
 from dogapi.common import get_ec2_instance_id
 from dogapi.constants import MetricType
@@ -93,7 +92,7 @@ class DogStatsApi(object):
         >>> dog_stats_api.gauge('cache.bytes.free', cache.get_free_bytes(), tags=['version:1.0'])
         """
         if not self._disabled:
-            self._aggregator.add_point(metric_name, tags, timestamp or time.time(), value, Gauge)
+            self._aggregator.add_point(metric_name, tags, timestamp or time(), value, Gauge)
 
     def increment(self, metric_name, value=1, timestamp=None, tags=None):
         """
@@ -104,7 +103,7 @@ class DogStatsApi(object):
         >>> dog_stats_api.increment('bytes.processed', file.size())
         """
         if not self._disabled:
-            self._aggregator.add_point(metric_name, tags, timestamp or time.time(), value, Counter)
+            self._aggregator.add_point(metric_name, tags, timestamp or time(), value, Counter)
 
     def histogram(self, metric_name, value, timestamp=None, tags=None):
         """
@@ -117,7 +116,7 @@ class DogStatsApi(object):
         >>> dog_stats_api.histogram('uploaded_file.size', uploaded_file.size())
         """
         if not self._disabled:
-            self._aggregator.add_point(metric_name, tags, timestamp or time.time(), value, Histogram)
+            self._aggregator.add_point(metric_name, tags, timestamp or time(), value, Histogram)
 
     def timed(self, metric_name, tags=None):
         """
@@ -139,9 +138,9 @@ class DogStatsApi(object):
         """
         def wrapper(func):
             def wrapped(*args, **kwargs):
-                start = time.time()
+                start = time()
                 result = func(*args, **kwargs)
-                self.histogram(metric_name, time.time() - start, tags=tags)
+                self.histogram(metric_name, time() - start, tags=tags)
                 return result
             return wrapped
         return wrapper
@@ -159,7 +158,7 @@ class DogStatsApi(object):
                 return False
 
             self._is_flush_in_progress = True
-            metrics = self._get_aggregate_metrics(timestamp or time.time())
+            metrics = self._get_aggregate_metrics(timestamp or time())
             count = len(metrics)
             if count:
                 self.flush_count += 1
