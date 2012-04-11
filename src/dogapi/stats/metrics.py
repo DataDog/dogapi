@@ -116,7 +116,7 @@ class MetricsAggregator(object):
     def flush(self, timestamp):
         """ Flush all metrics up to the given timestamp. """
         interval = timestamp - timestamp % self._roll_up_interval
-        past_intervals = sorted((i for i in self._metrics if i < interval))
+        past_intervals = [i for i in self._metrics if i < interval]
         metrics = []
         for i in past_intervals:
             for m in self._metrics.pop(i).values():
