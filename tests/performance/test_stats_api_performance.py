@@ -80,15 +80,15 @@ def measure_thousands_of_metrics():
     dog.start(api_key='apikey_3', api_host="https://app.datad0g.com")
     yappi.start()
     @dog.timed('timed')
-    def f():
-        1 + 1
+    def timed():
+        pass
     for i in range(100):
         for j in xrange(1000):
             name = j % 100
             dog.gauge('gauge.%s' % name, j)
-            dog.increment('gauge.%s' % name, j)
+            dog.increment('counter.%s' % name, j)
             dog.histogram('histogram.%s' % name, j)
-            f()
+            timed()
         print 'run %s' % i
     yappi.print_stats(sort_type=yappi.SORTTYPE_TSUB, sort_order=yappi.SORTORDER_DESC)
 
