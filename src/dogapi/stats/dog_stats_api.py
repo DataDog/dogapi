@@ -1,9 +1,8 @@
 """
 DogStatsApi is a tool for collecting application metrics without hindering
 performance. It collects metrics in the application thread with very little overhead
-(it just writes them to a `Queue <http://docs.python.org/library/queue.html>`_
-with an aggressive timeout). The aggregation and network access is performed in another
-thread to ensure the instrumentation doesn't block your application's real work.
+and allows flushing metrics in process, in a thread or in a greenlet, depending
+on your application's needs.
 """
 
 import logging
@@ -147,7 +146,9 @@ class DogStatsApi(object):
 
     def flush(self, timestamp=None):
         """
-        Flush all metrics to their final destination.
+        Flush and post all metrics to the server. Note that this is a blocking
+        call, so it is likely not suitable for user facing processes. In those
+        cases, it's probably best to flush in a thread or greenlet.
         """
         try:
             if self._is_flush_in_progress:

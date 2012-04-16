@@ -43,7 +43,7 @@ DogStatsApi
 
 .. autoclass::  dogapi.stats.DogStatsApi
 
-    .. method:: start(api_key=api_key, flush_interval=10, flush_in_thread=True, flush_in_greenlet=False)
+    .. method:: start(api_key=api_key, flush_interval=10, flush_in_thread=True, flush_in_greenlet=False, disabled=False)
 
         Begin flushing metrics with your account's *api_key* every
         *flush_interval* seconds. By default, metrics will be flushed in
@@ -58,6 +58,18 @@ DogStatsApi
         >>> from gevent import monkey; monkey.patch_all()
         >>> dog_stats_api.start(api_key='my_api_key', flush_in_greelet=True)
 
+        If you'd like to flush metrics in process, set *flush_in_thread* 
+        to False, though you'll have to call *flush* 
+        manually to post metrics to the server. ::
+
+        >>> dog_stats_api.start(api_key='my_api_key', flush_in_thread=False)
+
+        If for whatever reason, you need to disable metrics collection in a
+        hurry, set *disabled* to True and metrics won't be collected or flushed.
+
+        >>> dog_stats_api.start(api_key='my_api_key', disabled=True)
+
+
     .. automethod:: gauge
 
     .. automethod:: increment
@@ -65,6 +77,8 @@ DogStatsApi
     .. automethod:: histogram
 
     .. automethod:: timed
+
+    .. automethod:: flush
 
 
 .. module:: dogapi
