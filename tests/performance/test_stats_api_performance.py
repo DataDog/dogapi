@@ -18,7 +18,7 @@ class NullReporter(object):
     """
 
     def flush(self, metrics):
-        print 'flushing metrics'
+        print('flushing metrics')
 
 
 class NullDogStatsApi(DogStatsApi):
@@ -64,7 +64,7 @@ def profile_cpu_bound_program():
     real_dog.reporter = NullReporter()
     fake_dog = NullDogStatsApi()
     for type_, dog in [('real', real_dog), ('fake', fake_dog)]:
-        print '\n\n\nTESTING %s\n\n' % type_
+        print('\n\n\nTESTING %s\n\n' % type_)
         dog.start()
         program = CPUBoundProgram(dog)
         yappi.start()
@@ -83,13 +83,13 @@ def measure_thousands_of_metrics():
     def timed():
         pass
     for i in range(100):
-        for j in xrange(1000):
+        for j in range(1000):
             name = j % 100
             dog.gauge('gauge.%s' % name, j)
             dog.increment('counter.%s' % name, j)
             dog.histogram('histogram.%s' % name, j)
             timed()
-        print 'run %s' % i
+        print('run %s' % i)
     yappi.print_stats(sort_type=yappi.SORTTYPE_TSUB, sort_order=yappi.SORTORDER_DESC)
 
 

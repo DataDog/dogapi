@@ -1,6 +1,9 @@
 import sys
 
-import simplejson
+try:
+    import simplejson as json
+except ImportError:
+    import json
 
 from dogshell.common import report_errors, report_warnings, CommandLineClient
 
@@ -39,7 +42,7 @@ class TagClient(CommandLineClient):
             for c in res['tags']:
                 print('  ' + c)
         elif format == 'raw':
-            print(simplejson.dumps(res))
+            print(json.dumps(res))
         else:
             for c in res['tags']:
                 print(c)
@@ -55,7 +58,7 @@ class TagClient(CommandLineClient):
             for c in res['tags']:
                 print('  ' + c)
         elif format == 'raw':
-            print(simplejson.dumps(res))
+            print(json.dumps(res))
         else:
             for c in res['tags']:
                 print(c)
@@ -77,7 +80,7 @@ class TagClient(CommandLineClient):
                         print('  ' + host)
                     print()
             elif format == 'raw':
-                print(simplejson.dumps(res))
+                print(json.dumps(res))
             else:
                 for tag, hosts in list(res['tags'].items()):
                     for host in hosts:
@@ -87,7 +90,7 @@ class TagClient(CommandLineClient):
                 for tag in res['tags']:
                     print(tag)
             elif format == 'raw':
-                print(simplejson.dumps(res))
+                print(json.dumps(res))
             else:
                 for tag in res['tags']:
                     print(tag)
@@ -99,4 +102,4 @@ class TagClient(CommandLineClient):
         report_warnings(res)
         report_errors(res)
         if format == 'raw':
-            print(simplejson.dumps(res))
+            print(json.dumps(res))

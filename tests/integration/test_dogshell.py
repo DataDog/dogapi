@@ -7,7 +7,7 @@ import time
 import tempfile
 import unittest
 from contextlib import contextmanager 
-from ConfigParser import ConfigParser
+from configparser import ConfigParser
 from hashlib import md5
 
 class TestDogshell(unittest.TestCase):

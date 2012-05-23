@@ -1,6 +1,9 @@
 import sys
 
-import simplejson
+try:
+    import simplejson as json
+except ImportError:
+    import json
 
 from dogshell.common import report_errors, report_warnings, CommandLineClient
 
@@ -55,7 +58,7 @@ class CommentClient(CommandLineClient):
             print('handle\t\t' + res['comment']['handle'])
             print('message\n' + message)
         elif format == 'raw':
-            print(simplejson.dumps(res))
+            print(json.dumps(res))
         else:
             print('id\t\t' + str(res['comment']['id']))
             print('url\t\t' + res['comment']['url'])
@@ -83,7 +86,7 @@ class CommentClient(CommandLineClient):
             print('handle\t\t' + res['comment']['handle'])
             print('message\n' + message)
         elif format == 'raw':
-            print(simplejson.dumps(res))
+            print(json.dumps(res))
         else:
             print('id\t\t' + str(res['comment']['id']))
             print('url\t\t' + res['comment']['url'])
@@ -112,7 +115,7 @@ class CommentClient(CommandLineClient):
             print('handle\t\t' + res['comment']['handle'])
             print('message\n' + message)
         elif format == 'raw':
-            print(simplejson.dumps(res))
+            print(json.dumps(res))
         else:
             print('id\t\t' + str(res['comment']['id']))
             print('url\t\t' + res['comment']['url'])
@@ -137,7 +140,7 @@ class CommentClient(CommandLineClient):
             #print 'handle\t\t' + res['event']['handle']
             print('message\n' + message)
         elif format == 'raw':
-            print(simplejson.dumps(res))
+            print(json.dumps(res))
         else:
             print('id\t\t' + str(res['event']['id']))
             print('url\t\t' + res['event']['url'])
@@ -155,6 +158,6 @@ class CommentClient(CommandLineClient):
         if format == 'pretty':
             print('event %s deleted' % id)
         elif format == 'raw':
-            print(simplejson.dumps(res))
+            print(json.dumps(res))
         else:
             pass

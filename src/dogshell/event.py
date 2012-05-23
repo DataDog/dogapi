@@ -2,7 +2,10 @@ import datetime, time
 import re
 import sys
 
-import simplejson
+try:
+    import simplejson as json
+except ImportError:
+    import json
 
 from dogshell.common import report_errors, report_warnings, CommandLineClient
 
@@ -101,7 +104,7 @@ class EventClient(CommandLineClient):
         if format == 'pretty':
             prettyprint_event(res['event'])
         elif format == 'raw':
-            print(simplejson.dumps(res))
+            print(json.dumps(res))
         else:
             print_event(res['event'])
 
@@ -114,7 +117,7 @@ class EventClient(CommandLineClient):
         if format == 'pretty':
             prettyprint_event_details(res['event'])
         elif format == 'raw':
-            print(simplejson.dumps(res))
+            print(json.dumps(res))
         else:
             print_event_details(res['event'])
 
@@ -139,7 +142,7 @@ class EventClient(CommandLineClient):
                 prettyprint_event(event)
                 print()
         elif format == 'raw':
-            print(simplejson.dumps(res))
+            print(json.dumps(res))
         else:
             for event in res['events']:
                 print_event(event)

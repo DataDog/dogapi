@@ -5,7 +5,10 @@ import webbrowser
 from datetime import datetime
 
 import argparse
-import simplejson
+try:
+    import simplejson as json
+except ImportError:
+    import json
 
 from dogshell.common import report_errors, report_warnings, CommandLineClient
 
@@ -116,7 +119,7 @@ class DashClient(CommandLineClient):
         if format == 'pretty':
             print(self._pretty_json(res))
         else:
-            print(simplejson.dumps(res))
+            print(json.dumps(res))
 
     def _write_dash_to_file(self, dash_id, filename, timeout, format='raw', string_ids=False):
         with open(filename, "wb") as f:
@@ -133,7 +136,7 @@ class DashClient(CommandLineClient):
             if string_ids:
                 dash_obj["id"] = str(dash_obj["id"])
 
-            simplejson.dump(dash_obj, f, indent=2)
+            json.dump(dash_obj, f, indent=2)
 
             if format == 'pretty':
                 print("Downloaded dashboard {0} to file {1}".format(dash_id, filename))
@@ -144,7 +147,7 @@ class DashClient(CommandLineClient):
         self.dog.timeout = args.timeout
         for f in args.file:
             try:
-                dash_obj = simplejson.load(f)
+                dash_obj = json.load(f)
             except Exception as err:
             # except simplejson.decoder.JSONDecodeError as err: # only works in simplejson 2.2.x
                 raise Exception("Could not parse {0}: {1}".format(f.name, err))
@@ -175,7 +178,7 @@ class DashClient(CommandLineClient):
         if args.graphs is None:
             graphs = sys.stdin.read()
         try:
-            graphs = simplejson.loads(graphs)
+            graphs = json.loads(graphs)
         except:
             raise Exception('bad json parameter')
         res = self.dog.create_dashboard(args.title, args.description, graphs)
@@ -184,7 +187,7 @@ class DashClient(CommandLineClient):
         if format == 'pretty':
             print(self._pretty_json(res))
         else:
-            print(simplejson.dumps(res))
+            print(json.dumps(res))
 
     def _update(self, args):
         self.dog.timeout = args.timeout
@@ -192,7 +195,7 @@ class DashClient(CommandLineClient):
         if args.graphs is None:
             graphs = sys.stdin.read()
         try:
-            graphs = simplejson.loads(graphs)
+            graphs = json.loads(graphs)
         except:
             raise Exception('bad json parameter')
         res = self.dog.update_dashboard(args.dashboard_id, args.title, args.description, graphs)
@@ -201,7 +204,7 @@ class DashClient(CommandLineClient):
         if format == 'pretty':
             print(self._pretty_json(res))
         else:
-            print(simplejson.dumps(res))
+            print(json.dumps(res))
 
     def _show(self, args):
         self.dog.timeout = args.timeout
@@ -216,7 +219,7 @@ class DashClient(CommandLineClient):
         if format == 'pretty':
             print(self._pretty_json(res))
         else:
-            print(simplejson.dumps(res))
+            print(json.dumps(res))
 
     def _show_all(self, args):
         self.dog.timeout = args.timeout
@@ -232,7 +235,7 @@ class DashClient(CommandLineClient):
         if format == 'pretty':
             print(self._pretty_json(res))
         elif format == 'raw':
-            print(simplejson.dumps(res))
+            print(json.dumps(res))
         else:
             for d in res["dashes"]:
                 print("\t".join([(d["id"]), 
@@ -249,10 +252,10 @@ class DashClient(CommandLineClient):
         if format == 'pretty':
             print(self._pretty_json(res))
         else:
-            print(simplejson.dumps(res))
+            print(json.dumps(res))
 
     def _web_view(self, args):
-        dash_id = simplejson.load(args.file)['id']
+        dash_id = json.load(args.file)['id']
         url = self.dog.api_host + "/dash/dash/{0}".format(dash_id)
         webbrowser.open(url)
 
@@ -260,5 +263,5 @@ class DashClient(CommandLineClient):
         return s.replace("\r", "\\r").replace("\n", "\\n").replace("\t", "\\t")
 
     def _pretty_json(self, obj):
-        return simplejson.dumps(obj, sort_keys=True, indent=2)
+        return json.dumps(obj, sort_keys=True, indent=2)
 

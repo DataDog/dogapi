@@ -1,5 +1,3 @@
-
-
 import logging
 import socket
 import urllib.request, urllib.error, urllib.parse
