@@ -2,7 +2,7 @@
 
 import logging
 import socket
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 from dogapi.exceptions import *
 from dogapi.constants import *
@@ -18,7 +18,7 @@ def get_ec2_instance_id():
         socket.setdefaulttimeout(0.25)
 
         try:
-            return urllib2.urlopen(urllib2.Request('http://169.254.169.254/latest/meta-data/instance-id')).read()
+            return urllib.request.urlopen(urllib.request.Request('http://169.254.169.254/latest/meta-data/instance-id')).read()
         finally:
             # Reset the previous default timeout
             socket.setdefaulttimeout(old_timeout)

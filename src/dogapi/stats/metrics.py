@@ -119,7 +119,7 @@ class MetricsAggregator(object):
         past_intervals = [i for i in self._metrics if i < interval]
         metrics = []
         for i in past_intervals:
-            for m in self._metrics.pop(i).values():
+            for m in list(self._metrics.pop(i).values()):
                 metrics += m.flush(i)
         return metrics
 

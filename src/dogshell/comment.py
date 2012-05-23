@@ -49,19 +49,19 @@ class CommentClient(CommandLineClient):
             message = res['comment']['message']
             lines = message.split('\n')
             message = '\n'.join(['    ' + line for line in lines])
-            print 'id\t\t' + str(res['comment']['id'])
-            print 'url\t\t' + res['comment']['url']
-            print 'resource\t' + res['comment']['resource']
-            print 'handle\t\t' + res['comment']['handle']
-            print 'message\n' + message
+            print('id\t\t' + str(res['comment']['id']))
+            print('url\t\t' + res['comment']['url'])
+            print('resource\t' + res['comment']['resource'])
+            print('handle\t\t' + res['comment']['handle'])
+            print('message\n' + message)
         elif format == 'raw':
-            print simplejson.dumps(res)
+            print(simplejson.dumps(res))
         else:
-            print 'id\t\t' + str(res['comment']['id'])
-            print 'url\t\t' + res['comment']['url']
-            print 'resource\t' + res['comment']['resource']
-            print 'handle\t\t' + res['comment']['handle']
-            print 'message\t\t' + res['comment']['message'].__repr__()
+            print('id\t\t' + str(res['comment']['id']))
+            print('url\t\t' + res['comment']['url'])
+            print('resource\t' + res['comment']['resource'])
+            print('handle\t\t' + res['comment']['handle'])
+            print('message\t\t' + res['comment']['message'].__repr__())
 
     def _update(self, args):
         handle = args.handle
@@ -77,19 +77,19 @@ class CommentClient(CommandLineClient):
             message = res['comment']['message']
             lines = message.split('\n')
             message = '\n'.join(['    ' + line for line in lines])
-            print 'id\t\t' + str(res['comment']['id'])
-            print 'url\t\t' + res['comment']['url']
-            print 'resource\t' + res['comment']['resource']
-            print 'handle\t\t' + res['comment']['handle']
-            print 'message\n' + message
+            print('id\t\t' + str(res['comment']['id']))
+            print('url\t\t' + res['comment']['url'])
+            print('resource\t' + res['comment']['resource'])
+            print('handle\t\t' + res['comment']['handle'])
+            print('message\n' + message)
         elif format == 'raw':
-            print simplejson.dumps(res)
+            print(simplejson.dumps(res))
         else:
-            print 'id\t\t' + str(res['comment']['id'])
-            print 'url\t\t' + res['comment']['url']
-            print 'resource\t' + res['comment']['resource']
-            print 'handle\t\t' + res['comment']['handle']
-            print 'message\t\t' + res['comment']['message'].__repr__()
+            print('id\t\t' + str(res['comment']['id']))
+            print('url\t\t' + res['comment']['url'])
+            print('resource\t' + res['comment']['resource'])
+            print('handle\t\t' + res['comment']['handle'])
+            print('message\t\t' + res['comment']['message'].__repr__())
 
     def _reply(self, args):
         self.dog.timeout = args.timeout
@@ -106,19 +106,19 @@ class CommentClient(CommandLineClient):
             message = res['comment']['message']
             lines = message.split('\n')
             message = '\n'.join(['    ' + line for line in lines])
-            print 'id\t\t' + str(res['comment']['id'])
-            print 'url\t\t' + res['comment']['url']
-            print 'resource\t' + res['comment']['resource']
-            print 'handle\t\t' + res['comment']['handle']
-            print 'message\n' + message
+            print('id\t\t' + str(res['comment']['id']))
+            print('url\t\t' + res['comment']['url'])
+            print('resource\t' + res['comment']['resource'])
+            print('handle\t\t' + res['comment']['handle'])
+            print('message\n' + message)
         elif format == 'raw':
-            print simplejson.dumps(res)
+            print(simplejson.dumps(res))
         else:
-            print 'id\t\t' + str(res['comment']['id'])
-            print 'url\t\t' + res['comment']['url']
-            print 'resource\t' + res['comment']['resource']
-            print 'handle\t\t' + res['comment']['handle']
-            print 'message\t\t' + res['comment']['message'].__repr__()
+            print('id\t\t' + str(res['comment']['id']))
+            print('url\t\t' + res['comment']['url'])
+            print('resource\t' + res['comment']['resource'])
+            print('handle\t\t' + res['comment']['handle'])
+            print('message\t\t' + res['comment']['message'].__repr__())
 
     def _show(self, args):
         self.dog.timeout = args.timeout
@@ -131,19 +131,19 @@ class CommentClient(CommandLineClient):
             message = res['event']['text']
             lines = message.split('\n')
             message = '\n'.join(['    ' + line for line in lines])
-            print 'id\t\t' + str(res['event']['id'])
-            print 'url\t\t' + res['event']['url']
-            print 'resource\t' + res['event']['resource']
+            print('id\t\t' + str(res['event']['id']))
+            print('url\t\t' + res['event']['url'])
+            print('resource\t' + res['event']['resource'])
             #print 'handle\t\t' + res['event']['handle']
-            print 'message\n' + message
+            print('message\n' + message)
         elif format == 'raw':
-            print simplejson.dumps(res)
+            print(simplejson.dumps(res))
         else:
-            print 'id\t\t' + str(res['event']['id'])
-            print 'url\t\t' + res['event']['url']
-            print 'resource\t' + res['event']['resource']
+            print('id\t\t' + str(res['event']['id']))
+            print('url\t\t' + res['event']['url'])
+            print('resource\t' + res['event']['resource'])
             #print 'handle\t\t' + res['event']['handle']
-            print 'message\t\t' + res['event']['text'].__repr__()
+            print('message\t\t' + res['event']['text'].__repr__())
 
     def _delete(self, args):
         self.dog.timeout = args.timeout
@@ -153,8 +153,8 @@ class CommentClient(CommandLineClient):
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
-            print 'event %s deleted' % id
+            print('event %s deleted' % id)
         elif format == 'raw':
-            print simplejson.dumps(res)
+            print(simplejson.dumps(res))
         else:
             pass

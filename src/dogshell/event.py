@@ -12,8 +12,8 @@ def prettyprint_event(event):
     date = event['date_happened']
     dt = datetime.datetime.fromtimestamp(date)
     link = event['url']
-    print (title + ' (' + handle + ')').strip()
-    print dt.isoformat(' ') + ' | '+ link
+    print((title + ' (' + handle + ')').strip())
+    print(dt.isoformat(' ') + ' | '+ link)
 
 def print_event(event):
     prettyprint_event(event)
@@ -101,7 +101,7 @@ class EventClient(CommandLineClient):
         if format == 'pretty':
             prettyprint_event(res['event'])
         elif format == 'raw':
-            print simplejson.dumps(res)
+            print(simplejson.dumps(res))
         else:
             print_event(res['event'])
 
@@ -114,7 +114,7 @@ class EventClient(CommandLineClient):
         if format == 'pretty':
             prettyprint_event_details(res['event'])
         elif format == 'raw':
-            print simplejson.dumps(res)
+            print(simplejson.dumps(res))
         else:
             print_event_details(res['event'])
 
@@ -137,10 +137,10 @@ class EventClient(CommandLineClient):
         if format == 'pretty':
             for event in res['events']:
                 prettyprint_event(event)
-                print
+                print()
         elif format == 'raw':
-            print simplejson.dumps(res)
+            print(simplejson.dumps(res))
         else:
             for event in res['events']:
                 print_event(event)
-                print
+                print()

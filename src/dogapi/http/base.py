@@ -2,7 +2,7 @@ __all__ = [
     'BaseDatadog',
 ]
 
-import httplib
+import http.client
 import os
 import logging
 import re
@@ -10,7 +10,7 @@ import socket
 import time
 from contextlib import contextmanager
 from pprint import pformat
-from urllib import urlencode
+from urllib.parse import urlencode
 
 
 try:
@@ -32,7 +32,7 @@ __all__ = [
 class BaseDatadog(object):
     def __init__(self, api_key=None, application_key=None, api_version='v1', api_host=None, timeout=2, max_timeouts=3, backoff_period=300, swallow=True, use_ec2_instance_id=False, json_responses=False):
 
-        self.http_conn_cls = httplib.HTTPSConnection
+        self.http_conn_cls = http.client.HTTPSConnection
         self._api_host = None
         self.api_host = api_host or os.environ.get('DATADOG_HOST', 'https://app.datadoghq.com')
 
@@ -82,7 +82,7 @@ class BaseDatadog(object):
                     # Keep a count of the timeouts to know when to back off
                     self._timeout_counter += 1
                     raise HttpTimeout('%s %s timed out after %d seconds.' % (method, url, self.timeout))
-                except socket.error, e:
+                except socket.error as e:
                     # Translate the low level socket error into a more
                     # descriptive one
                     raise ClientError("Could not request %s %s%s: %s" % (method, self.api_host, url, e))
@@ -108,7 +108,7 @@ class BaseDatadog(object):
                 return response_obj
             finally:
                 conn.close()
-        except ClientError, e:
+        except ClientError as e:
             if self.swallow:
                 log.error(str(e))
             else:
@@ -138,12 +138,12 @@ class BaseDatadog(object):
 
         def fset(self, value):
             match = re.match('^(https?)://(.*)', value)
-            http_conn_cls = httplib.HTTPSConnection
+            http_conn_cls = http.client.HTTPSConnection
 
             if match:
                 host = match.group(2)
                 if match.group(1) == 'http':
-                    http_conn_cls = httplib.HTTPConnection
+                    http_conn_cls = http.client.HTTPConnection
             else:
                 host = value
 

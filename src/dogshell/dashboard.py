@@ -75,8 +75,7 @@ class DashClient(CommandLineClient):
         
         def _title_to_filename(title):
             # Get a lowercased version with most punctuation stripped out...
-            no_punct = filter(lambda c: c.isalnum() or c in [" ", "_", "-"],
-                              title.lower())
+            no_punct = [c for c in title.lower() if c.isalnum() or c in [" ", "_", "-"]]
             # Now replace all -'s, _'s and spaces with "_", and strip trailing _
             return no_punct.replace(" ", "_").replace("-", "_").strip("_")
 
@@ -86,7 +85,7 @@ class DashClient(CommandLineClient):
         report_errors(res)
         
         if not os.path.exists(args.pull_dir):
-            os.mkdir(args.pull_dir, 0755)
+            os.mkdir(args.pull_dir, 0o755)
         
         used_filenames = set()
         for dash_summary in res['dashes']:
@@ -101,8 +100,8 @@ class DashClient(CommandLineClient):
                                      format,
                                      args.string_ids)
         if format == 'pretty':
-            print("\n### Total: {0} dashboards to {1} ###"
-                  .format(len(used_filenames), os.path.realpath(args.pull_dir)))
+            print(("\n### Total: {0} dashboards to {1} ###"
+                  .format(len(used_filenames), os.path.realpath(args.pull_dir))))
 
     def _new_file(self, args):
         self.dog.timeout = args.timeout
@@ -115,9 +114,9 @@ class DashClient(CommandLineClient):
         self._write_dash_to_file(res['dash']['id'], args.filename, args.timeout, format, args.string_ids)
 
         if format == 'pretty':
-            print self._pretty_json(res)
+            print(self._pretty_json(res))
         else:
-            print simplejson.dumps(res)
+            print(simplejson.dumps(res))
 
     def _write_dash_to_file(self, dash_id, filename, timeout, format='raw', string_ids=False):
         with open(filename, "wb") as f:
@@ -137,9 +136,9 @@ class DashClient(CommandLineClient):
             simplejson.dump(dash_obj, f, indent=2)
 
             if format == 'pretty':
-                print "Downloaded dashboard {0} to file {1}".format(dash_id, filename)
+                print("Downloaded dashboard {0} to file {1}".format(dash_id, filename))
             else:
-                print "{0} {1}".format(dash_id, filename)
+                print("{0} {1}".format(dash_id, filename))
 
     def _push(self, args):
         self.dog.timeout = args.timeout
@@ -162,13 +161,13 @@ class DashClient(CommandLineClient):
             res = self.dog.update_dashboard(dash_obj["id"], dash_obj["title"], dash_obj["description"], dash_obj["graphs"])
 
             if 'errors' in res:
-                print >> sys.stderr, 'Upload of dashboard {0} from file {1} failed.'.format(dash_obj["id"], f.name)
+                print('Upload of dashboard {0} from file {1} failed.'.format(dash_obj["id"], f.name), file=sys.stderr)
 
             report_warnings(res)
             report_errors(res)
 
             if args.format == 'pretty':
-                print "Uploaded file {0} (dashboard {1})".format(f.name, dash_obj["id"])
+                print("Uploaded file {0} (dashboard {1})".format(f.name, dash_obj["id"]))
         
     def _post(self, args):
         self.dog.timeout = args.timeout
@@ -183,9 +182,9 @@ class DashClient(CommandLineClient):
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
-            print self._pretty_json(res)
+            print(self._pretty_json(res))
         else:
-            print simplejson.dumps(res)
+            print(simplejson.dumps(res))
 
     def _update(self, args):
         self.dog.timeout = args.timeout
@@ -200,9 +199,9 @@ class DashClient(CommandLineClient):
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
-            print self._pretty_json(res)
+            print(self._pretty_json(res))
         else:
-            print simplejson.dumps(res)
+            print(simplejson.dumps(res))
 
     def _show(self, args):
         self.dog.timeout = args.timeout
@@ -215,9 +214,9 @@ class DashClient(CommandLineClient):
             res["dash"]["id"] = str(res["dash"]["id"])
 
         if format == 'pretty':
-            print self._pretty_json(res)
+            print(self._pretty_json(res))
         else:
-            print simplejson.dumps(res)
+            print(simplejson.dumps(res))
 
     def _show_all(self, args):
         self.dog.timeout = args.timeout
@@ -231,15 +230,15 @@ class DashClient(CommandLineClient):
                 d["id"] = str(d["id"])
 
         if format == 'pretty':
-            print self._pretty_json(res)
+            print(self._pretty_json(res))
         elif format == 'raw':
-            print simplejson.dumps(res)
+            print(simplejson.dumps(res))
         else:
             for d in res["dashes"]:
-                print "\t".join([(d["id"]), 
+                print("\t".join([(d["id"]), 
                                  (d["resource"]),
                                  (d["title"]),
-                                 self._escape(d["description"])])
+                                 self._escape(d["description"])]))
 
     def _delete(self, args):
         self.dog.timeout = args.timeout
@@ -248,9 +247,9 @@ class DashClient(CommandLineClient):
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
-            print self._pretty_json(res)
+            print(self._pretty_json(res))
         else:
-            print simplejson.dumps(res)
+            print(simplejson.dumps(res))
 
     def _web_view(self, args):
         dash_id = simplejson.load(args.file)['id']
