@@ -42,8 +42,11 @@ class TestUnitDogStatsAPI(object):
 
     def sort_metrics(self, metrics):
         """ Sort metrics by timestamp of first point and then name """
-        sort = lambda metric: (metric['points'][0][0], metric['metric'],
-                                                            metric['tags'])
+        def sort(metric):
+            if metric['tags'] is None:
+                return (metric['points'][0][0], metric['metric'], [])
+            else:
+                return (metric['points'][0][0], metric['metric'], metric['tags'])
         return sorted(metrics, key=sort)
 
     def test_timed_decorator(self):
