@@ -152,8 +152,39 @@ class EventApi(object):
             return response['event']['id']
 
     def event(self, *args, **kwargs):
-        ''' No response, async interface by default
-        '''
+        """
+        Post an event.
+
+        :param title: title for the new event
+        :type title: string
+
+        :param text: event message
+        :type text: string
+
+        :param date_happened: when the event occurred. if unset defaults to the current time. (POSIX timestamp)
+        :type date_happened: integer
+
+        :param handle: user to post the event as. defaults to owner of the application key used to submit.
+        :type handle: string
+
+        :param priority: priority to post the event as. ("normal" or "low", defaults to "normal")
+        :type priority: string
+
+        :param related_event_id: post event as a child of the given event
+        :type related_event_id: id
+
+        :param tags: tags to post the event with
+        :type tags: list of strings
+
+        :param host: host to post the event with
+        :type host: list of strings
+
+        :param device_name: device_name to post the event with
+        :type device_name: list of strings
+
+        :return: new event id
+        :rtype: integer
+        """
         self._event(*args, **kwargs)
 
     def event_with_response(self, *args, **kwargs):
