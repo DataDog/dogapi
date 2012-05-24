@@ -31,10 +31,6 @@ class InfrastructureApi(object):
         >>> dog_http_api.all_tags()
         [ { 'tag1': [ 'host1', 'host2', ... ] }, ... ]
         """
-        if self.api_key is None or self.application_key is None:
-            self._report_error("Tag API requires api and application keys")
-            return
-
         response = self.http_request('GET', '/tags/hosts')
         if self.json_responses:
             return response

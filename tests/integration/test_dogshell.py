@@ -18,8 +18,8 @@ class TestDogshell(unittest.TestCase):
 		self.config_file = tempfile.NamedTemporaryFile()
 		config = ConfigParser()
 		config.add_section('Connection')
-		config.set('Connection', 'apikey', os.environ['DATADOG_API_KEY'])
-		config.set('Connection', 'appkey', os.environ['DATADOG_APP_KEY'])
+		config.set('Connection', 'apikey', os.environ[b'DATADOG_API_KEY'])
+		config.set('Connection', 'appkey', os.environ[b'DATADOG_APP_KEY'])
 		config.write(self.config_file)
 		self.config_file.flush()
 

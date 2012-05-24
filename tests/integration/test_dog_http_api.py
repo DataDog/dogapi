@@ -75,7 +75,7 @@ class TestDatadog(unittest.TestCase):
 
         stream = dog.stream(before_ts, now_ts + 2)
 
-        assert stream[-1]['title'] == before_title
+        assert stream[-1]['title'] == before_title, "{0} should == {1}".format(stream[-1]['title'], before_title)
         assert stream[0]['title'] == now_title
 
         now_event = dog.get_event(now_event_id)
@@ -128,7 +128,7 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         reply_id = dog.comment(TEST_USER, message + ' reply', related_event_id=comment_id)
         stream = dog.stream(before_ts, now_ts + 10)
 
-        assert reply_id in [x['id'] for x in stream[0]['comments']]
+        assert reply_id in [x['id'] for x in stream[0]['comments']], "Should find {0} in {1}".format(reply_id, [x['id'] for x in stream[0]['comments']])
 
         dog.delete_comment(comment_id)
         dog.delete_comment(reply_id)
