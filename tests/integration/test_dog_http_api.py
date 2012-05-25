@@ -3,6 +3,7 @@ import random, math
 import datetime
 import unittest
 import os
+import time
 
 # nose
 from nose.plugins.skip import SkipTest
@@ -75,20 +76,17 @@ class TestDatadog(unittest.TestCase):
 
         stream = dog.stream(before_ts, now_ts + 2)
 
-        assert stream[-1]['title'] == before_title, "{0} should == {1}".format(stream[-1]['title'], before_title)
-        assert stream[0]['title'] == now_title
-
         now_event = dog.get_event(now_event_id)
         before_event = dog.get_event(before_event_id)
 
-        assert now_event['text'] == now_message
-        assert before_event['text'] == before_message
+        self.assertEquals(now_event['text'], now_message)
+        self.assertEquals(before_event['text'], before_message)
 
         event_id = dog.event_with_response('test host and device', 'test host and device', host='test.host', device_name='test.device')
         event = dog.get_event(event_id)
 
-        assert event['host'] == 'test.host'
-        assert event['device_name'] == 'test.device'
+        self.assertEquals(event['host'], 'test.host')
+        self.assertEquals(event['device_name'], 'test.device')
 
         event_id = dog.event_with_response('test event tags', 'test event tags', tags=['test-tag-1','test-tag-2'])
         event = dog.get_event(event_id)
@@ -109,7 +107,7 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
 
         event = dog.get_event(event_id)
 
-        assert event.get("title", "") == "Testing git commits", event
+        self.assertEquals(event.get("title", ""), "Testing git commits")
 
     def test_comments(self):
         now = datetime.datetime.now()
@@ -126,12 +124,17 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         assert event['text'] == message + ' updated'
 
         reply_id = dog.comment(TEST_USER, message + ' reply', related_event_id=comment_id)
+
+        # Add a bit of latency for the comment to appear
+        time.sleep(1)
         stream = dog.stream(before_ts, now_ts + 10)
 
         assert reply_id in [x['id'] for x in stream[0]['comments']], "Should find {0} in {1}".format(reply_id, [x['id'] for x in stream[0]['comments']])
 
-        dog.delete_comment(comment_id)
+        # Delete the reply
         dog.delete_comment(reply_id)
+        # Then the post itself
+        dog.delete_comment(comment_id)
         try:
             dog.get_event(comment_id)
         except:

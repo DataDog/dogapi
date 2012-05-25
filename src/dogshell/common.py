@@ -1,7 +1,10 @@
 import configparser
 import os
 import sys
-from UserDict import IterableUserDict
+try:
+    from UserDict import IterableUserDict
+except ImportError:
+    from collections import UserDict as IterableUserDict 
 
 from dogapi import DogHttpApi
 

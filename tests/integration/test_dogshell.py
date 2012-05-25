@@ -6,20 +6,33 @@ import subprocess
 import time
 import tempfile
 import unittest
-from contextlib import contextmanager 
-from configparser import ConfigParser
+from contextlib import contextmanager
+try:
+	from configparser import ConfigParser
+except ImportError:
+	from ConfigParser import ConfigParser
 from hashlib import md5
+from dogapi.common import is_p3k
+
+def get_temp_file():
+	"""Return a (fn, fp) pair"""
+	if is_p3k():
+		fn = "/tmp/{0}-{1}".format(time.time(), random.random())
+		return (fn, open(fn, 'w+'))
+	else:
+		tf = tempfile.NamedTemporaryFile()
+		return (tf.name, tf)
 
 class TestDogshell(unittest.TestCase):
 
 	# Test init
 	def setUp(self):
 		# Generate a config file for the dog shell
-		self.config_file = tempfile.NamedTemporaryFile()
+		self.config_fn, self.config_file = get_temp_file()
 		config = ConfigParser()
 		config.add_section('Connection')
-		config.set('Connection', 'apikey', os.environ[b'DATADOG_API_KEY'])
-		config.set('Connection', 'appkey', os.environ[b'DATADOG_APP_KEY'])
+		config.set('Connection', 'apikey', os.environ['DATADOG_API_KEY'])
+		config.set('Connection', 'appkey', os.environ['DATADOG_APP_KEY'])
 		config.write(self.config_file)
 		self.config_file.flush()
 
@@ -150,18 +163,17 @@ class TestDogshell(unittest.TestCase):
 
 	def test_dashes(self):
 		# Create a dash and write it to a file
-		temp0 = tempfile.NamedTemporaryFile()
-		self.dogshell(["dashboard", "new_file", temp0.name])
-		temp0.seek(0)
+		name, temp0 = get_temp_file()
+		self.dogshell(["dashboard", "new_file", name])
 		dash = json.load(temp0)
+
 		assert 'id' in dash, dash
 		assert 'title' in dash, dash
-		assert temp0.name in dash['title']
 
 		# Update the file and push it to the server
 		unique = self.get_unique()
 		dash['title'] = 'dash title %s' % unique
-		temp1 = tempfile.NamedTemporaryFile()
+		name, temp1 = get_temp_file()
 		json.dump(dash, temp1)
 		temp1.flush()
 		self.dogshell(["dashboard", "push", temp1.name])
@@ -229,29 +241,24 @@ class TestDogshell(unittest.TestCase):
 		"""
 		cmd = ["dog", "--config", self.config_file.name] + args
 		proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-		try:
-			if stdin:
-				proc.stdin.write(stdin)
-			proc.stdin.close()
-			proc.wait()
-			out = proc.stdout.read()
-			err = proc.stderr.read()
-			return_code = proc.returncode
-			if check_return_code:
-				self.assertEquals(return_code, 0, err)
-				self.assertEquals(err, '')
-			return out, err, return_code
-		finally:
-			proc.stdout.close()
-			proc.stderr.close()
+		if stdin:
+			out, err = proc.communicate(stdin.encode("utf-8"))
+		else:
+			out, err = proc.communicate()
+		proc.wait()
+		return_code = proc.returncode
+		if check_return_code:
+			self.assertEquals(return_code, 0, err)
+			self.assertEquals(err, b'')
+		return out.decode('utf-8'), err.decode('utf-8'), return_code
 
 	def get_unique(self):
-		return md5(str(time.time() + random.random())).hexdigest()
+		return md5(str(time.time() + random.random()).encode('utf-8')).hexdigest()
 
 	def parse_response(self, out):
 		data = {}
 		for line in out.split('\n'):
-			parts = re.split('\s+', line.strip())
+			parts = re.split('\s+', str(line).strip())
 			key = parts[0]
 			# Could potentially have errors with other whitespace
 			val = " ".join(parts[1:]) 

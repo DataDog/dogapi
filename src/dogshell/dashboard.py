@@ -122,7 +122,7 @@ class DashClient(CommandLineClient):
             print(json.dumps(res))
 
     def _write_dash_to_file(self, dash_id, filename, timeout, format='raw', string_ids=False):
-        with open(filename, "wb") as f:
+        with open(filename, "w") as f:
             res = self.dog.dashboard(dash_id)
             report_warnings(res)
             report_errors(res)
