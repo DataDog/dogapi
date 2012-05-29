@@ -1,13 +1,12 @@
 from setuptools import setup, find_packages
-import sys
-import types
+import platform
 
 reqs = []
-if type(sys.version_info) == types.TupleType and sys.version_info[0] ==2 or sys.version_info.major == 2:
+if list(map(int, platform.python_version_tuple()))[0] == 2:
     # simplejson is not python3 compatible
     reqs.append("simplejson>=2.0.9")
 reqs.append("decorator>=3.3.2")
-if sys.version_info < (2, 7):
+if list(map(int, platform.python_version_tuple())) < [2, 7, 0]:
     reqs.append("argparse>=1.2")
 
 setup(

@@ -1,13 +1,13 @@
 import logging
 import socket
-import sys
+import platform
 
 from dogapi.exceptions import *
 from dogapi.constants import *
 
 log = logging.getLogger('dd.dogapi')
 
-def is_p3k(): return sys.version_info.major >= 3
+def is_p3k(): return list(map(int, platform.python_version_tuple()))[0] == 3
 
 if is_p3k():
     import urllib.request, urllib.error, urllib.parse
