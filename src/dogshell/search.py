@@ -1,4 +1,7 @@
-import simplejson
+try:
+    import simplejson as json
+except ImportError:
+    import json
 
 from dogshell.common import report_errors, report_warnings, CommandLineClient
 
@@ -18,16 +21,16 @@ class SearchClient(CommandLineClient):
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
-            for facet, results in res['results'].items():
+            for facet, results in list(res['results'].items()):
                 for idx, result in enumerate(results):
                     if idx == 0:
-                        print '\n'
-                        print "%s\t%s" % (facet, result)
+                        print('\n')
+                        print("%s\t%s" % (facet, result))
                     else:
-                        print "%s\t%s" % (' '*len(facet), result)
+                        print("%s\t%s" % (' '*len(facet), result))
         elif format == 'raw':
-            print simplejson.dumps(res)
+            print(json.dumps(res))
         else:
-            for facet, results in res['results'].items():
+            for facet, results in list(res['results'].items()):
                 for result in results:
-                    print "%s\t%s" % (facet, result)
+                    print("%s\t%s" % (facet, result))

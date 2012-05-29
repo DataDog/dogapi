@@ -23,7 +23,7 @@ class DashApi(object):
         See the `dashboard API documentation <http://api.datadoghq.com/dashboard>`_ for the
         dashboard data format.
         """
-        if isinstance(graphs, (str, unicode)):
+        if isinstance(graphs, str):
             graphs = json.loads(graphs)
         body = {
             'title': title,
@@ -44,7 +44,7 @@ class DashApi(object):
         See the `dashboard API documentation <http://api.datadoghq.com/dashboard>`_ for the
         dashboard data format.
         """
-        if isinstance(graphs, (str, unicode)):
+        if isinstance(graphs, str):
             graphs = json.loads(graphs)
         body = {
             'title': title,

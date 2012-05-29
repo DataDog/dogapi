@@ -1,6 +1,9 @@
 import sys
 
-import simplejson
+try:
+    import simplejson as json
+except ImportError:
+    import json
 
 from dogshell.common import report_errors, report_warnings, CommandLineClient
 
@@ -35,14 +38,14 @@ class TagClient(CommandLineClient):
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
-            print "Tags for '%s':" % res['host']
+            print("Tags for '%s':" % res['host'])
             for c in res['tags']:
-                print '  ' + c
+                print('  ' + c)
         elif format == 'raw':
-            print simplejson.dumps(res)
+            print(json.dumps(res))
         else:
             for c in res['tags']:
-                print c
+                print(c)
 
     def _replace(self, args):
         self.dog.timeout = args.timeout
@@ -51,14 +54,14 @@ class TagClient(CommandLineClient):
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
-            print "Tags for '%s':" % res['host']
+            print("Tags for '%s':" % res['host'])
             for c in res['tags']:
-                print '  ' + c
+                print('  ' + c)
         elif format == 'raw':
-            print simplejson.dumps(res)
+            print(json.dumps(res))
         else:
             for c in res['tags']:
-                print c
+                print(c)
 
     def _show(self, args):
         self.dog.timeout = args.timeout
@@ -71,26 +74,26 @@ class TagClient(CommandLineClient):
         report_errors(res)
         if args.host == 'all':
             if format == 'pretty':
-                for tag, hosts in res['tags'].items():
+                for tag, hosts in list(res['tags'].items()):
                     for host in hosts:
-                        print tag
-                        print '  ' + host
-                    print
+                        print(tag)
+                        print('  ' + host)
+                    print()
             elif format == 'raw':
-                print simplejson.dumps(res)
+                print(json.dumps(res))
             else:
-                for tag, hosts in res['tags'].items():
+                for tag, hosts in list(res['tags'].items()):
                     for host in hosts:
-                        print tag + '\t' + host
+                        print(tag + '\t' + host)
         else:
             if format == 'pretty':
                 for tag in res['tags']:
-                    print tag
+                    print(tag)
             elif format == 'raw':
-                print simplejson.dumps(res)
+                print(json.dumps(res))
             else:
                 for tag in res['tags']:
-                    print tag
+                    print(tag)
 
     def _detach(self, args):
         self.dog.timeout = args.timeout
@@ -99,4 +102,4 @@ class TagClient(CommandLineClient):
         report_warnings(res)
         report_errors(res)
         if format == 'raw':
-            print simplejson.dumps(res)
+            print(json.dumps(res))

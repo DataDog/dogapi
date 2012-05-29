@@ -1,10 +1,6 @@
 import time, datetime
 import socket
 
-import simplejson
-
-#from dogapi.common import find_localhost
-
 from dogshell.common import report_errors, report_warnings, CommandLineClient
 
 class MetricClient(CommandLineClient):

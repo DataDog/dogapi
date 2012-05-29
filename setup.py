@@ -2,14 +2,16 @@ from setuptools import setup, find_packages
 import sys
 
 reqs = []
-reqs.append("simplejson>=2.0.9")
+if sys.version_info.major == 2:
+    # simplejson is not python3 compatible
+    reqs.append("simplejson>=2.0.9")
 reqs.append("decorator>=3.3.2")
 if sys.version_info < (2, 7):
     reqs.append("argparse>=1.2")
 
 setup(
     name = "dogapi",
-    version = "1.0.4",
+    version = "1.0.5",
     packages = find_packages("src"),
     package_dir = {'':'src'},
     author = "Datadog, Inc.",

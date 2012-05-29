@@ -42,8 +42,11 @@ class TestUnitDogStatsAPI(object):
 
     def sort_metrics(self, metrics):
         """ Sort metrics by timestamp of first point and then name """
-        sort = lambda metric: (metric['points'][0][0], metric['metric'],
-                                                            metric['tags'])
+        def sort(metric):
+            if metric['tags'] is None:
+                return (metric['points'][0][0], metric['metric'], [])
+            else:
+                return (metric['points'][0][0], metric['metric'], metric['tags'])
         return sorted(metrics, key=sort)
 
     def test_timed_decorator(self):
@@ -148,10 +151,10 @@ class TestUnitDogStatsAPI(object):
         reporter = dog.reporter = MemoryReporter()
         # Sample all numbers between 1-100 many times. This
         # means our percentiles should be relatively close to themselves.
-        percentiles = range(100)
+        percentiles = list(range(100))
         random.shuffle(percentiles) # in place
         for i in percentiles:
-            for j in xrange(20):
+            for j in range(20):
                 dog.histogram('percentiles', i, 1000.0)
         dog.flush(2000.0)
         metrics = reporter.metrics
@@ -338,7 +341,7 @@ class TestUnitDogStatsAPI(object):
                 return threading.current_thread().ident
 
             def run(self):
-                print 'running %s' % self.id()
+                print('running %s' % self.id())
                 self.gauges = []
                 self.count = 0
                 end_time = time.time() + random.randint(0, 5)
@@ -353,13 +356,13 @@ class TestUnitDogStatsAPI(object):
 
         # Start writing to dog api in a bunch of threads.
         num_threads = 10
-        threads = [MetricProducer() for i in xrange(num_threads)]
+        threads = [MetricProducer() for i in range(num_threads)]
         [t.start() for t in threads]
         # Also write a few metrics in the main thread.
         expected_gauges = ['gauge.%s' % i for i in range(100)]
         for g in expected_gauges:
             dog.gauge(g, 1)
-        print 'waiting for threads to finish'
+        print('waiting for threads to finish')
         [t.join() for t in threads]
 
         # Wait for the flush/ roll up to complete.

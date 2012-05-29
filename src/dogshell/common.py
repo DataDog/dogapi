@@ -1,7 +1,10 @@
-import ConfigParser
+import configparser
 import os
 import sys
-from UserDict import IterableUserDict
+try:
+    from UserDict import IterableUserDict
+except ImportError:
+    from collections import UserDict as IterableUserDict 
 
 from dogapi import DogHttpApi
 
@@ -9,14 +12,14 @@ from dogapi import DogHttpApi
 def report_errors(res):
     if 'errors' in res:
         for e in res['errors']:
-            print >> sys.stderr, 'ERROR: ' + e
+            print('ERROR: ' + e, file=sys.stderr)
         sys.exit(1)
     return False
 
 def report_warnings(res):
     if 'warnings' in res:
         for e in res['warnings']:
-            print >> sys.stderr, 'WARNING: ' + e
+            print('WARNING: ' + e, file=sys.stderr)
         return True
     return False
 
@@ -36,7 +39,7 @@ class CommandLineClient(object):
 class DogshellConfig(IterableUserDict):
 
     def load(self, config_file):
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
         
         if os.access(config_file, os.F_OK):
             config.read(config_file)
@@ -44,11 +47,11 @@ class DogshellConfig(IterableUserDict):
                 report_errors({'errors': ['%s has no [Connection] section' % config_file]})
         else:
             try:
-                response = raw_input('%s does not exist. Would you like to create it? [Y/n] ' % config_file)
+                response = input('%s does not exist. Would you like to create it? [Y/n] ' % config_file)
                 if response.strip().lower() in ['', 'y', 'yes']:
                     # Read the api and app keys from stdin
-                    apikey = raw_input('What is your api key? (Get it here: https://app.datadoghq.com/account/settings) ')
-                    appkey = raw_input('What is your application key? (Generate one here: https://app.datadoghq.com/account/settings) ')
+                    apikey = input('What is your api key? (Get it here: https://app.datadoghq.com/account/settings) ')
+                    appkey = input('What is your application key? (Generate one here: https://app.datadoghq.com/account/settings) ')
                 
                     # Write the config file
                     config.add_section('Connection')
@@ -58,15 +61,15 @@ class DogshellConfig(IterableUserDict):
                     f = open(config_file, 'w')
                     config.write(f)
                     f.close()
-                    print 'Wrote %s' % config_file
+                    print('Wrote %s' % config_file)
                         
                 else:
                     # Abort
-                    print >> sys.stderr, 'Exiting'
+                    print('Exiting', file=sys.stderr)
                     sys.exit(1)
             except KeyboardInterrupt:
                 # Abort
-                print >> sys.stderr, '\nExiting'
+                print('\nExiting', file=sys.stderr)
                 sys.exit(1)
             
         
