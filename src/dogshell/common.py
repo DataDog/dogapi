@@ -7,19 +7,26 @@ except ImportError:
     from collections import UserDict as IterableUserDict 
 
 from dogapi import DogHttpApi
+from dogapi.common import is_p3k
 
+def print_err(msg):
+    if is_p3k():
+        print('ERROR: ' + msg, file=sys.stderr)
+    else:
+        print >> sys.stderr, msg
+        
 
 def report_errors(res):
     if 'errors' in res:
         for e in res['errors']:
-            print('ERROR: ' + e, file=sys.stderr)
+            print_err('ERROR: ' + e)
         sys.exit(1)
     return False
 
 def report_warnings(res):
     if 'warnings' in res:
         for e in res['warnings']:
-            print('WARNING: ' + e, file=sys.stderr)
+            print_err('WARNING: ' + e)
         return True
     return False
 
@@ -65,11 +72,11 @@ class DogshellConfig(IterableUserDict):
                         
                 else:
                     # Abort
-                    print('Exiting', file=sys.stderr)
+                    print_err('Exiting')
                     sys.exit(1)
             except KeyboardInterrupt:
                 # Abort
-                print('\nExiting', file=sys.stderr)
+                print_err('\nExiting')
                 sys.exit(1)
             
         

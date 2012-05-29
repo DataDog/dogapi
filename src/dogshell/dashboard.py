@@ -10,7 +10,7 @@ try:
 except ImportError:
     import json
 
-from dogshell.common import report_errors, report_warnings, CommandLineClient
+from dogshell.common import report_errors, report_warnings, CommandLineClient, print_err
 
 class DashClient(CommandLineClient):
 
@@ -164,7 +164,7 @@ class DashClient(CommandLineClient):
             res = self.dog.update_dashboard(dash_obj["id"], dash_obj["title"], dash_obj["description"], dash_obj["graphs"])
 
             if 'errors' in res:
-                print('Upload of dashboard {0} from file {1} failed.'.format(dash_obj["id"], f.name), file=sys.stderr)
+                print_err('Upload of dashboard {0} from file {1} failed.'.format(dash_obj["id"], f.name))
 
             report_warnings(res)
             report_errors(res)
