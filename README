@@ -11,6 +11,10 @@ A Python client for the DataDog API.
 Change Log
 ----------
 
+- 1.0.5
+    - Release date: 2012.05.29
+    - Compatible with python 3.2
+
 - 1.0.4
     - Release date: 2012.04.16
     - A rash of performance improvements to DogStatsApi's stats collection
