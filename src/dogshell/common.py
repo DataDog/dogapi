@@ -1,4 +1,10 @@
-import configparser
+from __future__ import print_function
+from dogapi.common import is_p3k
+
+if is_p3k():
+    import configparser
+else:
+    import ConfigParser as configparser
 import os
 import sys
 try:
@@ -7,7 +13,6 @@ except ImportError:
     from collections import UserDict as IterableUserDict 
 
 from dogapi import DogHttpApi
-from dogapi.common import is_p3k
 
 def print_err(msg):
     if is_p3k():
