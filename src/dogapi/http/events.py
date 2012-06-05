@@ -233,7 +233,3 @@ class EventApi(object):
             return response
         else:
             return None
-
-
-
-
