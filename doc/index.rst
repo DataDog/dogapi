@@ -26,6 +26,8 @@ To install from source, `download <https://github.com/DataDog/dogapi/tags>`_ a d
 
    >>> sudo python setup.py install
 
+If you use `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ you do not need to use sudo.
+
 DogHttpApi
 ==========
 DogHttpApi is a Python client library for DataDog's `HTTP API <http://api.datadoghq.com>`_.
