@@ -12,6 +12,7 @@ from time import time
 from dogapi.common import get_ec2_instance_id
 from dogapi.constants import MetricType
 from dogapi.stats.metrics import MetricsAggregator, Counter, Gauge, Histogram
+from dogapi.stats.statsd  import StatsdAggregator
 from dogapi.stats.reporters import HttpReporter
 
 
@@ -35,7 +36,10 @@ class DogStatsApi(object):
                     use_ec2_instance_ids=False,
                     flush_in_thread=True,
                     flush_in_greenlet=False,
-                    disabled=False):
+                    disabled=False,
+                    statsd=False,
+                    statsd_host='localhost',
+                    statsd_port=9966):
         """
         Configure the DogStatsApi instance and optionally, begin auto-flusing metrics.
 
@@ -53,24 +57,32 @@ class DogStatsApi(object):
         if use_ec2_instance_ids:
             self.host = get_ec2_instance_id()
 
-        # Initialize the metrics aggregator.
-        self._aggregator = MetricsAggregator(self.roll_up_interval)
-
-        # The reporter is responsible for sending metrics off to their final destination.
-        # It's abstracted to support easy unit testing and in the near future, forwarding
-        # to the datadog agent.
-        self.reporter = HttpReporter(api_key=api_key, api_host=api_host)
-
         self._is_auto_flushing = False
-        self._is_flush_in_progress = False
-        self.flush_count = 0
-        if self._disabled:
-            log.info("dogapi is disabled. No metrics will flush.")
+        if statsd:
+            # If we're configured to send to a statsd instance, use an aggregator
+            # which forwards packets over UDP.
+            self._needs_flush = False
+            self._aggregator = StatsdAggregator(statsd_host, statsd_port)
         else:
-            if flush_in_greenlet:
-                self._start_flush_greenlet()
-            elif flush_in_thread:
-                self._start_flush_thread()
+            # Otherwise create an aggreagtor that while aggregator metrics
+            # in process.
+            self._needs_flush = True
+            self._aggregator = MetricsAggregator(self.roll_up_interval)
+
+            # The reporter is responsible for sending metrics off to their final destination.
+            # It's abstracted to support easy unit testing and in the near future, forwarding
+            # to the datadog agent.
+            self.reporter = HttpReporter(api_key=api_key, api_host=api_host)
+
+            self._is_flush_in_progress = False
+            self.flush_count = 0
+            if self._disabled:
+                log.info("dogapi is disabled. No metrics will flush.")
+            else:
+                if flush_in_greenlet:
+                    self._start_flush_greenlet()
+                elif flush_in_thread:
+                    self._start_flush_thread()
 
     def stop(self):
         if not self._is_auto_flushing:
@@ -151,6 +163,8 @@ class DogStatsApi(object):
         cases, it's probably best to flush in a thread or greenlet.
         """
         try:
+            if not self._needs_flush:
+                return False
             if self._is_flush_in_progress:
                 log.debug("A flush is already in progress. Skipping this one.")
                 return False
