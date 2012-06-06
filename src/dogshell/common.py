@@ -63,8 +63,8 @@ class DogshellConfig(IterableUserDict):
                 report_errors({'errors': ['%s has no [Connection] section' % config_file]})
         else:
             try:
-                response = None
-                while response not in ['y', 'n']:
+                response = ''
+                while response.strip().lower() not in ['y', 'n']:
                     response = get_input('%s does not exist. Would you like to create it? [Y/n] ' % config_file)
                     if response.strip().lower() in ['', 'y', 'yes']:
                         # Read the api and app keys from stdin
