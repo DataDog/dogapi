@@ -16,7 +16,7 @@ class DashClient(CommandLineClient):
 
     def setup_parser(self, subparsers):
         parser = subparsers.add_parser('dashboard', help='Create, edit, and delete dashboards.')
-        parser.add_argument('--string_ids', action='store_true', dest='string_ids', 
+        parser.add_argument('--string_ids', action='store_true', dest='string_ids',
                             help='Represent Dashboard IDs as strings instead of ints in JSON')
 
         verb_parsers = parser.add_subparsers(title='Verbs')
@@ -38,17 +38,17 @@ class DashClient(CommandLineClient):
         show_parser.add_argument('dashboard_id', help='dashboard to show')
         show_parser.set_defaults(func=self._show)
 
-        show_all_parser = verb_parsers.add_parser('show_all', help='Show a list of all dashboards.')
-        show_all_parser.set_defaults(func=self._show_all)
+        #show_all_parser = verb_parsers.add_parser('show_all', help='Show a list of all dashboards.')
+        #show_all_parser.set_defaults(func=self._show_all)
 
         pull_parser = verb_parsers.add_parser('pull', help='Pull a dashboard on the server into a local file')
         pull_parser.add_argument('dashboard_id', help='ID of dashboard to pull')
         pull_parser.add_argument('filename', help='file to pull dashboard into') # , type=argparse.FileType('wb'))
         pull_parser.set_defaults(func=self._pull)
 
-        pull_all_parser = verb_parsers.add_parser('pull_all', help='Pull all dashboards into files in a directory')
-        pull_all_parser.add_argument('pull_dir', help='directory to pull dashboards into')
-        pull_all_parser.set_defaults(func=self._pull_all)
+        #pull_all_parser = verb_parsers.add_parser('pull_all', help='Pull all dashboards into files in a directory')
+        #pull_all_parser.add_argument('pull_dir', help='directory to pull dashboards into')
+        #pull_all_parser.set_defaults(func=self._pull_all)
 
         push_parser = verb_parsers.add_parser('push', help='Push updates to dashboards from local files to the server')
         push_parser.add_argument('--append_auto_text', action='store_true', dest='append_auto_text',
@@ -75,7 +75,7 @@ class DashClient(CommandLineClient):
 
     def _pull_all(self, args):
         self.dog.timeout = args.timeout
-        
+
         def _title_to_filename(title):
             # Get a lowercased version with most punctuation stripped out...
             no_punct = [c for c in title.lower() if c.isalnum() or c in [" ", "_", "-"]]
@@ -86,10 +86,10 @@ class DashClient(CommandLineClient):
         res = self.dog.dashboards()
         report_warnings(res)
         report_errors(res)
-        
+
         if not os.path.exists(args.pull_dir):
             os.mkdir(args.pull_dir, 0o755)
-        
+
         used_filenames = set()
         for dash_summary in res['dashes']:
             filename = _title_to_filename(dash_summary['title'])
@@ -97,7 +97,7 @@ class DashClient(CommandLineClient):
                 filename = filename + "-" + dash_summary['id']
             used_filenames.add(filename)
 
-            self._write_dash_to_file(dash_summary['id'], 
+            self._write_dash_to_file(dash_summary['id'],
                                      os.path.join(args.pull_dir, filename + ".json"),
                                      args.timeout,
                                      format,
@@ -109,11 +109,11 @@ class DashClient(CommandLineClient):
     def _new_file(self, args):
         self.dog.timeout = args.timeout
         format = args.format
-        res = self.dog.create_dashboard(args.filename, 
+        res = self.dog.create_dashboard(args.filename,
                          "Description for {0}".format(args.filename), [])
         report_warnings(res)
         report_errors(res)
-        
+
         self._write_dash_to_file(res['dash']['id'], args.filename, args.timeout, format, args.string_ids)
 
         if format == 'pretty':
@@ -151,7 +151,7 @@ class DashClient(CommandLineClient):
             except Exception as err:
             # except simplejson.decoder.JSONDecodeError as err: # only works in simplejson 2.2.x
                 raise Exception("Could not parse {0}: {1}".format(f.name, err))
-            
+
             # Always convert to int, in case it was originally a string.
             dash_obj["id"] = int(dash_obj["id"])
 
@@ -171,7 +171,7 @@ class DashClient(CommandLineClient):
 
             if args.format == 'pretty':
                 print("Uploaded file {0} (dashboard {1})".format(f.name, dash_obj["id"]))
-        
+
     def _post(self, args):
         self.dog.timeout = args.timeout
         format = args.format
@@ -238,7 +238,7 @@ class DashClient(CommandLineClient):
             print(json.dumps(res))
         else:
             for d in res["dashes"]:
-                print("\t".join([(d["id"]), 
+                print("\t".join([(d["id"]),
                                  (d["resource"]),
                                  (d["title"]),
                                  self._escape(d["description"])]))

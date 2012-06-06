@@ -7,7 +7,7 @@ class DashApi(object):
         """
         Return the dashboard with the given id.
 
-        See the `dashboard API documentation <http://api.datadoghq.com/dashboard>`_ for the
+        See the `dashboard API documentation <http://api.datadoghq.com/dashboards>`_ for the
         dashboard data format.
         """
         response = self.http_request('GET', '/dash/' + str(dash_id))
@@ -20,7 +20,7 @@ class DashApi(object):
         """
         Create a new dashboard with the given *title*, *description* and *graphs*.
 
-        See the `dashboard API documentation <http://api.datadoghq.com/dashboard>`_ for the
+        See the `dashboard API documentation <http://api.datadoghq.com/dashboards>`_ for the
         dashboard data format.
         """
         if isinstance(graphs, str):
@@ -41,7 +41,7 @@ class DashApi(object):
         Update the dashboard whose id is  *dash_id*, replacing it's *title*, *description* and *graphs*.
         Return the dashboard with the given id.
 
-        See the `dashboard API documentation <http://api.datadoghq.com/dashboard>`_ for the
+        See the `dashboard API documentation <http://api.datadoghq.com/dashboards>`_ for the
         dashboard data format.
         """
         if isinstance(graphs, str):

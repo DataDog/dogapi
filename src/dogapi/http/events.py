@@ -9,7 +9,7 @@ class EventApi(object):
         optional filtered by *priority* ("low" or "normal"), *sources* and
         *tags*.
 
-        See the `event API documentation <http://api.datadoghq.com/event>`_ for the
+        See the `event API documentation <http://api.datadoghq.com/events>`_ for the
         event data format.
 
         >>> dog_http_api.stream(1313769783, 131378000, sources=["nagios"])
@@ -55,7 +55,7 @@ class EventApi(object):
         """
         Get details for an individual event with the given *id*.
 
-        See the `event API documentation <http://api.datadoghq.com/event>`_ for the
+        See the `event API documentation <http://api.datadoghq.com/events>`_ for the
         event data format.
 
         >>> dog_http_api.get_event("event-1")
@@ -233,7 +233,3 @@ class EventApi(object):
             return response
         else:
             return None
-
-
-
-

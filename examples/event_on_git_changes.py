@@ -1,6 +1,6 @@
 '''
 A simple script that will do a git pull on a local repo and submit an event
-if there were new changes pulled down. Useful for setups that use git as 
+if there were new changes pulled down. Useful for setups that use git as
 their deployment mechanism, so you know when new code has been released.
 '''
 
@@ -9,7 +9,7 @@ import subprocess
 import sys
 from optparse import OptionParser
 
-from dogapi import dog
+from dogapi import dog_http_api as dog
 
 if 'DATADOG_API_KEY' not in os.environ:
     print >> sys.stderr, 'DATADOG_API_KEY environment variable not set'

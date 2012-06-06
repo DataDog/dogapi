@@ -16,15 +16,17 @@ Installation
 The module can be downloaded from PyPI and installed in one step with
 easy_install:
 
-    >>> easy_install dogapi
+    >>> sudo easy_install dogapi
 
 Or with pip:
 
-    >>> pip install dogapi
+    >>> sudo pip install dogapi
 
 To install from source, `download <https://github.com/DataDog/dogapi/tags>`_ a distribution and run:
 
-   >>> python setup.py install
+   >>> sudo python setup.py install
+
+If you use `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ you do not need to use sudo.
 
 DogHttpApi
 ==========
