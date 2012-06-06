@@ -9,7 +9,7 @@ class StatsdAggregator(object):
 
     def __init__(self, host='localhost', port=9966):
         self.host = host
-        self.port = port
+        self.port = int(port)
         self.address = (self.host, self.port)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
