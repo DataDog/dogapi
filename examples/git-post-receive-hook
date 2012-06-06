@@ -26,7 +26,7 @@ try:
     import sys
     from hashlib import sha1
     from socket import gethostname
-    from dogapi import dog
+    from dogapi import dog_http_api as dog
 
     dog.api_key = os.popen("git config datadog.api").read().strip()
     dog.application_key = os.popen("git config datadog.application").read().strip()

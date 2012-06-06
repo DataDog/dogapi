@@ -6,7 +6,7 @@ from datetime import timedelta as delta
 import math
 
 # import the simple dog client
-from dogapi import dog
+from dogapi import dog_http_api as dog
 
 # give dog your credentials (we're using os.environ to let you experiment via environment variables)
 # in this example we're only reporting data, so we only need an API key
@@ -31,7 +31,7 @@ for i in range(60, 1, -1):
     points.append((t, math.cos(i) + 1.0))
 
 # and emit the data in one call
-dog.metrics('test.api.test_metric', points, host="some_other_host")
+dog.metric('test.api.test_metric', points, host="some_other_host")
 
 # send an event too
 dog.event("API Testing", "Testing done, FTW")
