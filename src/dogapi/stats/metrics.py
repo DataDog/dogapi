@@ -26,6 +26,8 @@ class Metric(object):
 class Gauge(Metric):
     """ A gauge metric. """
 
+    stats_tag = 'g'
+
     def __init__(self, name, tags):
         self.name = name
         self.tags = tags
@@ -39,6 +41,8 @@ class Gauge(Metric):
 
 class Counter(Metric):
     """ A counter metric. """
+
+    stats_tag = 'c'
 
     def __init__(self, name, tags):
         self.name = name
@@ -54,6 +58,8 @@ class Counter(Metric):
 
 class Histogram(Metric):
     """ A histogram metric. """
+
+    stats_tag = 'h'
 
     def __init__(self, name, tags):
         self.name = name
