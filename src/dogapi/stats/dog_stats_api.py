@@ -39,7 +39,7 @@ class DogStatsApi(object):
                     disabled=False,
                     statsd=False,
                     statsd_host='localhost',
-                    statsd_port=9966):
+                    statsd_port=8125):
         """
         Configure the DogStatsApi instance and optionally, begin auto-flusing metrics.
 
@@ -61,6 +61,7 @@ class DogStatsApi(object):
         if statsd:
             # If we're configured to send to a statsd instance, use an aggregator
             # which forwards packets over UDP.
+            log.info("Initializing dog api to use statsd: %s, %s" % (statsd_host, statsd_port))
             self._needs_flush = False
             self._aggregator = StatsdAggregator(statsd_host, statsd_port)
         else:
