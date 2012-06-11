@@ -94,7 +94,7 @@ class DogStatsApi(object):
             return True
 
 
-    def gauge(self, metric_name, value, timestamp=None, tags=None):
+    def gauge(self, metric_name, value, timestamp=None, tags=None, sample_rate=1):
         """
         Record the instantaneous *value* of a metric. They most recent value in
         a given flush interval will be recorded. Optionally, specify a set of
@@ -104,9 +104,9 @@ class DogStatsApi(object):
         >>> dog_stats_api.gauge('cache.bytes.free', cache.get_free_bytes(), tags=['version:1.0'])
         """
         if not self._disabled:
-            self._aggregator.add_point(metric_name, tags, timestamp or time(), value, Gauge)
+            self._aggregator.add_point(metric_name, tags, timestamp or time(), value, Gauge, sample_rate)
 
-    def increment(self, metric_name, value=1, timestamp=None, tags=None):
+    def increment(self, metric_name, value=1, timestamp=None, tags=None, sample_rate=1):
         """
         Increment the counter by the given *value*. Optionally, specify a list of
         *tags* to associate with the metric.
@@ -115,9 +115,9 @@ class DogStatsApi(object):
         >>> dog_stats_api.increment('bytes.processed', file.size())
         """
         if not self._disabled:
-            self._aggregator.add_point(metric_name, tags, timestamp or time(), value, Counter)
+            self._aggregator.add_point(metric_name, tags, timestamp or time(), value, Counter, sample_rate)
 
-    def histogram(self, metric_name, value, timestamp=None, tags=None):
+    def histogram(self, metric_name, value, timestamp=None, tags=None, sample_rate=1):
         """
         Sample a histogram value. Histograms will produce metrics that
         describe the distribution of the recorded values, namely the minimum,
@@ -127,9 +127,9 @@ class DogStatsApi(object):
         >>> dog_stats_api.histogram('uploaded_file.size', uploaded_file.size())
         """
         if not self._disabled:
-            self._aggregator.add_point(metric_name, tags, timestamp or time(), value, Histogram)
+            self._aggregator.add_point(metric_name, tags, timestamp or time(), value, Histogram, sample_rate)
 
-    def timed(self, metric_name, tags=None):
+    def timed(self, metric_name, sample_rate=1, tags=None):
         """
         A decorator that will track the distribution of a function's run time.
         Optionally specify a list of tags to associate with the metric.
@@ -152,7 +152,7 @@ class DogStatsApi(object):
                 start = time()
                 result = func(*args, **kwargs)
                 end = time()
-                self.histogram(metric_name, end - start, end, tags=tags)
+                self.histogram(metric_name, end - start, end, tags=tags, sample_rate=sample_rate)
                 return result
             return wrapped
         return wrapper

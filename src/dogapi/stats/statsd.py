@@ -16,7 +16,7 @@ class StatsdAggregator(object):
     def add_point(self, metric, tags, timestamp, value, metric_class, sample_rate=1):
         payload = '%s:%s|%s' % (metric, value, metric_class.stats_tag)
         if sample_rate != 1:
-            if sample_rate > random():
+            if sample_rate <= random():
                 return
             payload += '|@%s' % sample_rate
         if tags:

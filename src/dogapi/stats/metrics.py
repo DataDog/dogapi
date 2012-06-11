@@ -112,7 +112,8 @@ class MetricsAggregator(object):
         self._metrics = defaultdict(lambda: {})
         self._roll_up_interval = roll_up_interval
 
-    def add_point(self, metric, tags, timestamp, value, metric_class):
+    def add_point(self, metric, tags, timestamp, value, metric_class, sample_rate=1):
+        # The sample rate is currently ignored for in process stuff
         interval = timestamp - timestamp % self._roll_up_interval
         key = (metric, tuple(sorted(tags)) if tags else tags)
         if key not in self._metrics[interval]:
