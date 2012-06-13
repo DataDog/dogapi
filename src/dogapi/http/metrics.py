@@ -16,7 +16,7 @@ class HttpMetricApi(object):
     default_metric_type = MetricType.Gauge
 
 
-    def metric(self, name, points, host=None, device=None, metric_type=MetricType.Gauge):
+    def metric(self, name, points, host=None, device=None, tags=None, metric_type=MetricType.Gauge):
         """
         Submit a point or series of *points* to the metric API, optionally specifying a *host*
         or *device*. Points can either be a value,
@@ -41,6 +41,7 @@ class HttpMetricApi(object):
             'type':     metric_type,
             'host':     host,
             'device':   device,
+            'tags' : tags
         }])
 
     def metrics(self, metrics):
