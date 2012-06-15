@@ -181,7 +181,7 @@ class DogStatsApi(object):
                 log.info("Flush #%s sending %s metrics" % (self.flush_count, count))
                 self.reporter.flush(metrics)
             else:
-                log.info("No metrics to flush. Continuing.")
+                log.debug("No metrics to flush. Continuing.")
         except:
             try:
                 log.exception("Error flushing metrics")
