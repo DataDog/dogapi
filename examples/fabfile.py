@@ -5,17 +5,20 @@ from fabric.api import *
 from fabric.colors import *
 from dogapi.fab import setup, notify
 
-setup(api_key = "YOUR API KEY HERE", application_key = "YOUR APPLICATION KEY HERE")
+setup(api_key = "YOUR API KEY HERE")
 
+# Make sure @notify is just above @task
+@parallel
 @notify
-@task(alias="success")
-def my_task(some_arg):
+@task(default=True, alias="success")
+def sweet_task(some_arg):
     """Always succeeds"""
-    print(green("My task always runs properly."))
+    print(green("My sweet task always runs properly."))
 
+@serial
 @notify
 @task(alias="failure")
-def my_other_task(some_arg):
+def boring_task(some_arg):
     """Always fails"""
-    print(red("My other task is designed to fail."))
+    print(red("My boring task is designed to fail."))
     raise Exception("failure!!!")
