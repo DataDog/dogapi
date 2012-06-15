@@ -11,6 +11,10 @@ A Python client for the DataDog API.
 Change Log
 ----------
 
+- 1.0.6
+    - Release date: 2012.06.05
+    - Bug fix in dogshell on python 3
+
 - 1.0.5
     - Release date: 2012.05.29
     - Compatible with python 3.2
