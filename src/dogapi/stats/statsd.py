@@ -15,11 +15,10 @@ class StatsdAggregator(object):
         self.socket_sendto = self.socket.sendto
 
     def add_point(self, metric, tags, timestamp, value, metric_class, sample_rate=1):
-        payload = '%s:%s|%s' % (metric, value, metric_class.stats_tag)
-        if sample_rate != 1:
-            if sample_rate <= random():
-                return
-            payload += '|@%s' % sample_rate
-        if tags:
-            payload += '|#' + ','.join(tags)
-        self.socket_sendto(payload, self.address)
+        if sample_rate == 1 or random() < sample_rate:
+            payload = '%s:%s|%s' % (metric, value, metric_class.stats_tag)
+            if sample_rate != 1:
+                payload += '|@%s' % sample_rate
+            if tags:
+                payload += '|#' + ','.join(tags)
+            self.socket_sendto(payload, self.address)
