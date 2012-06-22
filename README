@@ -5,15 +5,21 @@ A Python client for the DataDog API.
 
 - Library Documentation: http://pydoc.datadoghq.com
 - HTTP API Documetation: http://api.datadoghq.com/
-- DataDogHQ: http://datadoghq.com
-
+- Datadog: http://www.datadoghq.com
 
 Change Log
 ----------
 
+- 1.0.9
+    - Release date: 2012.06.22
+    - Fabric support
+
+- 1.0.7, 1.0.8
+    - never published
+
 - 1.0.6
-    - Release date: 2012.06.05
-    - Bug fix in dogshell on python 3
+    - Release date: 2012.06.04
+    - fix for a bug introduced by python 3 port
 
 - 1.0.5
     - Release date: 2012.05.29
