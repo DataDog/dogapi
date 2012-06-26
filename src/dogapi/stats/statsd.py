@@ -1,7 +1,11 @@
 
 
+import logging
 import socket
 from random import random
+
+
+logger = logging.getLogger('dd.dogapi')
 
 
 class StatsdAggregator(object):
@@ -21,4 +25,7 @@ class StatsdAggregator(object):
                 payload += '|@%s' % sample_rate
             if tags:
                 payload += '|#' + ','.join(tags)
-            self.socket_sendto(payload, self.address)
+            try:
+                self.socket_sendto(payload, self.address)
+            except:
+                logger.exception('couldnt submit statsd point')
