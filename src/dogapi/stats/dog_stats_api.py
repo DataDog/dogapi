@@ -229,7 +229,6 @@ class DogStatsApi(object):
 
         log.info("Starting flush thread with interval %s." % self.flush_interval)
         self._flush_thread = PeriodicTimer(self.flush_interval, flush)
-        self._flush_thread.daemon = True    # Die when parent thread dies.
         self._flush_thread.start()
 
     def _start_flush_greenlet(self):
