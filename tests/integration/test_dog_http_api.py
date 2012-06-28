@@ -73,8 +73,7 @@ class TestDatadog(unittest.TestCase):
 
         now_event_id = dog.event_with_response(now_title, now_message, now_ts)
         before_event_id = dog.event_with_response(before_title, before_message, before_ts)
-
-        stream = dog.stream(before_ts, now_ts + 2)
+        time.sleep(2)
 
         now_event = dog.get_event(now_event_id)
         before_event = dog.get_event(before_event_id)
@@ -83,12 +82,14 @@ class TestDatadog(unittest.TestCase):
         self.assertEquals(before_event['text'], before_message)
 
         event_id = dog.event_with_response('test host and device', 'test host and device', host='test.host', device_name='test.device')
+        time.sleep(2)
         event = dog.get_event(event_id)
 
         self.assertEquals(event['host'], 'test.host')
         self.assertEquals(event['device_name'], 'test.device')
 
         event_id = dog.event_with_response('test event tags', 'test event tags', tags=['test-tag-1','test-tag-2'])
+        time.sleep(2)
         event = dog.get_event(event_id)
 
         assert 'test-tag-1' in event['tags']
@@ -104,7 +105,7 @@ eac54655 *   Merge pull request #2 from DataDog/alq-add-arg-validation (alq@data
 f7a5a23d * missed version number in docs (matt@datadoghq.com)
 $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
 
-
+        time.sleep(1)
         event = dog.get_event(event_id)
 
         self.assertEquals(event.get("title", ""), "Testing git commits")

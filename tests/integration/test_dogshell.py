@@ -100,6 +100,9 @@ class TestDogshell(unittest.TestCase):
 		event_id = match_permalink(out)
 		assert event_id, out
 
+		# Add a bit of latency for the event to appear
+		time.sleep(2)
+
 		# Retrieve the event
 		cmd = ["event", "show", event_id]
 		out, err, return_code = self.dogshell(cmd)
