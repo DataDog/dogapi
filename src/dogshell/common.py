@@ -54,42 +54,47 @@ class CommandLineClient(object):
 
 class DogshellConfig(IterableUserDict):
 
-    def load(self, config_file):
+    def load(self, config_file, apikey, appkey):
         config = configparser.ConfigParser()
 
-        if os.access(config_file, os.F_OK):
-            config.read(config_file)
-            if not config.has_section('Connection'):
-                report_errors({'errors': ['%s has no [Connection] section' % config_file]})
+        if apikey is not None and appkey is not None:
+            self['apikey'] = apikey
+            self['appkey'] = appkey
         else:
-            try:
-                response = ''
-                while response.strip().lower() not in ['y', 'n']:
-                    response = get_input('%s does not exist. Would you like to create it? [Y/n] ' % config_file)
-                    if response.strip().lower() in ['', 'y', 'yes']:
-                        # Read the api and app keys from stdin
-                        apikey = get_input('What is your api key? (Get it here: https://app.datadoghq.com/account/settings) ')
-                        appkey = get_input('What is your application key? (Generate one here: https://app.datadoghq.com/account/settings) ')
+            if os.access(config_file, os.F_OK):
+                config.read(config_file)
+                if not config.has_section('Connection'):
+                    report_errors({'errors': ['%s has no [Connection] section' % config_file]})
+            else:
+                try:
+                    response = ''
+                    while response.strip().lower() not in ['y', 'n']:
+                        response = get_input('%s does not exist. Would you like to create it? [Y/n] ' % config_file)
+                        if response.strip().lower() in ['', 'y', 'yes']:
+                            # Read the api and app keys from stdin
+                            apikey = get_input('What is your api key? (Get it here: https://app.datadoghq.com/account/settings#api) ')
+                            appkey = get_input('What is your application key? (Generate one here: https://app.datadoghq.com/account/settings#api) ')
 
-                        # Write the config file
-                        config.add_section('Connection')
-                        config.set('Connection', 'apikey', apikey)
-                        config.set('Connection', 'appkey', appkey)
+                            # Write the config file
+                            config.add_section('Connection')
+                            config.set('Connection', 'apikey', apikey)
+                            config.set('Connection', 'appkey', appkey)
 
-                        f = open(config_file, 'w')
-                        config.write(f)
-                        f.close()
-                        print('Wrote %s' % config_file)
-                    elif response.strip().lower() == 'n':
-                        # Abort
-                        print_err('Exiting\n')
-                        sys.exit(1)
-            except KeyboardInterrupt:
-                # Abort
-                print_err('\nExiting')
-                sys.exit(1)
+                            f = open(config_file, 'w')
+                            config.write(f)
+                            f.close()
+                            print('Wrote %s' % config_file)
+                        elif response.strip().lower() == 'n':
+                            # Abort
+                            print_err('Exiting\n')
+                            sys.exit(1)
+                except KeyboardInterrupt:
+                    # Abort
+                    print_err('\nExiting')
+                    sys.exit(1)
 
 
-        self['apikey'] = config.get('Connection', 'apikey')
-        self['appkey'] = config.get('Connection', 'appkey')
-
+            self['apikey'] = config.get('Connection', 'apikey')
+            self['appkey'] = config.get('Connection', 'appkey')
+        assert self['apikey'] is not None and self['appkey'] is not None
+        

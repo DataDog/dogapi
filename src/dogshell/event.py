@@ -65,6 +65,7 @@ class EventClient(CommandLineClient):
         post_parser.add_argument('--tags', help='comma separated list of tags')
         post_parser.add_argument('--host', help='related host')
         post_parser.add_argument('--device', help='related device (e.g. eth0, /dev/sda1)')
+        post_parser.add_argument('--type', help='type of event, e.g. nagios, jenkins, etc.')
         post_parser.add_argument('message', help='event message body. if unset, reads from stdin.', nargs="?")
         post_parser.set_defaults(func=self._post)
 

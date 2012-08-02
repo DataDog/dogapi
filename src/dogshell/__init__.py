@@ -17,6 +17,10 @@ def main():
             formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--config', help='location of your dogrc file (default ~/.dogrc)',
             default=os.path.expanduser("~/.dogrc"))
+    parser.add_argument('--api-key', help='your API key, from https://app.datadoghq.com/account/settings#api',
+            dest="api_key", default=None)
+    parser.add_argument('--application-key', help='your Application key, from https://app.datadoghq.com/account/settings#api',
+            dest="app_key", default=None)
     parser.add_argument('--pretty', help='pretty-print output (suitable for human consumption, less useful for scripting)',
             dest='format', action='store_const', const='pretty')
     parser.add_argument('--raw', help='raw JSON as returned by the HTTP service',
@@ -38,7 +42,7 @@ def main():
     DashClient(config).setup_parser(subparsers)
 
     args = parser.parse_args()
-    config.load(args.config)
+    config.load(args.config, args.api_key, args.app_key)
 
     args.func(args)
 

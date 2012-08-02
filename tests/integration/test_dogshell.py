@@ -37,6 +37,8 @@ class TestDogshell(unittest.TestCase):
 		self.config_file.flush()
 
 	# Tests
+	def test_config_args(self):
+		out, err, return_code = self.dogshell(["--help"], use_cl_args=True)
 
 	def test_comment(self):
 		# Post a new comment
@@ -84,7 +86,7 @@ class TestDogshell(unittest.TestCase):
 	def test_event(self):
 		# Post an event
 		title =" Testing events from dogshell"
-		body = "%%%\n*Cool!*\n%%%\n"""
+		body = "%%%\n*Cool!*\n%%%\n"
 		tags = "tag:a,tag:b"
 		cmd = ["event", "post", title, "--tags", tags]
 		event_id = None
@@ -239,10 +241,14 @@ class TestDogshell(unittest.TestCase):
 
 	# Test helpers
 
-	def dogshell(self, args, stdin=None, check_return_code=True):
+	def dogshell(self, args, stdin=None, check_return_code=True, use_cl_args=False):
 		""" Helper function to call the dog shell command
 		"""
 		cmd = ["dog", "--config", self.config_file.name] + args
+		if use_cl_args:
+			cmd = ["dog",
+			       "--api-key={0}".format(os.environ["DATADOG_API_KEY"]),
+			       "--application-key={0}".format(os.environ["DATADOG_APP_KEY"])] + args
 		proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
 		if stdin:
 			out, err = proc.communicate(stdin.encode("utf-8"))
@@ -271,7 +277,3 @@ class TestDogshell(unittest.TestCase):
 
 if __name__ == '__main__':
 	unittest.main()
-
-
-
-

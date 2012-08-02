@@ -14,8 +14,6 @@
 #    git config datadog.api abcdefghi123456
 #    git config datadog.application jklmnop7890123
 
-
-
 import logging
 from logging.handlers import SysLogHandler
 logger = logging.getLogger("datadogit")
@@ -35,7 +33,7 @@ try:
 
     # Extract oldrev, newrev, refs
     args = sys.stdin.read().split()
-    assert args is not None and len(args) == 3
+    assert args is not None and len(args) == 3, args
 
     # Extract the log entry for the commits
     p = os.popen("git log --graph --format=format:'%%h %%ce %%s' %s..%s" % (args[0], args[1]))
