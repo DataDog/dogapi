@@ -11,6 +11,17 @@ A Python client for the DataDog API.
 Change Log
 ----------
 
+- 1.0.10
+    - Release date: 2012.08.03
+    - Extra command-line arguments: --api-key and --application-key
+
+- 1.0.9
+    - Release date: 2012.06.22
+    - Fabric support
+
+- 1.0.7, 1.0.8
+    - never published
+
 - 1.0.6
     - Release date: 2012.06.05
     - Bug fix in dogshell on python 3
