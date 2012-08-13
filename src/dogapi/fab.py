@@ -69,7 +69,8 @@ def notify(t):
                 except:
                     logger.exception("Datadog notification failed")
             # Reraise
-            raise e
+            raise
 
-    return wrapper
+    return WrappedCallableTask(wrapper)
+
     
