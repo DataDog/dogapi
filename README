@@ -11,6 +11,10 @@ A Python client for the DataDog API.
 Change Log
 ----------
 
+- 1.0.11
+    - Release date: 2012.08.13
+    - Fixes Fabric support when mixing old- and new-style tasks.
+
 - 1.0.10
     - Release date: 2012.08.03
     - Extra command-line arguments: --api-key and --application-key
