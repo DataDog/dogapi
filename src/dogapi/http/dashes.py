@@ -2,6 +2,11 @@ __all__ = [
     'DashApi',
 ]
 
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
 class DashApi(object):
     def dashboard(self, dash_id):
         """
