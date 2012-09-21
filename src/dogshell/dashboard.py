@@ -78,7 +78,7 @@ class DashClient(CommandLineClient):
 
         def _title_to_filename(title):
             # Get a lowercased version with most punctuation stripped out...
-            no_punct = [c for c in title.lower() if c.isalnum() or c in [" ", "_", "-"]]
+            no_punct = ''.join([c for c in title.lower() if c.isalnum() or c in [" ", "_", "-"]])
             # Now replace all -'s, _'s and spaces with "_", and strip trailing _
             return no_punct.replace(" ", "_").replace("-", "_").strip("_")
 
