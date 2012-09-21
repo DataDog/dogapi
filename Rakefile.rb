@@ -57,3 +57,7 @@ task :test => ['test:unit', 'test:integration']
 def build_number
   ENV['BUILD_NUMBER'] || 'dev'
 end
+
+task :release do
+  sh "python setup.py sdist upload"
+end
