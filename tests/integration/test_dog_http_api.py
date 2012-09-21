@@ -171,12 +171,20 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
                 }
 
         dash_id = dog.update_dashboard(dash_id, 'updated api dash', 'my api dash', [graph])
+
+        # Query and ensure all is well.
         remote_dash = dog.dashboard(dash_id)
 
         assert 'updated api dash' == remote_dash['title']
 
         p = graph['definition']['requests']
         assert graph['definition']['requests'] == remote_dash['graphs'][0]['definition']['requests']
+
+        # Query all dashboards and make sure it's in there.
+
+        dashes = dog.dashboards()
+        ids = [dash["id"] for dash in dashes]
+        assert dash_id in dashes or str(dash_id) in dashes
 
         dog.delete_dashboard(dash_id)
 
