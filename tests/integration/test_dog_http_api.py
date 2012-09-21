@@ -184,7 +184,7 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
 
         dashes = dog.dashboards()
         ids = [dash["id"] for dash in dashes]
-        assert dash_id in dashes or str(dash_id) in dashes
+        assert dash_id in ids or str(dash_id) in ids
 
         dog.delete_dashboard(dash_id)
 
