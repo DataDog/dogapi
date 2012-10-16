@@ -11,6 +11,10 @@ A Python client for the DataDog API.
 Change Log
 ----------
 
+- 1.0.14
+    - Release date: 2012.10.16
+    - Ensure the `timed` decorator preserves function attributes.
+
 - 1.0.13
     - Release date: 2012.09.21
     - Added missing `dashboards` endpoint, which fetches all of an org's dashes
