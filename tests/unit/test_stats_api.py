@@ -56,7 +56,11 @@ class TestUnitDogStatsAPI(object):
 
         @dog.timed('timed.test')
         def func(a, b, c=1, d=1):
+            """docstring"""
             return (a, b, c, d)
+
+        nt.assert_equal(func.__name__, 'func')
+        nt.assert_equal(func.__doc__, 'docstring')
 
         result = func(1, 2, d=3)
         # Assert it handles args and kwargs correctly.
