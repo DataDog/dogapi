@@ -4,7 +4,7 @@ from dogapi import dog_stats_api
 
 dog_stats_api.start(statsd=True,
                     statsd_host='localhost',
-                    statsd_port=9966)
+                    statsd_port=8125)
 
 while True:
     dog_stats_api.gauge('test.udp.gauge', 1000)

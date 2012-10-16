@@ -11,7 +11,7 @@ logger = logging.getLogger('dd.dogapi')
 class StatsdAggregator(object):
 
 
-    def __init__(self, host='localhost', port=9966):
+    def __init__(self, host='localhost', port=8125):
         self.host = host
         self.port = int(port)
         self.address = (self.host, self.port)
