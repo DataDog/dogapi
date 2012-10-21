@@ -83,7 +83,7 @@ class EventApi(object):
         else:
             return response['event']
 
-    def _event(self, title, text, date_happened=None, handle=None, priority=None, related_event_id=None, tags=None, host=None, device_name=None, **kwargs):
+    def _event(self, title, text, date_happened=None, handle=None, priority=None, related_event_id=None, tags=None, host=None, device_name=None, aggregation_key=None, **kwargs):
         """
         Post an event.
 
@@ -114,6 +114,9 @@ class EventApi(object):
         :param device_name: device_name to post the event with
         :type device_name: list of strings
 
+        :param aggregation_key: key to aggregate this event on
+        :type aggregation_key: string
+
         :return: new event id
         :rtype: integer
         """
@@ -142,6 +145,9 @@ class EventApi(object):
 
         if device_name is not None:
             body['device_name'] = device_name
+
+        if aggregation_key is not None:
+            body['aggregation_key'] = aggregation_key
 
         body.update(kwargs)
 

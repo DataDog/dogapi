@@ -95,6 +95,26 @@ class TestDatadog(unittest.TestCase):
         assert 'test-tag-1' in event['tags']
         assert 'test-tag-2' in event['tags']
 
+    def test_aggregate_events(self):
+        now_ts = int(time.time())
+        agg_key = 'aggregate_me ' + str(now_ts)
+        msg_1 = 'aggregate 1'
+        msg_2 = 'aggregate 2'
+
+        # send two events that should aggregate
+        event1_id = dog.event_with_response(msg_1, msg_1, aggregation_key=agg_key)
+        event2_id = dog.event_with_response(msg_2, msg_2, aggregation_key=agg_key)
+        time.sleep(3)
+
+        event1 = dog.get_event(event1_id)
+        event2 = dog.get_event(event2_id)
+
+        self.assertEquals(msg_1, event1['text'])
+        self.assertEquals(msg_2, event2['text'])
+
+        # FIXME: Need the aggregation_id to check if they are attached to the
+        # same aggregate
+
     def test_git_commits(self):
         """Pretend to send git commits"""
         event_id = dog.event_with_response("Testing git commits", """$$$
