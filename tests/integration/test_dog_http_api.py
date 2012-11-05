@@ -264,6 +264,37 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         dog.metric("test.metric", 1.0)
         dog.metric("test.metric", (time.time(), 1.0))
 
+    def test_alerts(self):
+        query = "sum(last_1d):sum:system.net.bytes_rcvd{host:host0} > 100"
+
+        alert_id = dog.alert(query)
+        alert = dog.get_alert(alert_id)
+        assert alert['query'] == query, alert['query']
+        assert alert['silenced'] == False, alert['silenced']
+
+        dog.update_alert(alert_id, query, silenced=True)
+        alert = dog.get_alert(alert_id)
+        assert alert['query'] == query, alert['query']
+        assert alert['silenced'] == True, alert['silenced']
+
+        dog.delete_alert(alert_id)
+        try:
+            dog.get_alert(alert_id)
+        except:
+            pass
+        else:
+            assert False, 'alert not deleted'
+
+        query1 = "sum(last_1d):sum:system.net.bytes_rcvd{host:host0} > 100"
+        query2 = "sum(last_1d):sum:system.net.bytes_rcvd{host:host0} > 200"
+
+        alert_id1 = dog.alert(query1)
+        alert_id2 = dog.alert(query2)
+        alerts = dog.get_all_alerts()
+        alert1 = [a for a in alerts if a['id'] == alert_id1][0]
+        alert2 = [a for a in alerts if a['id'] == alert_id2][0]
+        assert alert1['query'] == query1, alert1
+        assert alert2['query'] == query2, alert2
 
 if __name__ == '__main__':
     unittest.main()

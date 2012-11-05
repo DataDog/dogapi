@@ -11,6 +11,10 @@ A Python client for the DataDog API.
 Change Log
 ----------
 
+- 1.1.0
+    - Release date: 2012.11.06
+    - Support for the metric alert API.
+
 - 1.0.14
     - Release date: 2012.10.16
     - Ensure the `timed` decorator preserves function attributes.
