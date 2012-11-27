@@ -2,6 +2,9 @@ import argparse
 import os
 import sys
 
+import logging
+logging.getLogger('dd.dogapi').setLevel(logging.CRITICAL)
+
 from dogshell.common import DogshellConfig
 
 from dogshell.comment import CommentClient

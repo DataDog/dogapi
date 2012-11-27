@@ -20,9 +20,9 @@ from dogapi import DogHttpApi
 
 def print_err(msg):
     if is_p3k():
-        print('ERROR: ' + msg, file=sys.stderr)
+        print('ERROR: ' + msg + '\n', file=sys.stderr)
     else:
-        sys.stderr.write(msg)
+        sys.stderr.write(msg + '\n')
 
 
 def report_errors(res):
@@ -47,7 +47,7 @@ class CommandLineClient(object):
     @property
     def dog(self):
         if not self._dog:
-            self._dog = DogHttpApi(self.config['apikey'], self.config['appkey'], swallow=False, json_responses=True)
+            self._dog = DogHttpApi(self.config['apikey'], self.config['appkey'], swallow=True, json_responses=True)
         return self._dog
 
 
