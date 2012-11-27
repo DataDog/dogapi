@@ -11,6 +11,10 @@ A Python client for the DataDog API.
 Change Log
 ----------
 
+- 1.1.1
+    - Release date: 2012.11.27
+    - Better handling of API errors
+
 - 1.1.0
     - Release date: 2012.11.06
     - Support for the metric alert API.
