@@ -22,13 +22,10 @@ class AlertApi(object):
             body['name'] = name
         if message:
             body['message'] = message
-        
-        response = self.http_request('POST', '/alert', body)
 
-        if self.json_responses:
-            return response
-        else:
-            return response['id']
+        return self.http_request('POST', '/alert', body,
+            response_formatter=lambda x: x['id'],
+        )
 
     def update_alert(self, alert_id, query, name=None, message=None, silenced=False):
         """
@@ -49,13 +46,10 @@ class AlertApi(object):
             body['name'] = name
         if message:
             body['message'] = message
-        
-        response = self.http_request('PUT', '/alert/%s' % alert_id, body)
 
-        if self.json_responses:
-            return response
-        else:
-            return response['id']
+        return self.http_request('PUT', '/alert/%s' % alert_id, body,
+            response_formatter=lambda x: x['id'],
+        )
 
     def get_alert(self, alert_id):
         """
@@ -63,10 +57,8 @@ class AlertApi(object):
 
         >>> dog_http_api.get_alert(1234)
         """
-        
-        response = self.http_request('GET', '/alert/%s' % alert_id)
 
-        return response
+        return self.http_request('GET', '/alert/%s' % alert_id)
 
     def delete_alert(self, alert_id):
         """
@@ -74,10 +66,8 @@ class AlertApi(object):
 
         >>> dog_http_api.delete_alert(1234)
         """
-        
-        response = self.http_request('DELETE', '/alert/%s' % alert_id)
 
-        return response
+        return self.http_request('DELETE', '/alert/%s' % alert_id)
 
     def get_all_alerts(self):
         """
@@ -85,13 +75,10 @@ class AlertApi(object):
 
         >>> dog_http_api.get_all_alert()
         """
-        
-        response = self.http_request('GET', '/alert')
 
-        if self.json_responses:
-            return response
-        else:
-            return response['alerts']
+        return self.http_request('GET', '/alert',
+            response_formatter=lambda x: x['alerts'],
+        )
 
     def mute_alerts(self):
         """
@@ -99,10 +86,8 @@ class AlertApi(object):
 
         >>> dog_http_api.mute_alerts()
         """
-        
-        response = self.http_request('POST', '/mute_alerts')
 
-        return response
+        return self.http_request('POST', '/mute_alerts')
 
     def unmute_alerts(self):
         """
@@ -110,7 +95,5 @@ class AlertApi(object):
 
         >>> dog_http_api.unmute_alerts()
         """
-        
-        response = self.http_request('POST', '/unmute_alerts')
 
-        return response
+        return self.http_request('POST', '/unmute_alerts')

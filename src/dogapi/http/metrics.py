@@ -57,9 +57,4 @@ class HttpMetricApi(object):
     def _submit_metrics(self, metrics):
         logger.debug("flushing metrics over http.")
         request = { "series": metrics }
-        self.http_request('POST', '/series', request)
-        if self.json_responses:
-            return {}
-        else:
-            return None
-
+        return self.http_request('POST', '/series', request)

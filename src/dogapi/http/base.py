@@ -56,7 +56,7 @@ class BaseDatadog(object):
         self.use_ec2_instance_id = use_ec2_instance_id
         self.json_responses = json_responses
 
-    def http_request(self, method, path, body=None, **params):
+    def http_request(self, method, path, body=None, response_formatter=None, error_formatter=None, **params):
         try:
             # Check if it's ok to submit
             if not self._should_submit():
@@ -109,15 +109,34 @@ class BaseDatadog(object):
                         raise ValueError('Invalid JSON response: {0}'.format(response_str))
 
                     if response_obj and 'errors' in response_obj:
-                        raise ClientError(response_obj['errors'])
+                        raise ApiError(response_obj)
                 else:
+                    response_obj = None
+                if response_obj is None and self.json_responses:
                     response_obj = {}
-                return response_obj
+                if self.json_responses or response_formatter is None:
+                    return response_obj
+                else:
+                    return response_formatter(response_obj)
             finally:
                 conn.close()
         except ClientError as e:
             if self.swallow:
                 log.error(str(e))
+                if self.json_responses or error_formatter is None:
+                    return {'errors': e.args[0]}
+                else:
+                    return error_formatter({'errors': e.args[0]})
+            else:
+                raise
+        except ApiError as e:
+            if self.swallow:
+                for error in e.args[0]['errors']:
+                    log.error(str(error))
+                if self.json_responses or error_formatter is None:
+                    return e.args[0]
+                else:
+                    return error_formatter(e.args[0])
             else:
                 raise
 

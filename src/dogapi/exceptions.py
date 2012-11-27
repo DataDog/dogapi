@@ -11,6 +11,7 @@ __all__ = [
 	'ClientError',
 	'HttpTimeout',
 	'HttpBackoff',
+	'ApiError',
 	'timeout_exceptions',
 ]
 
@@ -20,5 +21,6 @@ class UnknownDelivery(DatadogException): pass
 class ClientError(DatadogException): pass
 class HttpTimeout(DatadogException): pass
 class HttpBackoff(DatadogException): pass
+class ApiError(DatadogException): pass
 timeout_exceptions = (socket.timeout, ssl.SSLError)
 

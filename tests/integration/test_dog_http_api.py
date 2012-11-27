@@ -10,6 +10,7 @@ from nose.plugins.skip import SkipTest
 
 # dogapi
 import dogapi
+from dogapi.exceptions import *
 import datetime, time
 
 
@@ -295,6 +296,37 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         alert2 = [a for a in alerts if a['id'] == alert_id2][0]
         assert alert1['query'] == query1, alert1
         assert alert2['query'] == query2, alert2
+
+    def test_user_error(self):
+        query = "sum(last_1d):sum:system.net.bytes_rcvd{host:host0} > 100"
+
+        dog.swallow = True
+        dog.json_responses = True
+
+        alert = dog.alert(query)
+        assert 'id' in alert, alert
+        result = dog.update_alert(alert['id'], 'aaa', silenced=True)
+        assert 'errors' in result, result
+
+        dog.swallow = True
+        dog.json_responses = False
+
+        alert_id = dog.alert(query)
+        assert alert_id == int(alert_id), alert_id
+        result = dog.update_alert(alert_id, 'aaa', silenced=True)
+        assert 'errors' in result, result
+
+        dog.swallow = False
+        dog.json_responses = False
+
+        alert_id = dog.alert(query)
+        assert alert_id == int(alert_id), alert_id
+        try:
+            result = dog.update_alert(alert_id, 'aaa', silenced=True)
+        except ApiError, e:
+            pass
+        else:
+            raise False, "Should have raised an exception"
 
 if __name__ == '__main__':
     unittest.main()

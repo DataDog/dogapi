@@ -45,11 +45,10 @@ class EventApi(object):
         if tags:
             params['tags'] = ','.join(tags)
 
-        response = self.http_request('GET', '/events', **params)
-        if self.json_responses:
-            return response
-        else:
-            return response['events']
+        return self.http_request('GET', '/events',
+            response_formatter=lambda x: x['events'],
+            **params
+        )
 
     def get_event(self, id):
         """
@@ -77,11 +76,9 @@ class EventApi(object):
           ]
         }
         """
-        response = self.http_request('GET', '/events/' + str(id))
-        if self.json_responses:
-            return response
-        else:
-            return response['event']
+        return self.http_request('GET', '/events/' + str(id),
+            response_formatter=lambda x: x['event'],
+        )
 
     def _event(self, title, text, date_happened=None, handle=None, priority=None, related_event_id=None, tags=None, host=None, device_name=None, aggregation_key=None, **kwargs):
         """
@@ -151,11 +148,9 @@ class EventApi(object):
 
         body.update(kwargs)
 
-        response = self.http_request('POST', '/events', body)
-        if self.json_responses:
-            return response
-        else:
-            return response['event']['id']
+        return self.http_request('POST', '/events', body,
+            response_formatter=lambda x: x['event']['id'],
+        )
 
     def event(self, *args, **kwargs):
         """
@@ -191,7 +186,7 @@ class EventApi(object):
         :return: new event id
         :rtype: integer
         """
-        self._event(*args, **kwargs)
+        return self._event(*args, **kwargs)
 
     def event_with_response(self, *args, **kwargs):
         return self._event(*args, **kwargs)
@@ -209,24 +204,18 @@ class EventApi(object):
         }
         if related_event_id is not None:
             body['related_event_id'] = int(related_event_id)
-        response = self.http_request('POST', '/comments', body)
-
-        if self.json_responses:
-            return response
-        else:
-            return response['comment']['id']
+        return self.http_request('POST', '/comments', body,
+            response_formatter=lambda x: x['comment']['id'],
+        )
 
     def update_comment(self, handle, message, comment_id):
         body = {
             'handle':  handle,
             'message': message,
         }
-        response = self.http_request('PUT', '/comments/%s' % comment_id, body)
-        if self.json_responses:
-            return response
-        else:
-            return response['comment']['id']
-
+        return self.http_request('PUT', '/comments/%s' % comment_id, body,
+            response_formatter=lambda x: x['comment']['id'],
+        )
 
     def delete_comment(self, comment_id):
         """
@@ -234,8 +223,4 @@ class EventApi(object):
 
         >>> dog_http_api.delete_comment('1234')
         """
-        response = self.http_request('DELETE', '/comments/' + str(comment_id))
-        if self.json_responses:
-            return response
-        else:
-            return None
+        return self.http_request('DELETE', '/comments/' + str(comment_id))

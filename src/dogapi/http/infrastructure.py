@@ -18,11 +18,9 @@ class InfrastructureApi(object):
           }
         }
         """
-        response = self.http_request('GET', '/search', q=query)
-        if self.json_responses:
-            return response
-        else:
-            return response['results']
+        return self.http_request('GET', '/search', q=query,
+            response_formatter=lambda x: x['results'],
+        )
 
     def all_tags(self):
         """
@@ -31,11 +29,9 @@ class InfrastructureApi(object):
         >>> dog_http_api.all_tags()
         [ { 'tag1': [ 'host1', 'host2', ... ] }, ... ]
         """
-        response = self.http_request('GET', '/tags/hosts')
-        if self.json_responses:
-            return response
-        else:
-            return response['tags']
+        return self.http_request('GET', '/tags/hosts',
+            response_formatter=lambda x: x['tags'],
+        )
 
     def host_tags(self, host_id):
         """
@@ -46,11 +42,9 @@ class InfrastructureApi(object):
         >>> dog_http_api.host_tags(1234)
         ['database', 'env:test']
         """
-        response = self.http_request('GET', '/tags/hosts/' + str(host_id))
-        if self.json_responses:
-            return response
-        else:
-            return response['tags']
+        return self.http_request('GET', '/tags/hosts/' + str(host_id),
+            response_formatter=lambda x: x['tags'],
+        )
 
     def add_tags(self, host_id, *tags):
         """add_tags(host_id, tag1, [tag2, [...]])
@@ -62,11 +56,9 @@ class InfrastructureApi(object):
         body = {
             'tags': tags,
         }
-        response = self.http_request('POST', '/tags/hosts/' + str(host_id), body)
-        if self.json_responses:
-            return response
-        else:
-            return response['tags']
+        return self.http_request('POST', '/tags/hosts/' + str(host_id), body,
+            response_formatter=lambda x: x['tags'],
+        )
 
     def change_tags(self, host_id, *tags):
         """change_tags(host_id, tag1, [tag2, [...]])
@@ -78,11 +70,9 @@ class InfrastructureApi(object):
         body = {
             'tags': tags
         }
-        response = self.http_request('PUT', '/tags/hosts/' + str(host_id), body)
-        if self.json_responses:
-            return response
-        else:
-            return response['tags']
+        return self.http_request('PUT', '/tags/hosts/' + str(host_id), body,
+            response_formatter=lambda x: x['tags'],
+        )
 
     def detach_tags(self, host_id):
         """
@@ -90,10 +80,4 @@ class InfrastructureApi(object):
 
         >>> dog_http_api.detach_tags(123)
         """
-        response = self.http_request('DELETE', '/tags/hosts/' + str(host_id))
-        if self.json_responses:
-            return response
-        else:
-            return None
-
-
+        return self.http_request('DELETE', '/tags/hosts/' + str(host_id))
