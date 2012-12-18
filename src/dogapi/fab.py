@@ -45,12 +45,14 @@ def notify(t):
             duration = end - start
             if notify_datadog:
                 try:
-                    dog_http_api.event("{0}".format(t.wrapped.func_name),
-                                       "{0} ran for {1}.".format(t.wrapped.func_name, human_duration(duration)),
+                    task_full_name = "%s.%s" % (t.__module__, t.wrapped.func_name)
+
+                    dog_http_api.event("{0}".format(task_full_name),
+                                       "{0} ran for {1}.".format(task_full_name, human_duration(duration)),
                                        source_type_name="fabric",
                                        alert_type="success",
                                        priority="normal",
-                                       aggregation_key=t.wrapped.func_name)
+                                       aggregation_key=task_full_name)
                 except:
                     logger.warn("Datadog notification failed but task {0} completed".format(t.wrapped.func_name))
             return r
@@ -60,12 +62,13 @@ def notify(t):
             duration = end - start
             if notify_datadog:
                 try:
-                    dog_http_api.event("{0}".format(t.wrapped.func_name),
-                                       "{0} failed after {1} because of {2}.".format(t.wrapped.func_name, human_duration(duration), e),
+                    task_full_name = "%s.%s" % (t.__module__, t.wrapped.func_name)
+                    dog_http_api.event("{0}".format(task_full_name),
+                                       "{0} failed after {1} because of {2}.".format(task_full_name, human_duration(duration), e),
                                        source_type_name="fabric",
                                        alert_type="error",
                                        priority="normal",
-                                       aggregation_key=t.wrapped.func_name)
+                                       aggregation_key=task_full_name)
                 except:
                     logger.exception("Datadog notification failed")
             # Reraise
