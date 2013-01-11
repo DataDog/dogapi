@@ -7,6 +7,8 @@ on your application's needs.
 
 import logging
 import socket
+from functools import wraps
+from contextlib import contextmanager
 from time import time
 
 from dogapi.common import get_ec2_instance_id
@@ -129,6 +131,34 @@ class DogStatsApi(object):
         if not self._disabled:
             self._aggregator.add_point(metric_name, tags, timestamp or time(), value, Histogram, sample_rate)
 
+    @contextmanager
+    def timer(self, metric_name, sample_rate=1, tags=None):
+        """
+        A context manager that will track the distribution of the contained code's run time.
+        Optionally specify a list of tags to associate with the metric.
+        ::
+
+            def get_user(user_id):
+                with dog_stats_api.timer('user.query.time'):
+                    # Do what you need to ...
+                    pass
+
+            # Is equivalent to ...
+            def get_user(user_id):
+                start = time.time()
+                try:
+                    # Do what you need to ...
+                    pass
+                finally:
+                    dog_stats_api.histogram('user.query.time', time.time() - start)
+        """
+        start = time()
+        try:
+            yield
+        finally:
+            end = time()
+            self.histogram(metric_name, end - start, end, tags=tags, sample_rate=sample_rate)
+
     def timed(self, metric_name, sample_rate=1, tags=None):
         """
         A decorator that will track the distribution of a function's run time.
@@ -148,15 +178,11 @@ class DogStatsApi(object):
                 dog_stats_api.histogram('user.query.time', time.time() - start)
         """
         def wrapper(func):
+            @wraps(func)
             def wrapped(*args, **kwargs):
-                start = time()
-                result = func(*args, **kwargs)
-                end = time()
-                self.histogram(metric_name, end - start, end, tags=tags, sample_rate=sample_rate)
-                return result
-            wrapped.__name__ = func.__name__
-            wrapped.__doc__  = func.__doc__
-            wrapped.__dict__.update(func.__dict__)
+                with self.timer(metric_name, sample_rate, tags):
+                    result = func(*args, **kwargs)
+                    return result
             return wrapped
         return wrapper
 
