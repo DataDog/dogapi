@@ -22,18 +22,22 @@ class InfrastructureApi(object):
             response_formatter=lambda x: x['results'],
         )
 
-    def all_tags(self):
+    def all_tags(self, source=None):
         """
         Get a list of tags for your org and their member hosts.
 
         >>> dog_http_api.all_tags()
         [ { 'tag1': [ 'host1', 'host2', ... ] }, ... ]
         """
+        params = {}
+        if source:
+            params['source'] = source
         return self.http_request('GET', '/tags/hosts',
             response_formatter=lambda x: x['tags'],
+            **params
         )
 
-    def host_tags(self, host_id):
+    def host_tags(self, host_id, source=None, by_source=False):
         """
         Get a list of tags for the specified host by name or id.
 
@@ -42,42 +46,61 @@ class InfrastructureApi(object):
         >>> dog_http_api.host_tags(1234)
         ['database', 'env:test']
         """
+        params = {}
+        if source:
+            params['source'] = source
+        if by_source:
+            params['by_source'] = 'true'
         return self.http_request('GET', '/tags/hosts/' + str(host_id),
             response_formatter=lambda x: x['tags'],
+            **params
         )
 
-    def add_tags(self, host_id, *tags):
-        """add_tags(host_id, tag1, [tag2, [...]])
+    def add_tags(self, host_id, tags, source=None):
+        """add_tags(host_id, [tag1, tag2, ...])
         Add one or more tags to a host.
 
-        >>> dog_http_api.add_tags(host_id, 'env:test')
-        >>> dog_http_api.add_tags(host_id, 'env:test', 'database')
+        >>> dog_http_api.add_tags(host_id, ['env:test'])
+        >>> dog_http_api.add_tags(host_id, ['env:test', 'database'])
         """
         body = {
             'tags': tags,
         }
+        params = {}
+        if source:
+            params['source'] = source
         return self.http_request('POST', '/tags/hosts/' + str(host_id), body,
             response_formatter=lambda x: x['tags'],
+            **params
         )
 
-    def change_tags(self, host_id, *tags):
-        """change_tags(host_id, tag1, [tag2, [...]])
+    def change_tags(self, host_id, tags, source=None):
+        """change_tags(host_id, [tag1, tag2, ...])
         Replace a host's tags with one or more new tags.
 
-        >>> dog_http_api.change_tags(host_id, 'env:test')
-        >>> dog_http_api.change_tags(host_id, 'env:test', 'database')
+        >>> dog_http_api.change_tags(host_id, ['env:test'])
+        >>> dog_http_api.change_tags(host_id, ['env:test', 'database'])
         """
         body = {
             'tags': tags
         }
+        params = {}
+        if source:
+            params['source'] = source
         return self.http_request('PUT', '/tags/hosts/' + str(host_id), body,
             response_formatter=lambda x: x['tags'],
+            **params
         )
 
-    def detach_tags(self, host_id):
+    def detach_tags(self, host_id, source=None):
         """
         Remove all tags from a host.
 
         >>> dog_http_api.detach_tags(123)
         """
-        return self.http_request('DELETE', '/tags/hosts/' + str(host_id))
+        params = {}
+        if source:
+            params['source'] = source
+        return self.http_request('DELETE', '/tags/hosts/' + str(host_id),
+            **params
+        )
