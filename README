@@ -11,6 +11,10 @@ A Python client for the DataDog API.
 Change Log
 ----------
 
+- 1.2.1
+    - Release date: 2013.03.06
+    - Fixed backwards compatability issues in the tagging api introduced in 1.2.0
+
 - 1.2.0
     - Release date: 2013.02.19
     - Context manager for capturing histogram of code execution time (thanks @cpennington)
