@@ -63,6 +63,8 @@ class InfrastructureApi(object):
         >>> dog_http_api.add_tags(host_id, ['env:test'])
         >>> dog_http_api.add_tags(host_id, ['env:test', 'database'])
         """
+        if isinstance(tags, basestring):
+            tags = [tags]
         body = {
             'tags': tags,
         }
@@ -81,6 +83,8 @@ class InfrastructureApi(object):
         >>> dog_http_api.change_tags(host_id, ['env:test'])
         >>> dog_http_api.change_tags(host_id, ['env:test', 'database'])
         """
+        if isinstance(tags, basestring):
+            tags = [tags]
         body = {
             'tags': tags
         }
