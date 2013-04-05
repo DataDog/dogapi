@@ -27,6 +27,8 @@ class MetricClient(CommandLineClient):
         if args.tags:
             tags = sorted(set([t.strip() for t in
                                args.tags.split(',') if t]))
+        else:
+            tags = None
         res = self.dog.metric(args.name, args.value, host=host,
             device=args.device, tags=tags)
         report_warnings(res)
