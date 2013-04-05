@@ -14,6 +14,7 @@ class MetricClient(CommandLineClient):
         post_parser.add_argument('value', help='metric value (integer or decimal value)', type=float)
         post_parser.add_argument('--host', help='scopes your metric to a specific host', default=None)
         post_parser.add_argument('--device', help='scopes your metric to a specific device', default=None)
+        post_parser.add_argument('--tags', help='comma-separated list of tags', default=None)
         post_parser.add_argument('--localhostname', help='same as --host=`hostname` (overrides --host)', action='store_true')
         parser.set_defaults(func=self._post)
 
@@ -23,6 +24,10 @@ class MetricClient(CommandLineClient):
             host = find_localhost()
         else:
             host = args.host
-        res = self.dog.metric(args.name, args.value, host=host, device=args.device)
+        if args.tags:
+            tags = sorted(set([t.strip() for t in
+                               args.tags.split(',') if t]))
+        res = self.dog.metric(args.name, args.value, host=host,
+            device=args.device, tags=tags)
         report_warnings(res)
         report_errors(res)
