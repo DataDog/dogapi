@@ -10,7 +10,7 @@ setup(api_key = "YOUR API KEY HERE")
 # Make sure @notify is just above @task
 @notify
 @task(default=True, alias="success")
-def sweet_task(some_arg):
+def sweet_task(some_arg, other_arg):
     """Always succeeds"""
     print(green("My sweet task always runs properly."))
 
