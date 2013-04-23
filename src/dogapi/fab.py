@@ -35,7 +35,7 @@ def _task_details(t):
 def _format_args(args, kwargs):
     serialized_args = u", ".join(map(unicode, args)+[u"{0}={1}".format(k, kwargs[k]) for k in kwargs])
     if len(serialized_args) > MAX_ARGS_LEN:
-        return serialized_args[:MAX_ARGS_LEN] + u"..."]
+        return serialized_args[:MAX_ARGS_LEN] + u"..."
     else:
         return serialized_args
 
@@ -63,8 +63,8 @@ def notify(t):
                                        alert_type="success",
                                        priority="normal",
                                        aggregation_key=_task_details(t))
-                except Exception:
-                    logger.warn("Datadog notification failed but task {0} completed".format(t.wrapped.func_name))
+                except Exception, e:
+                    logger.warn("Datadog notification failed with {0} but task {1} completed".format(e, t.wrapped.func_name))
             return r
         except Exception, e:
             # If notification is on, create an error event
@@ -78,8 +78,8 @@ def notify(t):
                                        alert_type="error",
                                        priority="normal",
                                        aggregation_key=_task_details(t))
-                except Exception:
-                    logger.exception("Datadog notification failed")
+                except Exception, e:
+                    logger.warn("Datadog notification failed with {0} and task {1} failed".format(e, t.wrapped.func_name))
             # Reraise
             raise
 
