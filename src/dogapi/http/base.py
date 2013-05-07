@@ -68,7 +68,11 @@ class BaseDatadog(object):
             if self.application_key:
                 params['application_key'] = self.application_key
             url = "/api/%s/%s?%s" % (self.api_version, path.lstrip('/'), urlencode(params))
-            conn = self.http_conn_cls(self.api_host, timeout=self.timeout)
+            try:
+                conn = self.http_conn_cls(self.api_host, timeout=self.timeout)
+            except TypeError:
+                # timeout= parameter is only supported 2.6+
+                conn = self.http_conn_cls(self.api_host)
 
             # Construct the body, if necessary
             headers = {}
