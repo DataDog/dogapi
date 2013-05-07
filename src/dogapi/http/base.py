@@ -68,7 +68,7 @@ class BaseDatadog(object):
             if self.application_key:
                 params['application_key'] = self.application_key
             url = "/api/%s/%s?%s" % (self.api_version, path.lstrip('/'), urlencode(params))
-            conn = self.http_conn_cls(self.api_host)
+            conn = self.http_conn_cls(self.api_host, timeout=self.timeout)
 
             # Construct the body, if necessary
             headers = {}
@@ -218,4 +218,3 @@ class BaseDatadog(object):
         backed_off_time = now - self._backoff_timestamp
         backoff_time_left = self.backoff_period - backed_off_time
         return round(backed_off_time, 2), round(backoff_time_left, 2)
-
