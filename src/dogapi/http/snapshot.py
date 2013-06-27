@@ -9,7 +9,7 @@ class SnapshotApi(object):
         Take a snapshot of a graph, returning the full url to the snapshot.
         Values for `start` and `end` are given in seconds since the epoch.
 
-        >>> end = time.time()
+        >>> end = int(time.time())
         >>> start = end - 60 * 60
         >>> dog_http_api.snapshot("system.load.1{*}", start, end)
         """
