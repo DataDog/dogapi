@@ -11,6 +11,15 @@ A Python client for the DataDog API.
 Change Log
 ----------
 
+- 1.2.3
+    - Release date: 2013.05.13
+    - Add a timeout paramter to HTTP connections
+
+- 1.2.2
+    - Release date: 2013.04.24
+    - Add tags argument to metric post
+    - Add arguments to fabric notify
+
 - 1.2.1
     - Release date: 2013.03.06
     - Fixed backwards compatability issues in the tagging api introduced in 1.2.0
