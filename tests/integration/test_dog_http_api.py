@@ -7,6 +7,7 @@ import time
 
 # nose
 from nose.plugins.skip import SkipTest
+from nose.plugins.attrib import attr
 
 # dogapi
 import dogapi
@@ -327,6 +328,33 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
             pass
         else:
             raise False, "Should have raised an exception"
+
+    @attr('snapshot')
+    def test_graph_snapshot(self):
+        metric_query = "system.load.1{*}"
+        event_query = "*"
+        end = int(time.time())
+        start = end - 60 * 60 # go back 1 hour
+
+        # Test without an event query
+        snap = dog.graph_snapshot(metric_query, start, end)
+        assert 'snapshot_url' in snap
+        assert 'metric_query' in snap
+        assert snap['metric_query'] == metric_query
+        # dumb snapshot validation
+        assert snap['snapshot_url'].endswith('.png')
+
+        # Test with an event query
+        snap = dog.graph_snapshot(metric_query, start, end, event_query=event_query)
+        assert 'snapshot_url' in snap, snap
+        assert 'metric_query' in snap, snap
+        assert 'event_query' in snap, snap
+        assert snap['metric_query'] == metric_query
+        assert snap['event_query'] == event_query
+        # dumb snapshot validation
+        assert snap['snapshot_url'].endswith('.png')
+
+
 
 if __name__ == '__main__':
     unittest.main()
