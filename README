@@ -10,6 +10,10 @@ A Python client for the DataDog API.
 
 Change Log
 ----------
+- 1.3.0
+    - Release date: 2013.06.27
+    - Add an API for inviting users
+    - Add an API for taking graph snapshots
 
 - 1.2.3
     - Release date: 2013.05.13
