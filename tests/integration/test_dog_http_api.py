@@ -354,6 +354,71 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         # dumb snapshot validation
         assert snap['snapshot_url'].endswith('.png')
 
+    @attr('screenboard')
+    def test_screenboard(self):
+        def _compare_screenboard(board1, board2):
+            compare_keys = ['board_title', 'height', 'width', 'widgets']
+            for key in compare_keys:
+                assert board1[key] == board2[key], key
+
+        board = {
+            "width": 1024,
+            "height": 768,
+            "board_title": "dogapi test",
+            "widgets": [
+                {
+                    "type": "event_stream",
+                    "title": False,
+                    "height": 57,
+                    "width": 59,
+                    "y": 18,
+                    "x": 84,
+                    "query": "tags:release",
+                    "timeframe": "1w"
+                },
+                {
+                  "type": "image",
+                  "height": 20,
+                  "width": 32,
+                  "y": 7,
+                  "x": 32,
+                  "url": "http://path/to/image.jpg"
+                }
+            ]
+        }
+
+        updated_board = {
+            "width": 1024,
+            "height": 768,
+            "board_title": "dogapi test",
+            "widgets": [
+                {
+                  "type": "image",
+                  "height": 20,
+                  "width": 32,
+                  "y": 7,
+                  "x": 32,
+                  "url": "http://path/to/image.jpg"
+                }
+            ]
+        }
+
+        create_res = dog.create_screenboard(board)
+        _compare_screenboard(board, create_res)
+
+        get_res = dog.get_screenboard(create_res['id'])
+        _compare_screenboard(get_res, create_res)
+        assert get_res['id'] == create_res['id']
+
+        update_res = dog.update_screenboard(get_res['id'], updated_board)
+        _compare_screenboard(update_res, updated_board)
+        assert get_res['id'] == update_res['id']
+
+        share_res = dog.share_screenboard(get_res['id'])
+        assert share_res['board_id'] == get_res['id']
+
+        delete_res = dog.delete_screenboard(update_res['id'])
+        assert delete_res['id'] == update_res['id']
 
 
 if __name__ == '__main__':
