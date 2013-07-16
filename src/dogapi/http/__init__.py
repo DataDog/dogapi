@@ -6,9 +6,10 @@ from dogapi.http.infrastructure import *
 from dogapi.http.alerts import *
 from dogapi.http.users import *
 from dogapi.http.snapshot import *
+from dogapi.http.screenboards import *
 
 class DogHttpApi(BaseDatadog, HttpMetricApi, EventApi, DashApi, InfrastructureApi,
-	AlertApi, UserApi, SnapshotApi):
+	AlertApi, UserApi, SnapshotApi, ScreenboardApi):
     """
     A high-level client for interacting with the Datadog API.
 
