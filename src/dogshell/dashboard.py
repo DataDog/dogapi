@@ -25,6 +25,8 @@ class DashClient(CommandLineClient):
         post_parser.add_argument('title', help='title for the new dashboard')
         post_parser.add_argument('description', help='short description of the dashboard')
         post_parser.add_argument('graphs', help='graph definitions as a JSON string. if unset, reads from stdin.', nargs="?")
+        post_parser.add_argument('--template_variables', help='a comma-separated list of template variables, e.g.: redis_port,availability-zone')
+
         post_parser.set_defaults(func=self._post)
 
         update_parser = verb_parsers.add_parser('update', help='Update existing dashboards.')
@@ -32,6 +34,7 @@ class DashClient(CommandLineClient):
         update_parser.add_argument('title', help='new title for the dashboard')
         update_parser.add_argument('description', help='short description of the dashboard')
         update_parser.add_argument('graphs', help='graph definitions as a JSON string. if unset, reads from stdin.', nargs="?")
+        update_parser.add_argument('--template_variables', help='a comma-separated list of template variables, e.g.: redis_port,availability-zone')
         update_parser.set_defaults(func=self._update)
 
         show_parser = verb_parsers.add_parser('show', help='Show a dashboard definition.')
@@ -175,13 +178,19 @@ class DashClient(CommandLineClient):
     def _post(self, args):
         self.dog.timeout = args.timeout
         format = args.format
+        graphs = args.graphs
         if args.graphs is None:
             graphs = sys.stdin.read()
         try:
             graphs = json.loads(graphs)
         except:
             raise Exception('bad json parameter')
-        res = self.dog.create_dashboard(args.title, args.description, graphs)
+        if args.template_variables:
+            tpl_vars = [v.strip() for v in args.template_variables.split(',')]
+        else:
+            tpl_vars = []
+        res = self.dog.create_dashboard(args.title, args.description, graphs,
+                                        template_variables=tpl_vars)
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
@@ -192,13 +201,19 @@ class DashClient(CommandLineClient):
     def _update(self, args):
         self.dog.timeout = args.timeout
         format = args.format
+        graphs = args.graphs
         if args.graphs is None:
             graphs = sys.stdin.read()
         try:
             graphs = json.loads(graphs)
         except:
             raise Exception('bad json parameter')
-        res = self.dog.update_dashboard(args.dashboard_id, args.title, args.description, graphs)
+        if args.template_variables:
+            tpl_vars = [v.strip() for v in args.template_variables.split(',')]
+        else:
+            tpl_vars = []
+        res = self.dog.update_dashboard(args.dashboard_id, args.title, args.description,
+                                        graphs, template_variables=tpl_vars)
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':

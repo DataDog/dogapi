@@ -31,7 +31,7 @@ class DashApi(object):
         )
 
 
-    def create_dashboard(self, title, description, graphs):
+    def create_dashboard(self, title, description, graphs, template_variables=None):
         """
         Create a new dashboard with the given *title*, *description* and *graphs*.
 
@@ -43,13 +43,14 @@ class DashApi(object):
         body = {
             'title': title,
             'description': description,
-            'graphs': graphs
+            'graphs': graphs,
+            'template_variables': template_variables or [],
         }
         return self.http_request('POST', '/dash', body,
             response_formatter=lambda x: x['dash']['id'],
         )
 
-    def update_dashboard(self, dash_id, title, description, graphs):
+    def update_dashboard(self, dash_id, title, description, graphs, template_variables=None):
         """
         Update the dashboard whose id is  *dash_id*, replacing it's *title*, *description* and *graphs*.
         Return the dashboard with the given id.
@@ -62,7 +63,8 @@ class DashApi(object):
         body = {
             'title': title,
             'description': description,
-            'graphs': graphs
+            'graphs': graphs,
+            'template_variables': template_variables or [],
         }
         return self.http_request('PUT', '/dash/' + str(dash_id), body,
             response_formatter=lambda x: x['dash']['id'],
