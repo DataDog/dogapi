@@ -10,9 +10,13 @@ A Python client for the DataDog API.
 
 Change Log
 ----------
+- 1.4.1
+    - Release date: 2013.08.15
+    - Add a `--counter` option to `dog metric post` to submit unsigned 64-bit counters to Datadog.
+
 - 1.4.0
     - Release date: 2013.07.16
-    - Added an API for creating/updating/deleting/sharing Screenboards.
+    - Add an API for creating/updating/deleting/sharing Screenboards.
 
 - 1.3.0
     - Release date: 2013.06.27
