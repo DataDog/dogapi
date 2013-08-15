@@ -1,5 +1,5 @@
 from __future__ import print_function
-from dogapi.common import is_p3k
+from dogapi.common import is_p3k, find_localhost
 
 
 get_input = input
@@ -49,7 +49,6 @@ class CommandLineClient(object):
         if not self._dog:
             self._dog = DogHttpApi(self.config['apikey'], self.config['appkey'], swallow=True, json_responses=True)
         return self._dog
-
 
 
 class DogshellConfig(IterableUserDict):
