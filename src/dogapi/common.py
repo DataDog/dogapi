@@ -41,5 +41,5 @@ def find_localhost():
         if memoized_hostname is None:
             memoized_hostname = socket.getfqdn()
         return memoized_hostname
-    except Exception, e:
+    except Exception:
         logging.exception("Cannot determine local hostname")
