@@ -6,7 +6,7 @@ A Python client for the DataDog API.
 - Library Documentation: http://pydoc.datadoghq.com
 - HTTP API Documetation: http://api.datadoghq.com/
 - DataDogHQ: http://datadoghq.com
-
+- Code: https://github.com/DataDog/dogapi ([![Build Status](https://travis-ci.org/DataDog/dogapi.png?branch=fabric)](https://travis-ci.org/DataDog/dogapi))
 
 Change Log
 ----------

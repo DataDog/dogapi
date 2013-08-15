@@ -33,4 +33,13 @@ def get_ec2_instance_id():
     except:
         return socket.gethostname()
 
+memoized_hostname = None
 
+def find_localhost():
+    try:
+        global memoized_hostname
+        if memoized_hostname is None:
+            memoized_hostname = socket.getfqdn()
+        return memoized_hostname
+    except Exception, e:
+        logging.exception("Cannot determine local hostname")

@@ -29,6 +29,12 @@ task :build do
   sh "python setup.py egg_info -b '_#{build_number}' bdist_egg"
 end
 
+desc "Run the code through pylint"
+task :lint do
+  sh "find src/dogapi -name '*.py' -type f -exec pylint --rcfile=.pylintrc --reports=n --output-format=colorized {} ';'"
+  sh "find src/dogshell -name '*.py' -type f -exec pylint --rcfile=.pylintrc --reports=n --output-format=colorized {} ';'"
+end
+
 namespace :test do
 
   desc "Run integration tests."
