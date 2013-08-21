@@ -166,6 +166,7 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
             assert False
 
 
+    @attr('dashboards')
     def test_dash(self):
 
         graph = {
@@ -192,12 +193,14 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
                     }
                 }
 
-        dash_id = dog.update_dashboard(dash_id, 'updated api dash', 'my api dash', [graph])
+        dash_id = dog.update_dashboard(dash_id, 'updated api dash', 'my api dash', [graph],
+                                       template_variables=['foo', 'bar'])
 
         # Query and ensure all is well.
         remote_dash = dog.dashboard(dash_id)
 
         assert 'updated api dash' == remote_dash['title']
+        assert ['foo', 'bar'] == remote_dash['template_variables']
 
         p = graph['definition']['requests']
         assert graph['definition']['requests'] == remote_dash['graphs'][0]['definition']['requests']
