@@ -9,9 +9,10 @@ logger = logging.getLogger("fabric")
 
 MAX_ARGS_LEN = 256
 
-def setup(api_key):
+def setup(api_key, application_key):
     global dog_http_api
     dog_http_api.api_key = api_key
+    dog_http_api.application_key = application_key
 
 def _human_duration(d):
     def pluralize(quantity, noun):
