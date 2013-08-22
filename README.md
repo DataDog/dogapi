@@ -10,6 +10,10 @@ A Python client for the DataDog API.
 
 Change Log
 ----------
+- 1.4.2
+    - Release date: 2013.08.22
+    - Add template variables to dashboard API.
+
 - 1.4.1
     - Release date: 2013.08.15
     - Add a `--counter` option to `dog metric post` to submit unsigned 64-bit counters to Datadog.
