@@ -270,7 +270,7 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         dog.metric("test.metric", (time.time(), 1.0))
 
     def test_alerts(self):
-        query = "sum(last_1d):sum:system.net.bytes_rcvd{host:host0} > 100"
+        query = "avg(last_1h):sum:system.net.bytes_rcvd{host:host0} > 100"
 
         alert_id = dog.alert(query)
         alert = dog.get_alert(alert_id)
@@ -290,8 +290,8 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         else:
             assert False, 'alert not deleted'
 
-        query1 = "sum(last_1d):sum:system.net.bytes_rcvd{host:host0} > 100"
-        query2 = "sum(last_1d):sum:system.net.bytes_rcvd{host:host0} > 200"
+        query1 = "avg(last_1h):sum:system.net.bytes_rcvd{host:host0} > 100"
+        query2 = "avg(last_1h):sum:system.net.bytes_rcvd{host:host0} > 200"
 
         alert_id1 = dog.alert(query1)
         alert_id2 = dog.alert(query2)
@@ -302,7 +302,7 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         assert alert2['query'] == query2, alert2
 
     def test_user_error(self):
-        query = "sum(last_1d):sum:system.net.bytes_rcvd{host:host0} > 100"
+        query = "avg(last_1h):sum:system.net.bytes_rcvd{host:host0} > 100"
 
         dog.swallow = True
         dog.json_responses = True
