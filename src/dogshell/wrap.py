@@ -46,9 +46,9 @@ def execute(cmd, cmd_timeout, sigterm_timeout, sigkill_timeout,
     stdout = ''
     stderr = ''
     try:
-        proc = subprocess.Popen(' '.join(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        proc = subprocess.Popen(u' '.join(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     except Exception:
-        print >> sys.stderr, "Failed to execute %s" % (repr(cmd))
+        print >> sys.stderr, u"Failed to execute %s" % (repr(cmd))
         raise
     try:
         returncode = poll_proc(proc, proc_poll_interval, cmd_timeout)
@@ -97,27 +97,27 @@ def main():
     host = get_ec2_instance_id()
     if returncode == 0:
         alert_type = 'success'
-        event_title = '[%s] %s succeeded in %.2fs' % (host, options.name,
-                                                      duration)
+        event_title = u'[%s] %s succeeded in %.2fs' % (host, options.name,
+                                                       duration)
     elif returncode is Timeout:
         alert_type = 'error'
-        event_title = '[%s] %s timed out after %.2fs' % (host, options.name,
-                                                         duration)
+        event_title = u'[%s] %s timed out after %.2fs' % (host, options.name,
+                                                          duration)
         returncode = -1
     else:
         alert_type = 'error'
-        event_title = '[%s] %s failed in %.2fs' % (host, options.name,
-                                                   duration)
-    event_body = ['%%%\n',
-        'commmand:\n```\n', ' '.join(cmd), '\n```\n',
-        'exit code: %s\n\n' % returncode,
+        event_title = u'[%s] %s failed in %.2fs' % (host, options.name,
+                                                    duration)
+    event_body = [u'%%%\n',
+        u'commmand:\n```\n', u' '.join(cmd), u'\n```\n',
+        u'exit code: %s\n\n' % returncode,
     ]
     if stdout:
-        event_body.extend(['stdout:\n```\n', stdout, '\n```\n'])
+        event_body.extend([u'stdout:\n```\n', stdout, u'\n```\n'])
     if stderr:
-        event_body.extend(['stderr:\n```\n', stderr, '\n```\n'])
-    event_body.append('%%%\n')
-    event_body = ''.join(event_body)
+        event_body.extend([u'stderr:\n```\n', stderr, u'\n```\n'])
+    event_body.append(u'%%%\n')
+    event_body = u''.join(event_body)
     event = {
         'alert_type': alert_type,
         'aggregation_key': options.name,
