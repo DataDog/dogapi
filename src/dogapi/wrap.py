@@ -52,7 +52,9 @@ def execute(cmd, cmd_timeout, sigterm_timeout, sigkill_timeout):
     try:
         returncode = poll_proc(proc, 1, cmd_timeout)
         stdout, stderr = proc.communicate()
+        duration = time.time() - start_time
     except Timeout:
+        duration = time.time() - start_time
         try:
             proc.terminate()
             sigterm_start = time.time()
@@ -69,7 +71,6 @@ def execute(cmd, cmd_timeout, sigterm_timeout, sigkill_timeout):
             # Ignore OSError 3: no process found.
             if e.errno != 3:
                 raise
-    duration = time.time() - start_time
     return returncode, stdout, stderr, duration
 
 def main():
