@@ -52,16 +52,19 @@ def execute(cmd, cmd_timeout, sigterm_timeout, sigkill_timeout):
     try:
         returncode = poll_proc(proc, 1, cmd_timeout)
         stdout, stderr = proc.communicate()
-    except Exception:
+    except Timeout:
         try:
             proc.terminate()
+            sigterm_start = time.time()
             try:
-                returncode = poll_proc(proc, 1, sigterm_timeout)
-                print >> sys.stderr, "SIGTERM"
+                print >> sys.stderr, "Command timed out after %.2fs, killing with SIGTERM" % (time.time() - start_time)
+                poll_proc(proc, 1, sigterm_timeout)
+                returncode = Timeout
             except Timeout:
+                print >> sys.stderr, "SIGTERM timeout failed after %.2fs, killing with SIGKILL" % (time.time() - sigterm_start)
                 proc.kill()
-                returncode = poll_proc(proc, 1, sigkill_timeout)
-                print >> sys.stderr, "SIGKILL"
+                poll_proc(proc, 1, sigkill_timeout)
+                returncode = Timeout
         except OSError, e:
             # Ignore OSError 3: no process found.
             if e.errno != 3:
@@ -92,6 +95,11 @@ def main():
         alert_type = 'success'
         event_title = '[%s] %s succeeded in %.2fs' % (host, options.name,
                                                       duration)
+    elif returncode is Timeout:
+        alert_type = 'error'
+        event_title = '[%s] %s timed out after %.2fs' % (host, options.name,
+                                                         duration)
+        returncode = -1
     else:
         alert_type = 'error'
         event_title = '[%s] %s failed in %.2fs' % (host, options.name,
