@@ -39,7 +39,8 @@ def poll_proc(proc, sleep_interval, timeout):
             time.sleep(sleep_interval)
     return returncode
 
-def execute(cmd, cmd_timeout, sigterm_timeout, sigkill_timeout):
+def execute(cmd, cmd_timeout, sigterm_timeout, sigkill_timeout,
+            proc_poll_interval):
     start_time = time.time()
     returncode = -1
     stdout = ''
@@ -50,7 +51,7 @@ def execute(cmd, cmd_timeout, sigterm_timeout, sigkill_timeout):
         print >> sys.stderr, "Failed to execute %s" % (repr(cmd))
         raise
     try:
-        returncode = poll_proc(proc, 1, cmd_timeout)
+        returncode = poll_proc(proc, proc_poll_interval, cmd_timeout)
         stdout, stderr = proc.communicate()
         duration = time.time() - start_time
     except Timeout:
@@ -60,12 +61,12 @@ def execute(cmd, cmd_timeout, sigterm_timeout, sigkill_timeout):
             sigterm_start = time.time()
             try:
                 print >> sys.stderr, "Command timed out after %.2fs, killing with SIGTERM" % (time.time() - start_time)
-                poll_proc(proc, 1, sigterm_timeout)
+                poll_proc(proc, proc_poll_interval, sigterm_timeout)
                 returncode = Timeout
             except Timeout:
                 print >> sys.stderr, "SIGTERM timeout failed after %.2fs, killing with SIGKILL" % (time.time() - sigterm_start)
                 proc.kill()
-                poll_proc(proc, 1, sigkill_timeout)
+                poll_proc(proc, proc_poll_interval, sigkill_timeout)
                 returncode = Timeout
         except OSError, e:
             # Ignore OSError 3: no process found.
@@ -81,6 +82,7 @@ def main():
     parser.add_option('-t', '--timeout', action='store', type='int', default=60*60*24)
     parser.add_option('--sigterm_timeout', action='store', type='int', default=60*2)
     parser.add_option('--sigkill_timeout', action='store', type='int', default=60)
+    parser.add_option('--proc_poll_interval', action='store', type='float', default=0.5)
     options, args = parser.parse_args()
 
     dog.api_key = options.api_key
@@ -89,7 +91,8 @@ def main():
     for part in args:
         cmd.extend(part.split(' '))
     returncode, stdout, stderr, duration = execute(cmd, options.timeout,
-        options.sigterm_timeout, options.sigkill_timeout)
+        options.sigterm_timeout, options.sigkill_timeout,
+        options.proc_poll_interval)
 
     host = get_ec2_instance_id()
     if returncode == 0:
