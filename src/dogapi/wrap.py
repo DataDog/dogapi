@@ -1,0 +1,105 @@
+import sys
+import subprocess
+import time
+from StringIO import StringIO
+from optparse import OptionParser
+
+from dogapi import dog_http_api as dog
+from dogapi.common import get_ec2_instance_id
+
+class Timeout(Exception): pass
+
+def poll_proc(proc, sleep_interval, timeout):
+    start_time = time.time()
+    returncode = None
+    while returncode is None:
+        returncode = proc.poll()
+        if time.time() - start_time > timeout:
+            raise Timeout()
+        else:
+            time.sleep(sleep_interval)
+    return returncode
+
+def execute(cmd, cmd_timeout, sigterm_timeout, sigkill_timeout):
+    start_time = time.time()
+    returncode = -1
+    stdout = ''
+    stderr = ''
+    try:
+        proc = subprocess.Popen(' '.join(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    except Exception:
+        print >> sys.stderr, "Failed to execute %s" % (repr(cmd))
+        raise
+    try:
+        returncode = poll_proc(proc, 1, cmd_timeout)
+        stdout, stderr = proc.communicate()
+    except Exception:
+        try:
+            proc.terminate()
+            try:
+                returncode = poll_proc(proc, 1, sigterm_timeout)
+                print >> sys.stderr, "SIGTERM"
+            except Timeout:
+                proc.kill()
+                returncode = poll_proc(proc, 1, sigkill_timeout)
+                print >> sys.stderr, "SIGKILL"
+        except OSError, e:
+            # Ignore OSError 3: no process found.
+            if e.errno != 3:
+                raise
+    duration = time.time() - start_time
+    return returncode, stdout, stderr, duration
+
+def main():
+    parser = OptionParser()
+    parser.add_option('-n', '--name', action='store', type='string')
+    parser.add_option('-k', '--api_key', action='store', type='string')
+    parser.add_option('-m', '--submit_mode', action='store', type='choice', default='errors', choices=['errors', 'all'])
+    parser.add_option('-t', '--timeout', action='store', type='int', default=60*60*24)
+    parser.add_option('--sigterm_timeout', action='store', type='int', default=60*2)
+    parser.add_option('--sigkill_timeout', action='store', type='int', default=60)
+    options, args = parser.parse_args()
+
+    dog.api_key = options.api_key
+
+    cmd = []
+    for part in args:
+        cmd.extend(part.split(' '))
+    returncode, stdout, stderr, duration = execute(cmd, options.timeout,
+        options.sigterm_timeout, options.sigkill_timeout)
+
+    host = get_ec2_instance_id()
+    if returncode == 0:
+        alert_type = 'success'
+        event_title = '[%s] %s succeeded in %.2fs' % (host, options.name,
+                                                      duration)
+    else:
+        alert_type = 'error'
+        event_title = '[%s] %s failed in %.2fs' % (host, options.name,
+                                                   duration)
+    event_body = ['%%%\n',
+        'commmand:\n```\n', ' '.join(cmd), '\n```\n',
+        'exit code: %s\n\n' % returncode,
+    ]
+    if stdout:
+        event_body.extend(['stdout:\n```\n', stdout, '\n```\n'])
+    if stderr:
+        event_body.extend(['stderr:\n```\n', stderr, '\n```\n'])
+    event_body.append('%%%\n')
+    event_body = ''.join(event_body)
+    event = {
+        'alert_type': alert_type,
+        'aggregation_key': options.name,
+        'host': host,
+    }
+
+    print >> sys.stderr, stderr.strip()
+    print >> sys.stdout, stdout.strip()
+
+    if options.submit_mode == 'all' or returncode != 0:
+        dog.event(event_title, event_body, **event)
+
+    sys.exit(returncode)
+
+if __name__ == '__main__':
+    main()
