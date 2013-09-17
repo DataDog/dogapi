@@ -10,6 +10,10 @@ A Python client for the DataDog API.
 
 Change Log
 ----------
+- 1.5.0
+    - Release date: 2013.9.17
+    - Add dogwrap command for calling scripts and generating events from their results
+
 - 1.4.2
     - Release date: 2013.08.22
     - Add template variables to dashboard API.
