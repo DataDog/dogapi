@@ -10,7 +10,7 @@ A Python client for the DataDog API.
 
 Change Log
 ----------
--- 1.5.0
+- 1.6.0
     - Release date: 2013.10.09
     - Update Fabric integration to support @roles and @hosts decorators.
     - Add timeout and notify_no_data to alert API.
