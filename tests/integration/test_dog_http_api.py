@@ -276,11 +276,19 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         alert = dog.get_alert(alert_id)
         assert alert['query'] == query, alert['query']
         assert alert['silenced'] == False, alert['silenced']
+        assert alert['notify_no_data'] == False, alert['notify_no_data']
 
         dog.update_alert(alert_id, query, silenced=True)
         alert = dog.get_alert(alert_id)
         assert alert['query'] == query, alert['query']
         assert alert['silenced'] == True, alert['silenced']
+
+        dog.update_alert(alert_id, query, silenced=True, notify_no_data=True, timeout_h=1)
+        alert = dog.get_alert(alert_id)
+        assert alert['query'] == query, alert['query']
+        assert alert['silenced'] == True, alert['silenced']
+        assert alert['notify_no_data'] == True, alert['notify_no_data']
+        assert alert['timeout_h'] == 1, alert['timeout_h']
 
         dog.delete_alert(alert_id)
         try:
