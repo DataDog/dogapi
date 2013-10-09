@@ -4,7 +4,8 @@ __all__ = [
 
 class AlertApi(object):
 
-    def alert(self, query, name=None, message=None, silenced=False):
+    def alert(self, query, name=None, message=None, silenced=False,
+            notify_no_data=None, timeout_h=None):
         """
         Create a new metric alert for the given *query*. If *name* is unset,
         the alert will be given a name based on the query. The *message* will
@@ -22,12 +23,17 @@ class AlertApi(object):
             body['name'] = name
         if message:
             body['message'] = message
+        if notify_no_data:
+            body['notify_no_data'] = notify_no_data
+        if timeout_h:
+            body['timeout_h'] = timeout_h
 
         return self.http_request('POST', '/alert', body,
             response_formatter=lambda x: x['id'],
         )
 
-    def update_alert(self, alert_id, query, name=None, message=None, silenced=False):
+    def update_alert(self, alert_id, query, name=None, message=None, silenced=False,
+            notify_no_data=None, timeout_h=None):
         """
         Update the metric alert identified by *alert_id* with the given
         *query*. If *name* is unset, the alert will be given a name based on
@@ -46,6 +52,10 @@ class AlertApi(object):
             body['name'] = name
         if message:
             body['message'] = message
+        if notify_no_data:
+            body['notify_no_data'] = notify_no_data
+        if timeout_h:
+            body['timeout_h'] = timeout_h
 
         return self.http_request('PUT', '/alert/%s' % alert_id, body,
             response_formatter=lambda x: x['id'],
