@@ -17,6 +17,7 @@ And you can give the command a timeout too:
 dogwrap -n test-job -k $API_KEY --timeout=1 "sleep 3"
 
 '''
+
 import sys
 import subprocess
 import time
@@ -25,6 +26,11 @@ from optparse import OptionParser
 
 from dogapi import dog_http_api as dog
 from dogapi.common import get_ec2_instance_id
+
+
+SUCCESS = 'success'
+ERROR = 'error'
+
 
 class Timeout(Exception): pass
 
@@ -76,13 +82,16 @@ def execute(cmd, cmd_timeout, sigterm_timeout, sigkill_timeout,
 
 def main():
     parser = OptionParser()
-    parser.add_option('-n', '--name', action='store', type='string')
+    parser.add_option('-n', '--name', action='store', type='string', help="The name of the event")
     parser.add_option('-k', '--api_key', action='store', type='string')
     parser.add_option('-m', '--submit_mode', action='store', type='choice', default='errors', choices=['errors', 'all'])
     parser.add_option('-t', '--timeout', action='store', type='int', default=60*60*24)
     parser.add_option('--sigterm_timeout', action='store', type='int', default=60*2)
     parser.add_option('--sigkill_timeout', action='store', type='int', default=60)
     parser.add_option('--proc_poll_interval', action='store', type='float', default=0.5)
+    parser.add_option('--notify_success', action='store', type='string', default='')
+    parser.add_option('--notify_error', action='store', type='string', default='')
+
     options, args = parser.parse_args()
 
     dog.api_key = options.api_key
@@ -96,16 +105,16 @@ def main():
 
     host = get_ec2_instance_id()
     if returncode == 0:
-        alert_type = 'success'
+        alert_type = SUCCESS
         event_title = u'[%s] %s succeeded in %.2fs' % (host, options.name,
                                                        duration)
     elif returncode is Timeout:
-        alert_type = 'error'
+        alert_type = ERROR
         event_title = u'[%s] %s timed out after %.2fs' % (host, options.name,
                                                           duration)
         returncode = -1
     else:
-        alert_type = 'error'
+        alert_type = ERROR
         event_title = u'[%s] %s failed in %.2fs' % (host, options.name,
                                                     duration)
     event_body = [u'%%%\n',
@@ -116,6 +125,16 @@ def main():
         event_body.extend([u'stdout:\n```\n', stdout, u'\n```\n'])
     if stderr:
         event_body.extend([u'stderr:\n```\n', stderr, u'\n```\n'])
+
+    notifications = ""
+    if alert_type == SUCCESS and options.notify_success:
+        notifications = options.notify_success
+    elif alert_type == ERROR and options.notify_error:
+        notifications = options.notify_error
+
+    if notifications:
+        event_body.extend([u'notifications: %s\n' % (notifications)])
+
     event_body.append(u'%%%\n')
     event_body = u''.join(event_body)
     event = {
