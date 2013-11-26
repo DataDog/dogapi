@@ -41,25 +41,25 @@ class TestDatadog(unittest.TestCase):
         dog.detach_tags(hostname)
         assert len(dog.host_tags(hostname)) == 0
 
-        dog.add_tags(hostname, 'test.tag.1', 'test.tag.2')
+        dog.add_tags(hostname, ['test.tag.1', 'test.tag.2'], source='datadog')
         new_tags = dog.host_tags(hostname)
         assert len(new_tags) == 2
         assert 'test.tag.1' in new_tags
         assert 'test.tag.2' in new_tags
 
-        dog.add_tags(hostname, 'test.tag.3')
+        dog.add_tags(hostname, ['test.tag.3'], source='datadog')
         new_tags = dog.host_tags(hostname)
         assert len(new_tags) == 3
         assert 'test.tag.1' in new_tags
         assert 'test.tag.2' in new_tags
         assert 'test.tag.3' in new_tags
 
-        dog.change_tags(hostname, 'test.tag.4')
+        dog.change_tags(hostname, ['test.tag.4'], source='datadog')
         new_tags = dog.host_tags(hostname)
         assert len(new_tags) == 1
         assert 'test.tag.4' in new_tags
 
-        dog.detach_tags(hostname)
+        dog.detach_tags(hostname, source='datadog')
         assert len(dog.host_tags(hostname)) == 0
 
     def test_events(self):
