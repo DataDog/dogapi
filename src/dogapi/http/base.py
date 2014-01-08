@@ -75,7 +75,7 @@ class BaseDatadog(object):
                 conn = self.http_conn_cls(self.api_host)
 
             # Using a proxy?
-            if 'https_proxy' in os.environ and 'set_tunnel' in dir(conn) and os.environ['https_proxy'] is not None:
+            if 'https_proxy' in os.environ and os.environ['https_proxy'] is not None:
                 proxy_host, proxy_port = splitport(os.environ.get('https_proxy', ''))
                 if proxy_port is not None:
                     try:
@@ -83,6 +83,8 @@ class BaseDatadog(object):
                         log.debug("SSL proxy through %s:%s" % (proxy_host, proxy_port))
                     except ValueError:
                         log.error("Invalid SSL Proxy port number %s from %s" % (proxy_port, os.environ.get('https_proxy')))
+                    except AttributeError:
+                        log.error("Your version of httplib does not support proxying")
 
             # Construct the body, if necessary
             headers = {}
