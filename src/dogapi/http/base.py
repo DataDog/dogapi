@@ -2,8 +2,8 @@ __all__ = [
     'BaseDatadog',
 ]
 
-import os
 import logging
+import os
 import re
 import socket
 import time
@@ -70,6 +70,11 @@ class BaseDatadog(object):
             url = "/api/%s/%s?%s" % (self.api_version, path.lstrip('/'), urlencode(params))
             try:
                 conn = self.http_conn_cls(self.api_host, timeout=self.timeout)
+                # Using a proxy?
+                if 'https_proxy' in os.environ and 'set_tunnel' in dir(conn):
+                    # conn.set_tunnel(os.environ['https_proxy'])
+                    pass
+                    
             except TypeError:
                 # timeout= parameter is only supported 2.6+
                 conn = self.http_conn_cls(self.api_host)
