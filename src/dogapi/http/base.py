@@ -27,7 +27,7 @@ if is_p3k():
     from urllib.parse import urlencode
 else:
     import httplib as http_client
-    from urllib import urlencode
+    from urllib import urlencode, splitport
 
 __all__ = [
     'BaseDatadog'
@@ -70,14 +70,16 @@ class BaseDatadog(object):
             url = "/api/%s/%s?%s" % (self.api_version, path.lstrip('/'), urlencode(params))
             try:
                 conn = self.http_conn_cls(self.api_host, timeout=self.timeout)
-                # Using a proxy?
-                if 'https_proxy' in os.environ and 'set_tunnel' in dir(conn):
-                    # conn.set_tunnel(os.environ['https_proxy'])
-                    pass
-                    
             except TypeError:
                 # timeout= parameter is only supported 2.6+
                 conn = self.http_conn_cls(self.api_host)
+
+            # Using a proxy?
+            if 'https_proxy' in os.environ and 'set_tunnel' in dir(conn) and os.environ['https_proxy'] is not None:
+                proxy_host, proxy_port = splitport(os.environ.get('https_proxy', ''))
+                if proxy_port is not None:
+                    conn.set_tunnel(proxy_host, proxy_port)
+                    log.debug("SSL proxy through %s:%s" % (proxy_host, proxy_port))
 
             # Construct the body, if necessary
             headers = {}
