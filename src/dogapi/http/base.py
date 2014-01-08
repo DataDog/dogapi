@@ -78,8 +78,11 @@ class BaseDatadog(object):
             if 'https_proxy' in os.environ and 'set_tunnel' in dir(conn) and os.environ['https_proxy'] is not None:
                 proxy_host, proxy_port = splitport(os.environ.get('https_proxy', ''))
                 if proxy_port is not None:
-                    conn.set_tunnel(proxy_host, proxy_port)
-                    log.debug("SSL proxy through %s:%s" % (proxy_host, proxy_port))
+                    try:
+                        conn.set_tunnel(proxy_host, int(proxy_port))
+                        log.debug("SSL proxy through %s:%s" % (proxy_host, proxy_port))
+                    except ValueError:
+                        log.error("Invalid SSL Proxy port number %s from %s" % (proxy_port, os.environ.get('https_proxy')))
 
             # Construct the body, if necessary
             headers = {}
