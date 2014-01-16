@@ -27,5 +27,5 @@ class StatsdAggregator(object):
                 payload += '|#' + ','.join(tags)
             try:
                 self.socket_sendto(payload, self.address)
-            except:
+            except Exception:
                 logger.exception('couldnt submit statsd point')
