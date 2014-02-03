@@ -39,7 +39,7 @@ def _format_args(args, kwargs):
     else:
         return serialized_args
 
-def _text(t, args, kwargs, error):
+def _text(t, args, kwargs, duration, error):
     if error:
         return "{0}({1}) failed after {2} because of {3}.".format(_task_details(t), _format_args(args, kwargs), _human_duration(duration), e)
     else:
@@ -69,7 +69,7 @@ def notify(t):
         duration = end - start
         try:
             dog_http_api.event(_title(t, args, kwargs, error),
-                               _text(t, args, kwargs, error),
+                               _text(t, args, kwargs, duration, error),
                                source_type_name="fabric",
                                alert_type="error" if error else "success",
                                priority="normal",
