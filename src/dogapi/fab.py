@@ -19,7 +19,7 @@ def _human_duration(d):
             return "{0} {1}s".format(quantity, noun)
         else:
             return "{0} {1}".format(quantity, noun)
-    
+
     if d < 1:
         return "less than 1 second"
     elif d < 60:
@@ -45,6 +45,15 @@ def _text(t, args, kwargs, error):
     else:
         return "{0}({1}) ran for {2}.".format(_task_details(t), _format_args(args, kwargs), _human_duration(duration)),
 
+def _title(t, args, kwargs, error):
+    return "{0}".format(_task_details(t)),
+
+def _arregation_key(t, args, kwargs, error):
+  return _task_details(t)
+
+def _tags(t, args, kwargs, error):
+    return []
+
 def notify(t):
     """Decorates a fabric task"""
     @wraps(t)
@@ -59,12 +68,13 @@ def notify(t):
         end = time.time()
         duration = end - start
         try:
-            dog_http_api.event("{0}".format(_task_details(t)),
+            dog_http_api.event(_title(t, args, kwargs, error),
                                _text(t, args, kwargs, error),
                                source_type_name="fabric",
                                alert_type="error" if error else "success",
                                priority="normal",
-                               aggregation_key=_task_details(t))
+                               aggregation_key=_aggregation_key(t, args, kwargs, error),
+                               tags=_tags(t, args, kwargs, error))
         except Exception, e:
             logger.warn("Datadog notification on task {0} failed with {1}".format(t.__name___, e))
 
