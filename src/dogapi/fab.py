@@ -19,7 +19,7 @@ def _human_duration(d):
             return "{0} {1}s".format(quantity, noun)
         else:
             return "{0} {1}".format(quantity, noun)
-    
+
     if d < 1:
         return "less than 1 second"
     elif d < 60:
@@ -39,40 +39,48 @@ def _format_args(args, kwargs):
     else:
         return serialized_args
 
+def _text(t, args, kwargs, duration, error):
+    if error:
+        return "{0}({1}) failed after {2} because of {3}.".format(_task_details(t), _format_args(args, kwargs), _human_duration(duration), e)
+    else:
+        return "{0}({1}) ran for {2}.".format(_task_details(t), _format_args(args, kwargs), _human_duration(duration)),
+
+def _title(t, args, kwargs, error):
+    return "{0}".format(_task_details(t)),
+
+def _arregation_key(t, args, kwargs, error):
+  return _task_details(t)
+
+def _tags(t, args, kwargs, error):
+    return []
+
 def notify(t):
     """Decorates a fabric task"""
     @wraps(t)
     def wrapper(*args, **kwargs):
         start = time.time()
-
+        error = None
         try:
             r = t(*args, **kwargs)
-            end = time.time()
-            duration = end - start
-            try:
-                dog_http_api.event("{0}".format(_task_details(t)),
-                                   "{0}({1}) ran for {2}.".format(_task_details(t), _format_args(args, kwargs), _human_duration(duration)),
-                                   source_type_name="fabric",
-                                   alert_type="success",
-                                   priority="normal",
-                                   aggregation_key=_task_details(t))
-            except Exception, e:
-                logger.warn("Datadog notification failed with {0} but task {1} completed".format(e, t.__name___))
-            return r
         except Exception, e:
-            # If notification is on, create an error event
-            end = time.time()
-            duration = end - start
-            try:
-                dog_http_api.event("{0}".format(_task_details(t)),
-                                   "{0}({1}) failed after {2} because of {3}.".format(_task_details(t), _format_args(args, kwargs), _human_duration(duration), e),
-                                   source_type_name="fabric",
-                                   alert_type="error",
-                                   priority="normal",
-                                   aggregation_key=_task_details(t))
-            except Exception, e:
-                logger.warn("Datadog notification failed with {0} and task {1} failed".format(e, t.__name___))
-            # Reraise
-            raise
+            error = e
+
+        end = time.time()
+        duration = end - start
+        try:
+            dog_http_api.event(_title(t, args, kwargs, error),
+                               _text(t, args, kwargs, duration, error),
+                               source_type_name="fabric",
+                               alert_type="error" if error else "success",
+                               priority="normal",
+                               aggregation_key=_aggregation_key(t, args, kwargs, error),
+                               tags=_tags(t, args, kwargs, error))
+        except Exception, e:
+            logger.warn("Datadog notification on task {0} failed with {1}".format(t.__name___, e))
+
+        if error:
+            raise error
+        else:
+            return r
 
     return WrappedCallableTask(wrapper)
