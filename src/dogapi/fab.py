@@ -41,14 +41,14 @@ def _format_args(args, kwargs):
 
 def _text(t, args, kwargs, duration, error):
     if error:
-        return "{0}({1}) failed after {2} because of {3}.".format(_task_details(t), _format_args(args, kwargs), _human_duration(duration), e)
+        return "{0}({1}) failed after {2} because of {3}.".format(_task_details(t), _format_args(args, kwargs), _human_duration(duration), error)
     else:
         return "{0}({1}) ran for {2}.".format(_task_details(t), _format_args(args, kwargs), _human_duration(duration)),
 
 def _title(t, args, kwargs, error):
     return "{0}".format(_task_details(t)),
 
-def _arregation_key(t, args, kwargs, error):
+def _agrregation_key(t, args, kwargs, error):
   return _task_details(t)
 
 def _tags(t, args, kwargs, error):
