@@ -12,7 +12,7 @@ Change Log
 ----------
 - 1.6.2
     - Release date: 2014.01.16
-    - Don't catch KeyboardInterrupt wehn sending to StatsD
+    - Don't catch KeyboardInterrupt when sending to StatsD
 
 - 1.6.1
     - Release date: 2013.11.19
