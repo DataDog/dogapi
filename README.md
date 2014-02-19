@@ -10,6 +10,13 @@ A Python client for the DataDog API.
 
 Change Log
 ----------
+
+- 1.6.4 / 2014-02-19
+  - Prevent exceptions due to misnamed variable, #79 @smartkiwi
+
+- 1.6.3 / 2014-02-07
+  - Allow further customizations of fabric task, fix typos, @alq666
+
 - 1.6.2
     - Release date: 2014.01.16
     - Don't catch KeyboardInterrupt when sending to StatsD
