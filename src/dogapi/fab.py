@@ -76,7 +76,7 @@ def notify(t):
                                aggregation_key=_aggregation_key(t, args, kwargs, error),
                                tags=_tags(t, args, kwargs, error))
         except Exception, e:
-            logger.warn("Datadog notification on task {0} failed with {1}".format(t.__name___, e))
+            logger.warn("Datadog notification on task {0} failed with {1}".format(t.__name__, e))
 
         if error:
             raise error
