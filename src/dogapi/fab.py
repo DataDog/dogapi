@@ -49,7 +49,7 @@ def _title(t, args, kwargs, error):
     return "{0}".format(_task_details(t)),
 
 def _aggregation_key(t, args, kwargs, error):
-  return _task_details(t)
+    return _task_details(t)
 
 def _tags(t, args, kwargs, error):
     return []
