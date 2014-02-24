@@ -11,6 +11,9 @@ A Python client for the DataDog API.
 Change Log
 ----------
 
+- 1.6.5 /2014-02-24
+  - Fix typo in fabric task, #82
+
 - 1.6.4 / 2014-02-19
   - Prevent exceptions due to misnamed variable, #79 @smartkiwi
 
