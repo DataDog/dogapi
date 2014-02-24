@@ -48,7 +48,7 @@ def _text(t, args, kwargs, duration, error):
 def _title(t, args, kwargs, error):
     return "{0}".format(_task_details(t)),
 
-def _agrregation_key(t, args, kwargs, error):
+def _aggregation_key(t, args, kwargs, error):
   return _task_details(t)
 
 def _tags(t, args, kwargs, error):
