@@ -28,6 +28,9 @@ try:
 
     dog.api_key = os.popen("git config datadog.api").read().strip()
     dog.application_key = os.popen("git config datadog.application").read().strip()
+    
+    # Check if bare repository
+    isbare = os.popen("git config core.bare").read().strip()
 
     logger.debug("Notifying Datadog with %s/%s" % (dog.api_key, dog.application_key))
 
@@ -57,8 +60,12 @@ try:
     # repo name
     repo_name = "repository"
     try:
-        # go 2 dirs up and use pwd as the repo name, not great but should work
-        repo_name = os.path.basename(os.path.realpath(os.path.join(__file__, "..", "..", "..")))
+        if isbare == "true":
+            # go 1 dirs up and use pwd as the repo name, not great but should work
+            repo_name = os.path.basename(os.path.realpath(os.path.join(__file__, "..", "..")))
+        else:
+            # go 2 dirs up and use pwd as the repo name, not great but should work
+            repo_name = os.path.basename(os.path.realpath(os.path.join(__file__, "..", "..", "..")))
     except:
         # fail
         pass
