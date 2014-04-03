@@ -98,9 +98,11 @@ class DogStatsApi(object):
 
     def gauge(self, metric_name, value, timestamp=None, tags=None, sample_rate=1):
         """
-        Record the instantaneous *value* of a metric. They most recent value in
+        Record the current *value* of a metric. They most recent value in
         a given flush interval will be recorded. Optionally, specify a set of
-        tags to associate with the metric.
+        tags to associate with the metric. This should be used for sum values
+        such as total hard disk space, process uptime, total number of active 
+        users, or number of rows in a database table.
 
         >>> dog_stats_api.gauge('process.uptime', time.time() - process_start_time)
         >>> dog_stats_api.gauge('cache.bytes.free', cache.get_free_bytes(), tags=['version:1.0'])
@@ -111,7 +113,8 @@ class DogStatsApi(object):
     def increment(self, metric_name, value=1, timestamp=None, tags=None, sample_rate=1):
         """
         Increment the counter by the given *value*. Optionally, specify a list of
-        *tags* to associate with the metric.
+        *tags* to associate with the metric. This is useful for counting things
+        such as incrementing a counter each time a page is requested.
 
         >>> dog_stats_api.increment('home.page.hits')
         >>> dog_stats_api.increment('bytes.processed', file.size())
