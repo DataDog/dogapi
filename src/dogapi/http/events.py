@@ -80,7 +80,7 @@ class EventApi(object):
             response_formatter=lambda x: x['event'],
         )
 
-    def _event(self, title, text, date_happened=None, handle=None, priority=None, related_event_id=None, tags=None, host=None, device_name=None, aggregation_key=None, **kwargs):
+    def _event(self, title, text, date_happened=None, handle=None, priority=None, related_event_id=None, tags=None, host=None, device_name=None, aggregation_key=None, event_type= None,**kwargs):
         """
         Post an event.
 
@@ -114,6 +114,9 @@ class EventApi(object):
         :param aggregation_key: key to aggregate this event on
         :type aggregation_key: string
 
+        :param event_type: type of event to post the event with
+        :type event_type: string
+
         :return: new event id
         :rtype: integer
         """
@@ -145,6 +148,9 @@ class EventApi(object):
 
         if aggregation_key is not None:
             body['aggregation_key'] = aggregation_key
+
+        if event_type is not None:
+            body['source_type_name'] = event_type
 
         body.update(kwargs)
 
