@@ -11,6 +11,13 @@ A Python client for the DataDog API.
 Change Log
 ----------
 
+- 1.7.0 / 2014-05-07
+  - When setting up dogapi for fabric, optionally accept an application key as well as an api key. Thanks @zupo. [#60](https://github.com/DataDog/dogapi/pull/60)
+  - Remove logging.basicConfig() from module scope. Thanks @micktwomey. [#67](https://github.com/DataDog/dogapi/pull/67)
+  - Fix post-receive hook to support bare repositories. Thanks @mattbailey [#84](https://github.com/DataDog/dogapi/pull/84)
+  - Minor documentation updates for gauge/increment. Thanks @robbyt [#85](https://github.com/DataDog/dogapi/pull/85)
+  - Update dogshell post event with source type and aggregation key arguments. [#87](https://github.com/DataDog/dogapi/pull/87)
+
 - 1.6.5 /2014-02-24
   - Fix typo in fabric task, #82
 
