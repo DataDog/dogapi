@@ -25,7 +25,7 @@ class DashClient(CommandLineClient):
         post_parser.add_argument('title', help='title for the new dashboard')
         post_parser.add_argument('description', help='short description of the dashboard')
         post_parser.add_argument('graphs', help='graph definitions as a JSON string. if unset, reads from stdin.', nargs="?")
-        post_parser.add_argument('--template_variables', help='a comma-separated list of template variables, e.g.: redis_port,availability-zone')
+        post_parser.add_argument('--template_variables', help='a json list of template variable dicts, e.g. \'[{"name": "host", "prefix": "host", "default": "host:my-host"}]\'')
 
         post_parser.set_defaults(func=self._post)
 
@@ -34,7 +34,7 @@ class DashClient(CommandLineClient):
         update_parser.add_argument('title', help='new title for the dashboard')
         update_parser.add_argument('description', help='short description of the dashboard')
         update_parser.add_argument('graphs', help='graph definitions as a JSON string. if unset, reads from stdin.', nargs="?")
-        update_parser.add_argument('--template_variables', help='a comma-separated list of template variables, e.g.: redis_port,availability-zone')
+        update_parser.add_argument('--template_variables', help='a json list of template variable dicts, e.g. \'[{"name": "host", "prefix": "host", "default": "host:my-host"}]\'')
         update_parser.set_defaults(func=self._update)
 
         show_parser = verb_parsers.add_parser('show', help='Show a dashboard definition.')
@@ -157,14 +157,15 @@ class DashClient(CommandLineClient):
 
             # Always convert to int, in case it was originally a string.
             dash_obj["id"] = int(dash_obj["id"])
-
             if args.append_auto_text:
                 datetime_str = datetime.now().strftime('%x %X')
                 auto_text = ("<br/>\nUpdated at {0} from {1} ({2}) on {3}"
                              .format(datetime_str, f.name, dash_obj["id"], platform.node()))
                 dash_obj["description"] += auto_text
-
-            res = self.dog.update_dashboard(dash_obj["id"], dash_obj["title"], dash_obj["description"], dash_obj["graphs"])
+            tpl_vars = dash_obj.get("template_variables", [])
+            res = self.dog.update_dashboard(dash_obj["id"], dash_obj["title"], dash_obj["description"],
+                                            dash_obj["graphs"], template_variables=tpl_vars)
+            print tpl_vars
 
             if 'errors' in res:
                 print_err('Upload of dashboard {0} from file {1} failed.'.format(dash_obj["id"], f.name))
@@ -186,7 +187,11 @@ class DashClient(CommandLineClient):
         except:
             raise Exception('bad json parameter')
         if args.template_variables:
-            tpl_vars = [v.strip() for v in args.template_variables.split(',')]
+            try:
+                tpl_vars = json.loads(args.template_variables)
+            except Exception:
+                raise Exception('bad template_variable json parameter')
+
         else:
             tpl_vars = []
         res = self.dog.create_dashboard(args.title, args.description, graphs,
@@ -209,7 +214,10 @@ class DashClient(CommandLineClient):
         except:
             raise Exception('bad json parameter')
         if args.template_variables:
-            tpl_vars = [v.strip() for v in args.template_variables.split(',')]
+            try:
+                tpl_vars = json.loads(args.template_variables)
+            except Exception:
+                raise Exception('bad template_variable json parameter')
         else:
             tpl_vars = []
         res = self.dog.update_dashboard(args.dashboard_id, args.title, args.description,
