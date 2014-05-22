@@ -187,10 +187,13 @@ class DashClient(CommandLineClient):
         except:
             raise Exception('bad json parameter')
         if args.template_variables:
-            try:
-                tpl_vars = json.loads(args.template_variables)
-            except Exception:
-                raise Exception('bad template_variable json parameter')
+            if '[' not in args.template_variables:
+                tpl_vars = [v.strip() for v in args.template_variables.split(',')]
+            else:
+                try:
+                    tpl_vars = json.loads(args.template_variables)
+                except Exception:
+                    raise Exception('bad template_variable json parameter')
 
         else:
             tpl_vars = []
@@ -214,10 +217,13 @@ class DashClient(CommandLineClient):
         except:
             raise Exception('bad json parameter')
         if args.template_variables:
-            try:
-                tpl_vars = json.loads(args.template_variables)
-            except Exception:
-                raise Exception('bad template_variable json parameter')
+            if '[' not in args.template_variables:
+                tpl_vars = [v.strip() for v in args.template_variables.split(',')]
+            else:
+                try:
+                    tpl_vars = json.loads(args.template_variables)
+                except Exception:
+                    raise Exception('bad template_variable json parameter')
         else:
             tpl_vars = []
         res = self.dog.update_dashboard(args.dashboard_id, args.title, args.description,
