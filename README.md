@@ -11,6 +11,11 @@ A Python client for the DataDog API.
 Change Log
 ----------
 
+- 1.8.0 / 2014-05-22
+  - Update dogshell dashboard post, push, and update to accept new template variable format [#89](https://github.com/DataDog/dogapi/pull/89)
+  - Fix bug preventing Fabric events from getting written 
+  - Update Fabric integration to capture stdout and stderr in event [#94](https://github.com/DataDog/dogapi/pull/95)
+
 - 1.7.0 / 2014-05-07
   - When setting up dogapi for fabric, optionally accept an application key as well as an api key. Thanks @zupo. [#60](https://github.com/DataDog/dogapi/pull/60)
   - Remove logging.basicConfig() from module scope. Thanks @micktwomey. [#67](https://github.com/DataDog/dogapi/pull/67)
