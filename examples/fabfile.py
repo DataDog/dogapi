@@ -30,4 +30,12 @@ env.roledefs.update({
 @roles('webserver')
 @hosts('localhost')
 def roles_task(arg_1, arg_2):
-    run('touch /tmp/fab_test')
+    # return the result to display the stdout in the event text
+    return run('touch /tmp/fab_test')
+
+@task(alias="multi_command")
+@notify
+def multi_task():
+    # return multiple commands results to display their output in the event text
+    commands = ['echo 1', 'echo 2']
+    return [run(cmd) for cmd in commands]
