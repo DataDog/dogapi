@@ -1,6 +1,7 @@
 """Example of integration between Fabric and Datadog.
 """
 
+from __future__ import with_statement
 from fabric.api import *
 from fabric.colors import *
 from dogapi.fab import setup, notify
@@ -37,5 +38,6 @@ def roles_task(arg_1, arg_2):
 @notify
 def multi_task():
     # return multiple commands results to display their output in the event text
-    commands = ['echo 1', 'echo 2']
-    return [run(cmd) for cmd in commands]
+    commands = ['echo 1', 'ls /wrongdirectory']
+    with settings(warn_only=True):  # capture stdout instead of failing
+        return [run(cmd) for cmd in commands]

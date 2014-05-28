@@ -75,7 +75,9 @@ def notify(t):
             if r:
                 if not isinstance(r, list):
                     r = [r]
-                output = '\n\n'.join(['%s\n%s' % (res.command, res.stdout) for res in r])
+                output = '\n\n'.join(['%s\n%s\n%s' %
+                    (res.command, res.stdout, res.stderr) for res in r]
+                )
         except Exception, e:
             error = e
 
