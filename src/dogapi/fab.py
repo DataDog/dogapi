@@ -41,11 +41,18 @@ def _format_args(args, kwargs):
     else:
         return serialized_args
 
-def _text(t, args, kwargs, duration, error):
+def _text(t, args, kwargs, duration, output, error):
     if error:
-        return "{0}({1}) failed after {2} because of {3}.".format(_task_details(t), _format_args(args, kwargs), _human_duration(duration), error)
+        text = "{0}({1}) failed after {2} because of {3}.".format(_task_details(t), _format_args(args, kwargs), _human_duration(duration), error)
     else:
-        return "{0}({1}) ran for {2}.".format(_task_details(t), _format_args(args, kwargs), _human_duration(duration))
+        text = "{0}({1}) ran for {2}.".format(_task_details(t), _format_args(args, kwargs), _human_duration(duration))
+    if output:
+        text += (u'\nOutput:\n'
+            u'%%%\n'
+            u'@@@\n'
+            u'{0}\n'
+            u'@@@').format(output)
+    return text
 
 def _title(t, args, kwargs, error):
     return "{0}".format(_task_details(t))
@@ -62,8 +69,15 @@ def notify(t):
     def wrapper(*args, **kwargs):
         start = time.time()
         error = None
+        output = None
         try:
             r = t(*args, **kwargs)
+            if r:
+                if not isinstance(r, list):
+                    r = [r]
+                output = '\n\n'.join(['%s\n%s\n%s' %
+                    (res.command, res.stdout, res.stderr) for res in r]
+                )
         except Exception, e:
             error = e
 
@@ -71,7 +85,7 @@ def notify(t):
         duration = end - start
         try:
             dog_http_api.event(_title(t, args, kwargs, error),
-                               _text(t, args, kwargs, duration, error),
+                               _text(t, args, kwargs, duration, output, error),
                                source_type_name="fabric",
                                alert_type="error" if error else "success",
                                priority="normal",
