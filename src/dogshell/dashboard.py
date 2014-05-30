@@ -25,7 +25,9 @@ class DashClient(CommandLineClient):
         post_parser.add_argument('title', help='title for the new dashboard')
         post_parser.add_argument('description', help='short description of the dashboard')
         post_parser.add_argument('graphs', help='graph definitions as a JSON string. if unset, reads from stdin.', nargs="?")
-        post_parser.add_argument('--template_variables', help='a json list of template variable dicts, e.g. \'[{"name": "host", "prefix": "host", "default": "host:my-host"}]\'')
+        post_parser.add_argument('--template_variables', type=_template_variables, default=[],
+                                    help='a json list of template variable dicts, e.g. \
+                                    \'[{"name": "host", "prefix": "host", "default": "host:my-host"}]\'')
 
         post_parser.set_defaults(func=self._post)
 
@@ -34,7 +36,9 @@ class DashClient(CommandLineClient):
         update_parser.add_argument('title', help='new title for the dashboard')
         update_parser.add_argument('description', help='short description of the dashboard')
         update_parser.add_argument('graphs', help='graph definitions as a JSON string. if unset, reads from stdin.', nargs="?")
-        update_parser.add_argument('--template_variables', help='a json list of template variable dicts, e.g. \'[{"name": "host", "prefix": "host", "default": "host:my-host"}]\'')
+        update_parser.add_argument('--template_variables', type=_template_variables, default=[],
+                                    help='a json list of template variable dicts, e.g. \
+                                    \'[{"name": "host", "prefix": "host", "default": "host:my-host"}]\'')
         update_parser.set_defaults(func=self._update)
 
         show_parser = verb_parsers.add_parser('show', help='Show a dashboard definition.')
@@ -186,16 +190,8 @@ class DashClient(CommandLineClient):
             graphs = json.loads(graphs)
         except:
             raise Exception('bad json parameter')
-        if args.template_variables:
-            try:
-                tpl_vars = json.loads(args.template_variables)
-            except Exception:
-                raise Exception('bad template_variable json parameter')
-
-        else:
-            tpl_vars = []
         res = self.dog.create_dashboard(args.title, args.description, graphs,
-                                        template_variables=tpl_vars)
+                                        template_variables=args.template_variables)
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
@@ -213,15 +209,9 @@ class DashClient(CommandLineClient):
             graphs = json.loads(graphs)
         except:
             raise Exception('bad json parameter')
-        if args.template_variables:
-            try:
-                tpl_vars = json.loads(args.template_variables)
-            except Exception:
-                raise Exception('bad template_variable json parameter')
-        else:
-            tpl_vars = []
+
         res = self.dog.update_dashboard(args.dashboard_id, args.title, args.description,
-                                        graphs, template_variables=tpl_vars)
+                                        graphs, template_variables=args.template_variables)
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
@@ -288,3 +278,11 @@ class DashClient(CommandLineClient):
     def _pretty_json(self, obj):
         return json.dumps(obj, sort_keys=True, indent=2)
 
+def _template_variables(tpl_var_input):
+    if '[' not in tpl_var_input:
+        return [v.strip() for v in tpl_var_input.split(',')]
+    else:
+        try:
+            return json.loads(tpl_var_input)
+        except Exception:
+            raise argparse.ArgumentTypeError('bad template_variable json parameter')
