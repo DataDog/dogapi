@@ -200,7 +200,10 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         remote_dash = dog.dashboard(dash_id)
 
         assert 'updated api dash' == remote_dash['title']
-        assert ['foo', 'bar'] == remote_dash['template_variables']
+        self.assertEqual([
+            {'default': None, 'name': 'foo', 'prefix': None},
+            {'default': None, 'name': 'bar', 'prefix': None},
+        ], remote_dash['template_variables'])
 
         p = graph['definition']['requests']
         assert graph['definition']['requests'] == remote_dash['graphs'][0]['definition']['requests']
