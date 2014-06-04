@@ -11,9 +11,12 @@ A Python client for the DataDog API.
 Change Log
 ----------
 
+- 1.9.0 / 2014-06-04
+  - Add silenced_timeout_ts to alert API [#96](https://github.com/DataDog/dogapi/pull/96)
+
 - 1.8.0 / 2014-05-22
   - Update dogshell dashboard post, push, and update to accept new template variable format [#89](https://github.com/DataDog/dogapi/pull/89)
-  - Fix bug preventing Fabric events from getting written 
+  - Fix bug preventing Fabric events from getting written
   - Update Fabric integration to capture stdout and stderr in event [#94](https://github.com/DataDog/dogapi/pull/95)
 
 - 1.7.0 / 2014-05-07
