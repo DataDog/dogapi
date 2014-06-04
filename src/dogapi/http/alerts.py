@@ -33,7 +33,7 @@ class AlertApi(object):
         )
 
     def update_alert(self, alert_id, query, name=None, message=None, silenced=False,
-            notify_no_data=None, timeout_h=None):
+            silenced_timeout_ts=None, notify_no_data=None, timeout_h=None):
         """
         Update the metric alert identified by *alert_id* with the given
         *query*. If *name* is unset, the alert will be given a name based on
@@ -56,6 +56,8 @@ class AlertApi(object):
             body['notify_no_data'] = notify_no_data
         if timeout_h:
             body['timeout_h'] = timeout_h
+        if silenced_timeout_ts:
+            body['silenced_timeout_ts']
 
         return self.http_request('PUT', '/alert/%s' % alert_id, body,
             response_formatter=lambda x: x['id'],
