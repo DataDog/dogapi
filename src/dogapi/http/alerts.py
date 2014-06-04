@@ -33,7 +33,7 @@ class AlertApi(object):
         )
 
     def update_alert(self, alert_id, query, name=None, message=None, silenced=False,
-            silenced_timeout_ts=None, notify_no_data=None, timeout_h=None):
+            notify_no_data=None, timeout_h=None, silenced_timeout_ts=None):
         """
         Update the metric alert identified by *alert_id* with the given
         *query*. If *name* is unset, the alert will be given a name based on
