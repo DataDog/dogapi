@@ -22,6 +22,7 @@ logger.addHandler(SysLogHandler())
 try:
     import os
     import sys
+    import re
     from hashlib import sha1
     from socket import gethostname
     from dogapi import dog_http_api as dog
@@ -61,8 +62,11 @@ try:
     repo_name = "repository"
     try:
         if isbare == "true":
-            # go 1 dirs up and use pwd as the repo name, not great but should work
-            repo_name = os.path.basename(os.path.realpath(os.path.join(__file__, "..", "..")))
+            # Get the basename of CWD, but strip '/hooks' from the end if we happen to be in there.
+            repo_name = os.path.basename(re.sub('/?hooks/?$', '', os.getcwd()))
+            # Could also be done as so:
+            # p = os.popen("basename $(echo $(pwd) | sed 's/hooks$//')")
+            # repo_name = p.read()
         else:
             # go 2 dirs up and use pwd as the repo name, not great but should work
             repo_name = os.path.basename(os.path.realpath(os.path.join(__file__, "..", "..", "..")))
