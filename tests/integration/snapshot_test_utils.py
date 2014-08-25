@@ -25,8 +25,7 @@ def assert_not_blank(snapshot_url):
 
 def assert_has_no_events(snapshot_url):
     """ Asserts snapshot has no events"""
-    pixels = read_image_as_raster('')
-    # pixels = read_image_as_raster(snapshot_url)
+    pixels = read_image_as_raster(snapshot_url)
     for color in set(pixels):
         r, g, b, a = color  # red, green, blue, alpha
         assert not (r == 255 and g == 230 and b == 230),\
