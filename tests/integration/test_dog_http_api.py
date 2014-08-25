@@ -353,8 +353,9 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         # Test without an event query
         snap = dog.graph_snapshot(metric_query, start, end)
         time.sleep(3)  # Give API enough time to create the snapshot
-        assert 'snapshot_url' in snap
-        assert 'metric_query' in snap
+        assert 'snapshot_url' in snap, snap
+        assert 'metric_query' in snap, snap
+        assert 'event_query' not in snap, snap
         assert snap['metric_query'] == metric_query
         snapshot_url = snap['snapshot_url']
         assert_not_blank(snapshot_url)
