@@ -1,18 +1,18 @@
 # python
-import random, math
 import datetime
-import unittest
 import os
 import time
+import unittest
 
 # nose
-from nose.plugins.skip import SkipTest
 from nose.plugins.attrib import attr
 
 # dogapi
 import dogapi
 from dogapi.exceptions import *
-import datetime, time
+from snapshot_test_utils import (
+    assert_not_blank, assert_has_no_events
+)
 
 
 TEST_USER = os.environ.get('DATADOG_TEST_USER')
@@ -352,21 +352,24 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
 
         # Test without an event query
         snap = dog.graph_snapshot(metric_query, start, end)
+        time.sleep(3)  # Give API enough time to create the snapshot
         assert 'snapshot_url' in snap
         assert 'metric_query' in snap
         assert snap['metric_query'] == metric_query
-        # dumb snapshot validation
-        assert snap['snapshot_url'].endswith('.png')
+        snapshot_url = snap['snapshot_url']
+        assert_not_blank(snapshot_url)
+        assert_has_no_events(snapshot_url)
 
         # Test with an event query
-        snap = dog.graph_snapshot(metric_query, start, end, event_query=event_query)
+        snap = dog.graph_snapshot(metric_query, start, end,
+                                  event_query=event_query)
+        time.sleep(3)  # Give API enough time to create the snapshot
         assert 'snapshot_url' in snap, snap
         assert 'metric_query' in snap, snap
         assert 'event_query' in snap, snap
         assert snap['metric_query'] == metric_query
         assert snap['event_query'] == event_query
-        # dumb snapshot validation
-        assert snap['snapshot_url'].endswith('.png')
+        assert_not_blank(snap['snapshot_url'])
 
     @attr('screenboard')
     def test_screenboard(self):

@@ -6,6 +6,7 @@ if sys.version_info[0] == 2:
     # simplejson is not python3 compatible
     reqs.append("simplejson>=2.0.9")
 reqs.append("decorator>=3.3.2")
+reqs.append("pil>=1.1.7")
 if [sys.version_info[0], sys.version_info[1]] < [2, 7]:
     reqs.append("argparse>=1.2")
 
