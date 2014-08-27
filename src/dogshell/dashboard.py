@@ -169,7 +169,7 @@ class DashClient(CommandLineClient):
             tpl_vars = dash_obj.get("template_variables", [])
             res = self.dog.update_dashboard(dash_obj["id"], dash_obj["title"], dash_obj["description"],
                                             dash_obj["graphs"], template_variables=tpl_vars)
-            print tpl_vars
+            print(tpl_vars)
 
             if 'errors' in res:
                 print_err('Upload of dashboard {0} from file {1} failed.'.format(dash_obj["id"], f.name))
