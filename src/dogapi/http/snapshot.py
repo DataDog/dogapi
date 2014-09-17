@@ -16,10 +16,8 @@ class SnapshotApi(object):
         query_params = {
             'metric_query': metric_query,
             'start': start,
-            'end': end
+            'end': end,
+            'event_query': event_query
         }
-
-        if event_query:
-            query_params['event_query'] = event_query
 
         return self.http_request('GET', '/graph/snapshot', **query_params)

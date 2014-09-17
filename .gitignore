@@ -5,4 +5,3 @@ dist
 *.DS_Store
 _build
 *.egg
-.idea
