@@ -11,6 +11,9 @@ A Python client for the DataDog API.
 Change Log
 ----------
 
+- 1.9.1 / 2014-09-17
+  - Fix bug in snapshot API [#99](https://github.com/DataDog/dogapi/issues/99)
+
 - 1.9.0 / 2014-06-04
   - Add silenced_timeout_ts to alert API [#96](https://github.com/DataDog/dogapi/pull/96)
 
