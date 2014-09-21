@@ -6,7 +6,7 @@ class InfrastructureApi(object):
     def search(self, query):
         """
         Search datadog for hosts and metrics by name. The search *query* can be
-        faceted to limit the results (e.g. ``"host:foo"``, or ``"metric:bar"``)
+        faceted to limit the results (e.g. ``"hosts:foo"``, or ``"metrics:bar"``)
         or un-faceted, which will return results of all types (e.g. ``"baz"``).
         Return a dictionary mapping each queried facet to a list of name
         strings.
