@@ -1,6 +1,6 @@
 import argparse
 import os
-import sys
+import pkg_resources as pkg
 
 import logging
 logging.getLogger('dd.dogapi').setLevel(logging.CRITICAL)
@@ -30,6 +30,8 @@ def main():
             dest='format', action='store_const', const='raw')
     parser.add_argument('--timeout', help='time to wait in seconds before timing out an API call (default 10)',
             default=10, type=int)
+    parser.add_argument('-v', '--version', help='Dog API version', action='version',
+                        version='%(prog)s {version}'.format(version=pkg.require("dogapi")[0].version))
 
     config = DogshellConfig()
 
