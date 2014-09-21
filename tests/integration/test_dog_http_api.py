@@ -6,6 +6,7 @@ import unittest
 
 # nose
 from nose.plugins.attrib import attr
+from nose.tools import assert_equal as eq
 
 # dogapi
 import dogapi
@@ -165,48 +166,115 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         else:
             assert False
 
+    @attr('dashboards', 'validation')
+    def test_dash_validation(self):
+        graph = {
+            "title": "test metric graph",
+            "definition":
+                {
+                    "requests": [{"q": "testing.metric.1{host:blah.host.1}"}],
+                    "viz": "timeseries",
+                }
+        }
+
+        # No title
+        try:
+            dog.create_dashboard(None, 'my api dash', [graph])
+            assert False, "Should report an api error"
+        except ApiError, e:
+            exception_msg = e.message['errors'][0]
+            eq(exception_msg, "The parameter 'title' is required")
+
+        # No description
+        try:
+            dog.create_dashboard('api dash', None, [graph])
+            assert False, "Should report an api error"
+        except ApiError, e:
+            exception_msg = e.message['errors'][0]
+            eq(exception_msg, "The parameter 'description' is required")
+
+        # No graph
+        try:
+            dog.create_dashboard('api dash', 'my api dash', None)
+            assert False, "Should report an api error"
+        except ApiError, e:
+            exception_msg = e.message['errors'][0]
+            eq(exception_msg, "The parameter 'graphs' is required")
+
+        # Graphs not list
+        try:
+            dog.create_dashboard('api dash', 'my api dash', graph)
+            assert False, "Should report an api error"
+        except ApiError, e:
+            exception_msg = e.message['errors'][0]
+            eq(exception_msg, "The 'graphs' parameter is required to be a list")
+
+        # Empty list of graphs
+        try:
+            dog.create_dashboard('api dash', 'my api dash', [])
+            assert False, "Should report an api error"
+        except ApiError, e:
+            exception_msg = e.message['errors'][0]
+            eq(exception_msg, "The 'graphs' parameter is required")
+
+        # None in the graph list
+        try:
+            dog.create_dashboard('api dash', 'my api dash', [graph, None])
+            assert False, "Should report an api error"
+        except ApiError, e:
+            exception_msg = e.message['errors'][0]
+            eq(exception_msg, "The 'graphs' parameter contains None graphs")
+
+        # Dashboard not found
+        try:
+            dog.dashboard(999999)
+            assert False, "Should report an api error"
+        except ApiError, e:
+            exception_msg = e.message['errors'][0]
+            eq(exception_msg, "No dashboard matches that dash_id.")
 
     @attr('dashboards')
     def test_dash(self):
-
         graph = {
-                "title": "test metric graph",
-                "definition":
-                    {
-                        "requests": [{"q": "testing.metric.1{host:blah.host.1}"}],
-                        "viz": "timeseries",
-                    }
+            "title": "test metric graph",
+            "definition":
+                {
+                    "requests": [{"q": "testing.metric.1{host:blah.host.1}"}],
+                    "viz": "timeseries",
                 }
-        dash_id = dog.create_dashboard('api dash', 'my api dash', [graph])
+        }
 
+        dash_id = dog.create_dashboard('api dash', 'my api dash', [graph])
         remote_dash = dog.dashboard(dash_id)
 
-        assert 'api dash' == remote_dash['title']
-        assert graph['definition']['requests'] == remote_dash['graphs'][0]['definition']['requests']
+        eq('api dash', remote_dash['title'])
+        eq('my api dash', remote_dash['description'])
+        eq(graph['definition']['requests'], remote_dash['graphs'][0]['definition']['requests'])
 
         graph = {
-                "title": "updated test metric graph",
-                "definition":
-                    {
-                        "requests": [{"q": "testing.metric.1{host:blah.host.1}"}],
-                        "viz": "timeseries",
-                    }
-                }
+            "title": "updated test metric graph",
+            "definition": {
+                "requests": [{"q": "testing.metric.1{host:blah.host.1}"}],
+                "viz": "timeseries",
+            }
+        }
 
-        dash_id = dog.update_dashboard(dash_id, 'updated api dash', 'my api dash', [graph],
+        dash_id = dog.update_dashboard(dash_id, 'updated api dash',
+                                       'my updated api dash', [graph],
                                        template_variables=['foo', 'bar'])
 
         # Query and ensure all is well.
         remote_dash = dog.dashboard(dash_id)
 
-        assert 'updated api dash' == remote_dash['title']
+        eq('updated api dash', remote_dash['title'])
+        eq('my updated api dash', remote_dash['description'])
         self.assertEqual([
             {'default': None, 'name': 'foo', 'prefix': None},
             {'default': None, 'name': 'bar', 'prefix': None},
         ], remote_dash['template_variables'])
 
         p = graph['definition']['requests']
-        assert graph['definition']['requests'] == remote_dash['graphs'][0]['definition']['requests']
+        eq(p, remote_dash['graphs'][0]['definition']['requests'])
 
         # Query all dashboards and make sure it's in there.
 
@@ -221,7 +289,7 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         except:
             pass
         else:
-            # the previous get *should* throw and exception
+            # the previous get *should* throw an exception
             assert False
 
     def test_search(self):
