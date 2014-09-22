@@ -4,14 +4,15 @@ import os
 import time
 import unittest
 
-# nose
+# 3p
 from nose.plugins.attrib import attr
 from nose.tools import assert_equal as eq
+import simplejson as json
 
 # dogapi
 import dogapi
 from dogapi.exceptions import *
-from snapshot_test_utils import (
+from tests.util.snapshot_test_utils import (
     assert_not_blank, assert_has_no_events
 )
 
@@ -424,8 +425,10 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         assert 'snapshot_url' in snap, snap
         assert 'metric_query' in snap, snap
         assert 'event_query' not in snap, snap
-        assert snap['metric_query'] == metric_query
+        eq(snap['metric_query'], metric_query)
         snapshot_url = snap['snapshot_url']
+        if 'localhost' in dog.api_host:
+            snapshot_url = 'http://%s%s' % (dog.api_host, snapshot_url)
         assert_not_blank(snapshot_url)
         assert_has_no_events(snapshot_url)
 
@@ -436,9 +439,48 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         assert 'snapshot_url' in snap, snap
         assert 'metric_query' in snap, snap
         assert 'event_query' in snap, snap
-        assert snap['metric_query'] == metric_query
-        assert snap['event_query'] == event_query
-        assert_not_blank(snap['snapshot_url'])
+        eq(snap['metric_query'], metric_query)
+        eq(snap['event_query'], event_query)
+        snapshot_url = snap['snapshot_url']
+        if 'localhost' in dog.api_host:
+            snapshot_url = 'http://%s%s' % (dog.api_host, snapshot_url)
+        assert_not_blank(snapshot_url)
+
+        # Test with a graph def
+        graph_def = {
+            "viz": "toplist",
+            "requests": [{
+                "q": "top(system.disk.free{*} by {device}, 10, 'mean', 'desc')",
+                "style": {
+                    "palette": "dog_classic"
+                },
+                "conditional_formats": [{
+                    "palette": "red",
+                    "comparator": ">",
+                    "value": 50000000000
+                }, {
+                    "palette": "green",
+                    "comparator": ">",
+                    "value": 30000000000
+                }]
+            }]
+        }
+        graph_def = json.dumps(graph_def)
+        snap = dog.graph_snapshot(metric_query, start, end,
+                                  event_query=event_query,
+                                  graph_def=graph_def)
+        time.sleep(3)  # Give API enough time to create the snapshot
+        assert 'snapshot_url' in snap, snap
+        assert 'metric_query' in snap, snap
+        assert 'event_query' in snap, snap
+        assert 'graph_def' in snap, snap
+        eq(snap['metric_query'], metric_query)
+        eq(snap['event_query'], event_query)
+        eq(snap['graph_def'], graph_def)
+        snapshot_url = snap['snapshot_url']
+        if 'localhost' in dog.api_host:
+            snapshot_url = 'http://%s%s' % (dog.api_host, snapshot_url)
+        assert_not_blank(snapshot_url)
 
     @attr('screenboard')
     def test_screenboard(self):
