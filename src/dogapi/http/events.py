@@ -197,28 +197,31 @@ class EventApi(object):
     def event_with_response(self, *args, **kwargs):
         return self._event(*args, **kwargs)
 
-    def comment(self, handle, message, comment_id=None, related_event_id=None):
+    def comment(self, message, handle=None, related_event_id=None):
         """
-        Post a comment *message* as the user with *handle*. Edit a comment by including it's *comment_id*.
+        Post a comment *message*.
+        If *handle* is not provided, uses application key owner.
         Reply to a related event by setting the *related_event_id*.
 
-        >>> dog_http_api.comment("matt", "Hey! Something strange is going on.")
+        >>> dog_http_api.comment("Hey! Something strange is going on.")
         """
         body = {
-            'handle':  handle,
-            'message': message,
+            'message': message
         }
+        if handle is not None:
+            body['handle'] = handle
         if related_event_id is not None:
             body['related_event_id'] = int(related_event_id)
         return self.http_request('POST', '/comments', body,
-            response_formatter=lambda x: x['comment']['id'],
+             response_formatter=lambda x: x['comment']['id']
         )
 
-    def update_comment(self, handle, message, comment_id):
+    def update_comment(self, message, comment_id, handle=None):
         body = {
-            'handle':  handle,
             'message': message,
         }
+        if handle is not None:
+            body['handle'] = handle
         return self.http_request('PUT', '/comments/%s' % comment_id, body,
             response_formatter=lambda x: x['comment']['id'],
         )

@@ -142,24 +142,29 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         self.assertEquals(event.get("title", ""), "Testing git commits")
 
     def test_comments(self):
+        wait_time = 3  # seconds
         now = datetime.datetime.now()
         now_ts = int(time.mktime(now.timetuple()))
-        before_ts = int(time.mktime((now - datetime.timedelta(minutes=5)).timetuple()))
+        before_ts = int(time.mktime((now - datetime.timedelta(minutes=15)).timetuple()))
         message = 'test message ' + str(now_ts)
 
-        comment_id = dog.comment(TEST_USER, message)
+        comment_id = dog.comment(message)
+        time.sleep(wait_time)
         event = dog.get_event(comment_id)
-        assert event['text'] == message
+        eq(event['text'], message)
 
-        dog.update_comment(TEST_USER, message + ' updated', comment_id)
+        dog.update_comment(message + ' updated', comment_id)
+        time.sleep(wait_time)
         event = dog.get_event(comment_id)
         eq(event['text'], message + ' updated')
 
-        reply_id = dog.comment(TEST_USER, message + ' reply', related_event_id=comment_id)
+        reply_id = dog.comment(message + ' reply', related_event_id=comment_id)
+        time.sleep(wait_time)
+        stream = dog.stream(before_ts, now_ts+100)
 
-        # Add a bit of latency for the comment to appear
-        time.sleep(1)
-        stream = dog.stream(before_ts, now_ts + 10)
+        ok(stream is not None, msg="No events found in stream")
+        ok(isinstance(stream, list), msg="Event stream is not a list")
+        ok(len(stream) > 0, msg="No events found in stream")
 
         comment_ids = [x['id'] for x in stream[0]['comments']]
         ok(reply_id in comment_ids,
@@ -169,6 +174,7 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         dog.delete_comment(reply_id)
         # Then the post itself
         dog.delete_comment(comment_id)
+        time.sleep(wait_time)
         try:
             dog.get_event(comment_id)
         except:
