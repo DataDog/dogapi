@@ -148,17 +148,17 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         before_ts = int(time.mktime((now - datetime.timedelta(minutes=15)).timetuple()))
         message = 'test message ' + str(now_ts)
 
-        comment_id = dog.comment(message)
+        comment_id = dog.comment(TEST_USER, message)
         time.sleep(wait_time)
         event = dog.get_event(comment_id)
         eq(event['text'], message)
 
-        dog.update_comment(message + ' updated', comment_id)
+        dog.update_comment(TEST_USER, message + ' updated', comment_id)
         time.sleep(wait_time)
         event = dog.get_event(comment_id)
         eq(event['text'], message + ' updated')
 
-        reply_id = dog.comment(message + ' reply', related_event_id=comment_id)
+        reply_id = dog.comment(TEST_USER, message + ' reply', related_event_id=comment_id)
         time.sleep(wait_time)
         stream = dog.stream(before_ts, now_ts+100)
 

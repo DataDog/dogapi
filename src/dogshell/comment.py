@@ -45,7 +45,7 @@ class CommentClient(CommandLineClient):
         format = args.format
         if comment is None:
             comment = sys.stdin.read()
-        res = self.dog.comment(comment, handle=handle)
+        res = self.dog.comment(handle, comment)
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
@@ -73,7 +73,7 @@ class CommentClient(CommandLineClient):
         format = args.format
         if comment is None:
             comment = sys.stdin.read()
-        res = self.dog.update_comment(comment, id, handle=handle)
+        res = self.dog.update_comment(handle, comment, id)
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
@@ -102,7 +102,7 @@ class CommentClient(CommandLineClient):
         format = args.format
         if comment is None:
             comment = sys.stdin.read()
-        res = self.dog.comment(comment, handle=handle, related_event_id=id)
+        res = self.dog.comment(handle, comment, related_event_id=id)
         report_warnings(res)
         report_errors(res)
         if format == 'pretty':
