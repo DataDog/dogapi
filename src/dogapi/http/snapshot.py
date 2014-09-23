@@ -2,6 +2,7 @@ __all__ = [
     'SnapshotApi',
 ]
 
+from urlparse import urlparse
 
 class SnapshotApi(object):
 
@@ -54,3 +55,24 @@ class SnapshotApi(object):
         }
 
         return self.http_request('GET', '/graph/snapshot', **query_params)
+
+    def snapshot_ready(self, snapshot_url):
+        """
+        Returns true if a snapshot is ready for download. Typically snapshots
+        require 2 seconds to render. This method can to get a sure answer on
+        the status of the snapshot.
+
+        Example usage:
+
+        >> snap = dog_http_api.snapshot(metric_query, start, end)
+        >> snapshot_url = snap['snapshot_url']
+        >> while not snapshot_ready(snapshot_url):
+        >>     time.sleep(1)
+        >> img = urllib.urlopen(snapshot_url)
+        """
+        path = urlparse(snapshot_url).path
+        params = {
+            'test_only': True
+        }
+        resp = self.http_request('GET', path, is_api_request=False, **params)
+        return resp['status_code'] == 200

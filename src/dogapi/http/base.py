@@ -56,7 +56,9 @@ class BaseDatadog(object):
         self.use_ec2_instance_id = use_ec2_instance_id
         self.json_responses = json_responses
 
-    def http_request(self, method, path, body=None, response_formatter=None, error_formatter=None, **params):
+    def http_request(self, method, path, body=None,
+                     response_formatter=None, error_formatter=None,
+                     is_api_request=True, **params):
         try:
             # Check if it's ok to submit
             if not self._should_submit():
@@ -67,7 +69,8 @@ class BaseDatadog(object):
                 params['api_key'] = self.api_key
             if self.application_key:
                 params['application_key'] = self.application_key
-            url = "/api/%s/%s?%s" % (self.api_version, path.lstrip('/'), urlencode(params))
+            prefix = '/api/%s' % self.api_version if is_api_request else ''
+            url = "%s/%s?%s" % (prefix, path.lstrip('/'), urlencode(params))
             try:
                 conn = self.http_conn_cls(self.api_host, timeout=self.timeout)
             except TypeError:
