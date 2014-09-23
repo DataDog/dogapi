@@ -1,8 +1,13 @@
+from dogapi.common import is_p3k
+
 __all__ = [
     'SnapshotApi',
 ]
 
-from urlparse import urlparse
+if is_p3k():
+    from urllib.parse import urlparse
+else:
+    from urlparse import urlparse
 
 class SnapshotApi(object):
 
