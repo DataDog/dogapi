@@ -13,14 +13,14 @@ def read_image_as_raster(img_url):
     return [pixels[x, y] for x in range(w) for y in xrange(h)]
 
 
-def assert_not_blank(snapshot_url):
-    """ Asserts image is not blank"""
+def assert_snap_not_blank(snapshot_url):
+    """ Asserts snapshot is not blank"""
     pixels = read_image_as_raster(snapshot_url)
     assert len(pixels) > 0, "Image should not be empty"
     assert len(set(pixels)) > 1, "Image should have at least 2 colors"
 
 
-def assert_has_no_events(snapshot_url):
+def assert_snap_has_no_events(snapshot_url):
     """ Asserts snapshot has no events"""
     pixels = read_image_as_raster(snapshot_url)
     for color in set(pixels):
