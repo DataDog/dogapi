@@ -11,31 +11,46 @@ A Python client for the DataDog API.
 Change Log
 ----------
 
-- 1.9.1 / 2014-09-17
+- 1.9.2
+  - Release date: 2014.09.24
+  - Improve dashboard API Validation [#25](https://github.com/DataDog/dogapi/issues/25) and [#26] (https://github.com/DataDog/dogapi/issues/26)
+  - Add version command [#65] (https://github.com/DataDog/dogapi/issues/65)
+  - Correct typos in search docstring [#100] (https://github.com/DataDog/dogapi/issues/100)
+  - A new method to get snapshots using a graph definition [#78] (https://github.com/DataDog/dogapi/issues/78)
+  - A new method to check if a snapshot is ready.
+  
+- 1.9.1
+  - Release date: 2014.09.17
   - Fix bug in snapshot API [#99](https://github.com/DataDog/dogapi/issues/99)
 
-- 1.9.0 / 2014-06-04
+- 1.9.0 
+  - Release date: 2014.06.04
   - Add silenced_timeout_ts to alert API [#96](https://github.com/DataDog/dogapi/pull/96)
 
-- 1.8.0 / 2014-05-22
+- 1.8.0
+  - Release date: 2014.05.22
   - Update dogshell dashboard post, push, and update to accept new template variable format [#89](https://github.com/DataDog/dogapi/pull/89)
   - Fix bug preventing Fabric events from getting written
   - Update Fabric integration to capture stdout and stderr in event [#94](https://github.com/DataDog/dogapi/pull/95)
 
-- 1.7.0 / 2014-05-07
+- 1.7.0
+  - Release date: 2014.05.07
   - When setting up dogapi for fabric, optionally accept an application key as well as an api key. Thanks @zupo. [#60](https://github.com/DataDog/dogapi/pull/60)
   - Remove logging.basicConfig() from module scope. Thanks @micktwomey. [#67](https://github.com/DataDog/dogapi/pull/67)
   - Fix post-receive hook to support bare repositories. Thanks @mattbailey [#84](https://github.com/DataDog/dogapi/pull/84)
   - Minor documentation updates for gauge/increment. Thanks @robbyt [#85](https://github.com/DataDog/dogapi/pull/85)
   - Update dogshell post event with source type and aggregation key arguments. [#87](https://github.com/DataDog/dogapi/pull/87)
 
-- 1.6.5 /2014-02-24
+- 1.6.5
+  - Release date: 2014.02.24
   - Fix typo in fabric task, #82
 
-- 1.6.4 / 2014-02-19
+- 1.6.4
+  - Release date: 2014.02.19
   - Prevent exceptions due to misnamed variable, #79 @smartkiwi
 
-- 1.6.3 / 2014-02-07
+- 1.6.3
+  - Release date: 2014.02.07
   - Allow further customizations of fabric task, fix typos, @alq666
 
 - 1.6.2
