@@ -4,15 +4,17 @@ import os
 import time
 import unittest
 
-# nose
+# 3p
 from nose.plugins.attrib import attr
 from nose.tools import assert_equal as eq
+from nose.tools import assert_true as ok
+import simplejson as json
 
 # dogapi
 import dogapi
 from dogapi.exceptions import *
-from snapshot_test_utils import (
-    assert_not_blank, assert_has_no_events
+from tests.util.snapshot_test_utils import (
+    assert_snap_not_blank, assert_snap_has_no_events
 )
 
 
@@ -64,6 +66,7 @@ class TestDatadog(unittest.TestCase):
         assert len(dog.host_tags(hostname)) == 0
 
     def test_events(self):
+        wait_time = 10  # seconds
         now = datetime.datetime.now()
 
         now_ts = int(time.mktime(now.timetuple()))
@@ -76,7 +79,7 @@ class TestDatadog(unittest.TestCase):
 
         now_event_id = dog.event_with_response(now_title, now_message, now_ts)
         before_event_id = dog.event_with_response(before_title, before_message, before_ts)
-        time.sleep(2)
+        time.sleep(wait_time)
 
         now_event = dog.get_event(now_event_id)
         before_event = dog.get_event(before_event_id)
@@ -84,15 +87,20 @@ class TestDatadog(unittest.TestCase):
         self.assertEquals(now_event['text'], now_message)
         self.assertEquals(before_event['text'], before_message)
 
-        event_id = dog.event_with_response('test host and device', 'test host and device', host='test.host', device_name='test.device')
-        time.sleep(2)
+        event_id = dog.event_with_response('test host and device',
+                                           'test host and device',
+                                           host='test.host',
+                                           device_name='test.device')
+        time.sleep(wait_time)
         event = dog.get_event(event_id)
 
         self.assertEquals(event['host'], 'test.host')
         self.assertEquals(event['device_name'], 'test.device')
 
-        event_id = dog.event_with_response('test event tags', 'test event tags', tags=['test-tag-1','test-tag-2'])
-        time.sleep(2)
+        event_id = dog.event_with_response('test event tags',
+                                           'test event tags',
+                                           tags=['test-tag-1', 'test-tag-2'])
+        time.sleep(wait_time)
         event = dog.get_event(event_id)
 
         assert 'test-tag-1' in event['tags']
@@ -107,7 +115,7 @@ class TestDatadog(unittest.TestCase):
         # send two events that should aggregate
         event1_id = dog.event_with_response(msg_1, msg_1, aggregation_key=agg_key)
         event2_id = dog.event_with_response(msg_2, msg_2, aggregation_key=agg_key)
-        time.sleep(3)
+        time.sleep(10)
 
         event1 = dog.get_event(event1_id)
         event2 = dog.get_event(event2_id)
@@ -128,37 +136,45 @@ eac54655 *   Merge pull request #2 from DataDog/alq-add-arg-validation (alq@data
 f7a5a23d * missed version number in docs (matt@datadoghq.com)
 $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
 
-        time.sleep(1)
+        time.sleep(10)
         event = dog.get_event(event_id)
 
         self.assertEquals(event.get("title", ""), "Testing git commits")
 
     def test_comments(self):
+        wait_time = 3  # seconds
         now = datetime.datetime.now()
         now_ts = int(time.mktime(now.timetuple()))
-        before_ts = int(time.mktime((now - datetime.timedelta(minutes=5)).timetuple()))
+        before_ts = int(time.mktime((now - datetime.timedelta(minutes=15)).timetuple()))
         message = 'test message ' + str(now_ts)
 
         comment_id = dog.comment(TEST_USER, message)
+        time.sleep(wait_time)
         event = dog.get_event(comment_id)
-        assert event['text'] == message
+        eq(event['text'], message)
 
         dog.update_comment(TEST_USER, message + ' updated', comment_id)
+        time.sleep(wait_time)
         event = dog.get_event(comment_id)
-        assert event['text'] == message + ' updated'
+        eq(event['text'], message + ' updated')
 
         reply_id = dog.comment(TEST_USER, message + ' reply', related_event_id=comment_id)
+        time.sleep(wait_time)
+        stream = dog.stream(before_ts, now_ts+100)
 
-        # Add a bit of latency for the comment to appear
-        time.sleep(1)
-        stream = dog.stream(before_ts, now_ts + 10)
+        ok(stream is not None, msg="No events found in stream")
+        ok(isinstance(stream, list), msg="Event stream is not a list")
+        ok(len(stream) > 0, msg="No events found in stream")
 
-        assert reply_id in [x['id'] for x in stream[0]['comments']], "Should find {0} in {1}".format(reply_id, [x['id'] for x in stream[0]['comments']])
+        comment_ids = [x['id'] for x in stream[0]['comments']]
+        ok(reply_id in comment_ids,
+           msg="Should find {0} in {1}".format(reply_id, comment_ids))
 
         # Delete the reply
         dog.delete_comment(reply_id)
         # Then the post itself
         dog.delete_comment(comment_id)
+        time.sleep(wait_time)
         try:
             dog.get_event(comment_id)
         except:
@@ -345,6 +361,7 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
 
         alert_id = dog.alert(query)
         alert = dog.get_alert(alert_id)
+        time.sleep(10)
         assert alert['query'] == query, alert['query']
         assert alert['silenced'] == False, alert['silenced']
         assert alert['notify_no_data'] == False, alert['notify_no_data']
@@ -420,25 +437,65 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
 
         # Test without an event query
         snap = dog.graph_snapshot(metric_query, start, end)
-        time.sleep(3)  # Give API enough time to create the snapshot
-        assert 'snapshot_url' in snap, snap
-        assert 'metric_query' in snap, snap
-        assert 'event_query' not in snap, snap
-        assert snap['metric_query'] == metric_query
+        ok('snapshot_url' in snap, msg=snap)
+        ok('metric_query' in snap, msg=snap)
+        ok('event_query' not in snap, msg=snap)
+        eq(snap['metric_query'], metric_query)
         snapshot_url = snap['snapshot_url']
-        assert_not_blank(snapshot_url)
-        assert_has_no_events(snapshot_url)
+        while not dog.snapshot_ready(snapshot_url):
+            time.sleep(1)
+        if 'localhost' in dog.api_host:
+            snapshot_url = 'http://%s%s' % (dog.api_host, snapshot_url)
+        assert_snap_not_blank(snapshot_url)
+        assert_snap_has_no_events(snapshot_url)
 
         # Test with an event query
         snap = dog.graph_snapshot(metric_query, start, end,
                                   event_query=event_query)
-        time.sleep(3)  # Give API enough time to create the snapshot
-        assert 'snapshot_url' in snap, snap
-        assert 'metric_query' in snap, snap
-        assert 'event_query' in snap, snap
-        assert snap['metric_query'] == metric_query
-        assert snap['event_query'] == event_query
-        assert_not_blank(snap['snapshot_url'])
+        ok('snapshot_url' in snap, msg=snap)
+        ok('metric_query' in snap, msg=snap)
+        ok('event_query' in snap, msg=snap)
+        eq(snap['metric_query'], metric_query)
+        eq(snap['event_query'], event_query)
+        snapshot_url = snap['snapshot_url']
+        while not dog.snapshot_ready(snapshot_url):
+            time.sleep(1)
+        if 'localhost' in dog.api_host:
+            snapshot_url = 'http://%s%s' % (dog.api_host, snapshot_url)
+        assert_snap_not_blank(snapshot_url)
+
+        # Test with a graph def
+        graph_def = {
+            "viz": "toplist",
+            "requests": [{
+                "q": "top(system.disk.free{*} by {device}, 10, 'mean', 'desc')",
+                "style": {
+                    "palette": "dog_classic"
+                },
+                "conditional_formats": [{
+                    "palette": "red",
+                    "comparator": ">",
+                    "value": 50000000000
+                }, {
+                    "palette": "green",
+                    "comparator": ">",
+                    "value": 30000000000
+                }]
+            }]
+        }
+        graph_def = json.dumps(graph_def)
+        snap = dog.graph_snapshot_from_def(graph_def, start, end)
+        ok('snapshot_url' in snap, msg=snap)
+        ok('graph_def' in snap, msg=snap)
+        ok('metric_query' not in snap, msg=snap)
+        ok('event_query' not in snap, msg=snap)
+        eq(snap['graph_def'], graph_def)
+        snapshot_url = snap['snapshot_url']
+        while not dog.snapshot_ready(snapshot_url):
+            time.sleep(1)
+        if 'localhost' in dog.api_host:
+            snapshot_url = 'http://%s%s' % (dog.api_host, snapshot_url)
+        assert_snap_not_blank(snapshot_url)
 
     @attr('screenboard')
     def test_screenboard(self):
