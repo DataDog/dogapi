@@ -1,16 +1,19 @@
 from setuptools import setup, find_packages
 import sys
 
-reqs = [
-    "decorator>=3.3.2",
-    "Pillow>=2.5.0"
+install_reqs = [
+    "decorator>=3.3.2"
 ]
+test_reqs = [
+     "Pillow>=2.5.0"
+]
+
 if sys.version_info[0] == 2:
     # simplejson is not python3 compatible
-    reqs.append("simplejson>=2.0.9")
+    install_reqs.append("simplejson>=2.0.9")
 
 if [sys.version_info[0], sys.version_info[1]] < [2, 7]:
-    reqs.append("argparse>=1.2")
+    install_reqs.append("argparse>=1.2")
 
 setup(
     name = "dogapi",
@@ -23,8 +26,9 @@ setup(
     license = "BSD",
     keywords = "datadog data",
     url = "http://www.datadoghq.com",
-    install_requires = reqs,
-    entry_points={
+    install_requires = install_reqs,
+    tests_require = test_reqs,
+    entry_points = {
         'console_scripts': [
             'dog = dogshell:main',
             'dogwrap = dogshell.wrap:main',
