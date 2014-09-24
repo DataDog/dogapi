@@ -64,8 +64,8 @@ class SnapshotApi(object):
     def snapshot_ready(self, snapshot_url):
         """
         Returns true if a snapshot is ready for download. Typically snapshots
-        require 2 seconds to render. This method can to get a sure answer on
-        the status of the snapshot.
+        require 2 seconds to render. This method can be used to get a sure
+        answer on the status of the snapshot.
 
         Example usage:
 
@@ -76,8 +76,6 @@ class SnapshotApi(object):
         >> img = urllib.urlopen(snapshot_url)
         """
         path = urlparse(snapshot_url).path
-        params = {
-            'test_only': True
-        }
-        resp = self.http_request('GET', path, is_api_request=False, **params)
+        resp = self.http_request('GET', path, is_api_request=False,
+                                 test_only=True)
         return resp['status_code'] == 200
