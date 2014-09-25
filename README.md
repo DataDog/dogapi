@@ -11,20 +11,14 @@ A Python client for the DataDog API.
 Change Log
 ----------
 
-- 1.9.2
+- 1.8.5
   - Release date: 2014.09.24
   - Improve dashboard API Validation [#25](https://github.com/DataDog/dogapi/issues/25) and [#26] (https://github.com/DataDog/dogapi/issues/26)
   - Add version command [#65] (https://github.com/DataDog/dogapi/issues/65)
   - Correct typos in search docstring [#100] (https://github.com/DataDog/dogapi/issues/100)
   - A new method to get snapshots using a graph definition [#78] (https://github.com/DataDog/dogapi/issues/78)
   - A new method to check if a snapshot is ready.
-  
-- 1.9.1
-  - Release date: 2014.09.17
   - Fix bug in snapshot API [#99](https://github.com/DataDog/dogapi/issues/99)
-
-- 1.9.0 
-  - Release date: 2014.06.04
   - Add silenced_timeout_ts to alert API [#96](https://github.com/DataDog/dogapi/pull/96)
 
 - 1.8.0
