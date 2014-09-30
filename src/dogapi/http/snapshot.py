@@ -74,8 +74,9 @@ class SnapshotApi(object):
         >>     time.sleep(1)
         >> img = urllib.urlopen(snapshot_url)
         """
-        snap_path = urlparse(snapshot_url).path.split('/snapshot/view/')[1]
+        snap_path = urlparse(snapshot_url).path
+        snap_path = snap_path.split('/snapshot/view/')[1].split('.png')[0]
+        snapshot_status_url = '/graph/snapshot_status/{0}'.format(snap_path)
         get_status_code = lambda x: int(x['status_code'])
-        return self.http_request('GET', '/graph/snapshot_status',
-                            response_formatter=get_status_code,
-                            snap_path=snap_path)
+        return self.http_request('GET', snapshot_status_url,
+                            response_formatter=get_status_code)

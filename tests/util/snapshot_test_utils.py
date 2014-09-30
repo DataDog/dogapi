@@ -21,7 +21,10 @@ def assert_snap_not_blank(snapshot_url):
     nt.ok_(pixels is not None
            and isinstance(pixels, list)
            and len(set(pixels)) > 2,
-           msg="Invalid or blank snapshot")
+           msg="Invalid or blank snapshot: {0}".format(snapshot_url))
+    for pixel in set(pixels):
+        nt.ok_(isinstance(pixel, tuple),
+               msg="Invalid snapshot: {0}".format(snapshot_url))
 
 
 def assert_snap_has_no_events(snapshot_url):
@@ -30,4 +33,4 @@ def assert_snap_has_no_events(snapshot_url):
     for color in set(pixels):
         r, g, b, a = color  # red, green, blue, alpha
         nt.ok_(r != 255 or g != 230 and b != 230,
-               msg="Snapshot should not have events")
+               msg="Snapshot should not have events: {0}".format(snapshot_url))
