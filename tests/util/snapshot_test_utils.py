@@ -1,6 +1,8 @@
-from PIL import Image
 import io
 import urllib
+
+from PIL import Image
+import nose.tools as nt
 
 
 def read_image_as_raster(img_url):
@@ -16,8 +18,10 @@ def read_image_as_raster(img_url):
 def assert_snap_not_blank(snapshot_url):
     """ Asserts snapshot is not blank"""
     pixels = read_image_as_raster(snapshot_url)
-    assert len(pixels) > 0, "Image should not be empty"
-    assert len(set(pixels)) > 1, "Image should have at least 2 colors"
+    nt.ok_(pixels is not None
+           and isinstance(pixels, list)
+           and len(set(pixels)) > 2,
+           msg="Invalid or blank snapshot")
 
 
 def assert_snap_has_no_events(snapshot_url):
@@ -25,5 +29,5 @@ def assert_snap_has_no_events(snapshot_url):
     pixels = read_image_as_raster(snapshot_url)
     for color in set(pixels):
         r, g, b, a = color  # red, green, blue, alpha
-        assert not (r == 255 and g == 230 and b == 230),\
-            "Snapshot should not have events"
+        nt.ok_(r != 255 or g != 230 and b != 230,
+               msg="Snapshot should not have events")

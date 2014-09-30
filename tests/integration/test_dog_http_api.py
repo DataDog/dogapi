@@ -433,7 +433,7 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         metric_query = "system.load.1{*}"
         event_query = "*"
         end = int(time.time())
-        start = end - 60 * 60 # go back 1 hour
+        start = end - 60 * 60  # go back 1 hour
 
         # Test without an event query
         snap = dog.graph_snapshot(metric_query, start, end)
@@ -442,8 +442,8 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         ok('event_query' not in snap, msg=snap)
         eq(snap['metric_query'], metric_query)
         snapshot_url = snap['snapshot_url']
-        while not dog.snapshot_ready(snapshot_url):
-            time.sleep(1)
+        while dog.snapshot_status(snapshot_url) != 200:
+            time.sleep(2)
         if 'localhost' in dog.api_host:
             snapshot_url = 'http://%s%s' % (dog.api_host, snapshot_url)
         assert_snap_not_blank(snapshot_url)
@@ -458,8 +458,8 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         eq(snap['metric_query'], metric_query)
         eq(snap['event_query'], event_query)
         snapshot_url = snap['snapshot_url']
-        while not dog.snapshot_ready(snapshot_url):
-            time.sleep(1)
+        while dog.snapshot_status(snapshot_url) != 200:
+            time.sleep(2)
         if 'localhost' in dog.api_host:
             snapshot_url = 'http://%s%s' % (dog.api_host, snapshot_url)
         assert_snap_not_blank(snapshot_url)
@@ -491,8 +491,8 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         ok('event_query' not in snap, msg=snap)
         eq(snap['graph_def'], graph_def)
         snapshot_url = snap['snapshot_url']
-        while not dog.snapshot_ready(snapshot_url):
-            time.sleep(1)
+        while dog.snapshot_status(snapshot_url) != 200:
+            time.sleep(2)
         if 'localhost' in dog.api_host:
             snapshot_url = 'http://%s%s' % (dog.api_host, snapshot_url)
         assert_snap_not_blank(snapshot_url)
