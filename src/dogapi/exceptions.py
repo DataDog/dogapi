@@ -25,6 +25,6 @@ timeout_exceptions = (socket.timeout, )
 
 try:
 	import ssl
-	timeout_exceptions += timeout_exceptions + (ssl.SSLError, )
+	timeout_exceptions += (ssl.SSLError, )
 except ImportError:
 	pass
