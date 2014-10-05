@@ -3,7 +3,6 @@
 """
 
 import socket
-import ssl
 
 __all__ = [
 	'DatadogException',
@@ -22,5 +21,10 @@ class ClientError(DatadogException): pass
 class HttpTimeout(DatadogException): pass
 class HttpBackoff(DatadogException): pass
 class ApiError(DatadogException): pass
-timeout_exceptions = (socket.timeout, ssl.SSLError)
+timeout_exceptions = (socket.timeout, )
 
+try:
+	import ssl
+	timeout_exceptions += timeout_exceptions + (ssl.SSLError, )
+except ImportError:
+	pass
