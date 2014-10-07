@@ -1,16 +1,11 @@
-from dogapi.exceptions import ApiError
-
 __all__ = [
     'DowntimeApi',
     'MonitorApi',
     'MonitorType',
 ]
 
-class MonitorType(object):
-    SERVICE_CHECK = 'service check'
-    METRIC_ALERT = 'metric alert'
-    QUERY_ALERT = 'query alert'
-    ALL = (SERVICE_CHECK, METRIC_ALERT, QUERY_ALERT)
+from dogapi.constants import MonitorType
+from dogapi.exceptions import ApiError
 
 class MonitorApi(object):
 
@@ -26,7 +21,8 @@ class MonitorApi(object):
         """
         mtype = mtype.lower()
         if mtype not in MonitorType.ALL:
-            raise ApiError('Invalid monitor type: %s' % mtype)
+            raise ApiError('Invalid monitor type, expected one of %s' \
+                    % ', '.join(MonitorType.ALL))
 
         body = {
             'type': mtype,
