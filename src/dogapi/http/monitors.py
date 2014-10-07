@@ -21,7 +21,7 @@ class MonitorApi(object):
         """
         mtype = mtype.lower()
         if mtype not in MonitorType.ALL:
-            raise ApiError('Invalid monitor type, expected one of %s' \
+            raise ApiError('Invalid monitor type, expected one of: %s' \
                     % ', '.join(MonitorType.ALL))
 
         body = {
@@ -86,7 +86,7 @@ class MonitorApi(object):
 
         return self.http_request('DELETE', '/monitor/%s' % monitor_id)
 
-    def get_all_monitors(self, include_state=False):
+    def get_all_monitors(self):
         """
         Get the details for all monitors. If *include_state* is set to True then
         the response will include the state of each active group in the alert.
@@ -171,8 +171,11 @@ class DowntimeApi(object):
         """
         return self.http_request('DELETE', '/downtime/%s' % downtime_id)
 
-    def list_downtime(self):
+    def list_downtime(self, current_only=False):
         """
         List all scheduled downtimes.
         """
-        return self.http_request('GET', '/downtime')
+        params = {}
+        if current_only:
+            params['current_only'] = True
+        return self.http_request('GET', '/downtime', **params)
