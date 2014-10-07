@@ -582,7 +582,7 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         nt.assert_equal(monitor['options']['silenced'], options['silenced'])
 
         query2 = "avg(last_1h):sum:system.net.bytes_rcvd{host:host0} > 200"
-        updated_monitor_id = dog.update_monitor(monitor_id, query2)
+        updated_monitor_id = dog.update_monitor(monitor_id, query2, options=options)
         monitor = dog.get_monitor(updated_monitor_id)
         nt.assert_equal(monitor['query'], query2)
 
