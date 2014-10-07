@@ -3,6 +3,7 @@ __all__ = [
 ]
 
 class AlertApi(object):
+    """ DEPRECATED: Used the methods in `MonitorApi` instead. """
 
     def alert(self, query, name=None, message=None, silenced=False,
             notify_no_data=None, timeout_h=None):
