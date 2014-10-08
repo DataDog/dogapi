@@ -26,7 +26,6 @@ class MonitorApi(object):
 
         body = {
             'type': mtype,
-            'name': name,
             'query': query,
         }
 
