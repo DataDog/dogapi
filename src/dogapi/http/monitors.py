@@ -67,14 +67,23 @@ class MonitorApi(object):
             response_formatter=lambda x: x['id'],
         )
 
-    def get_monitor(self, monitor_id):
+    def get_monitor(self, monitor_id, group_states=None):
         """
         Get the details for the monitor identified by *monitor_id*.
 
-        >>> dog_http_api.get_monitor(1234)
-        """
+        *group_states* is optionally a list of statuses chosen from "all", "ok",
+        "warn", "alert", "no data". For example, if you want only the failing
+        groups then you would set it to ['alert', 'warn']. If no value is given
+        then no group states will be returned.
 
-        return self.http_request('GET', '/monitor/%s' % monitor_id)
+        >>> dog_http_api.get_monitor(1234, group_states=['all'])
+        """
+        params = {}
+
+        if group_states:
+            params['group_states'] = ','.join(group_states)
+
+        return self.http_request('GET', '/monitor/%s' % monitor_id, **params)
 
     def delete_monitor(self, monitor_id):
         """
@@ -85,15 +94,24 @@ class MonitorApi(object):
 
         return self.http_request('DELETE', '/monitor/%s' % monitor_id)
 
-    def get_all_monitors(self):
+    def get_all_monitors(self, group_states=None):
         """
         Get the details for all monitors. If *include_state* is set to True then
         the response will include the state of each active group in the alert.
 
-        >>> dog_http_api.get_all_monitors()
-        """
+        *group_states* is optionally a list of statuses chosen from "all", "ok",
+        "warn", "alert", "no data". For example, if you want only the failing
+        groups then you would set it to ['alert', 'warn']. If no value is given
+        then no group states will be returned.
 
-        return self.http_request('GET', '/monitor')
+        >>> dog_http_api.get_all_monitors(group_states=['alert'])
+        """
+        params = {}
+
+        if group_states:
+            params['group_states'] = ','.join(group_states)
+
+        return self.http_request('GET', '/monitor', **params)
 
     def mute_monitors(self):
         """

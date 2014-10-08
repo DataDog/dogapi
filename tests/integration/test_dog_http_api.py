@@ -606,7 +606,7 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
 
         monitor_id1 = dog.monitor('metric alert', query1)
         monitor_id2 = dog.monitor('metric alert', query2)
-        monitors = dog.get_all_monitors()
+        monitors = dog.get_all_monitors(group_states=['alert', 'warn'])
         monitor1 = [m for m in monitors if m['id'] == monitor_id1][0]
         monitor2 = [m for m in monitors if m['id'] == monitor_id2][0]
         assert monitor1['query'] == query1, monitor1
@@ -624,7 +624,7 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
             }
         }
         monitor_id = dog.monitor('service check', query, options=options)
-        monitor = dog.get_monitor(monitor_id)
+        monitor = dog.get_monitor(monitor_id, group_states=['all'])
 
         nt.assert_equal(monitor['query'], query)
         nt.assert_equal(monitor['options']['notify_no_data'],
