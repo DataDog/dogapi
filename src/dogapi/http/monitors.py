@@ -152,8 +152,9 @@ class DowntimeApi(object):
         body = {
             'scope': scope,
             'start': start,
-            'end': end
         }
+        if end:
+            body['end'] = end
         return self.http_request('POST', '/downtime', body,
             response_formatter=lambda x: x['id'],
         )
@@ -170,7 +171,7 @@ class DowntimeApi(object):
         """
         return self.http_request('DELETE', '/downtime/%s' % downtime_id)
 
-    def list_downtime(self, current_only=False):
+    def get_all_downtimes(self, current_only=False):
         """
         List all scheduled downtimes.
         """
