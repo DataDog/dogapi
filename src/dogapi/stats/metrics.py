@@ -28,32 +28,34 @@ class Gauge(Metric):
 
     stats_tag = 'g'
 
-    def __init__(self, name, tags):
+    def __init__(self, name, tags, host):
         self.name = name
         self.tags = tags
+        self.host = host
         self.value = None
 
     def add_point(self, value):
         self.value = value
 
     def flush(self, timestamp):
-        return [(timestamp, self.value, self.name, self.tags)]
+        return [(timestamp, self.value, self.name, self.tags, self.host)]
 
 class Counter(Metric):
     """ A counter metric. """
 
     stats_tag = 'c'
 
-    def __init__(self, name, tags):
+    def __init__(self, name, tags, host):
         self.name = name
         self.tags = tags
+        self.host = host
         self.count = 0
 
     def add_point(self, value):
         self.count += value
 
     def flush(self, timestamp):
-        return [(timestamp, self.count, self.name, self.tags)]
+        return [(timestamp, self.count, self.name, self.tags, self.host)]
 
 
 class Histogram(Metric):
@@ -61,9 +63,10 @@ class Histogram(Metric):
 
     stats_tag = 'h'
 
-    def __init__(self, name, tags):
+    def __init__(self, name, tags, host):
         self.name = name
         self.tags = tags
+        self.host = host
         self.max = float("-inf")
         self.min = float("inf")
         self.sum = 0
@@ -86,17 +89,17 @@ class Histogram(Metric):
         if not self.count:
             return []
         metrics = [
-            (timestamp, self.min,       '%s.min'   % self.name, self.tags),
-            (timestamp, self.max,       '%s.max'   % self.name, self.tags),
-            (timestamp, self.count,     '%s.count' % self.name, self.tags),
-            (timestamp, self.average(), '%s.avg'   % self.name, self.tags)
+            (timestamp, self.min,       '%s.min'   % self.name, self.tags, self.host),
+            (timestamp, self.max,       '%s.max'   % self.name, self.tags, self.host),
+            (timestamp, self.count,     '%s.count' % self.name, self.tags, self.host),
+            (timestamp, self.average(), '%s.avg'   % self.name, self.tags, self.host)
         ]
         length = len(self.samples)
         self.samples.sort()
         for p in self.percentiles:
             val = self.samples[int(round(p * length - 1))]
             name = '%s.%spercentile' % (self.name, int(p * 100))
-            metrics.append((timestamp, val, name, self.tags))
+            metrics.append((timestamp, val, name, self.tags, self.host))
         return metrics
 
     def average(self):
@@ -112,12 +115,12 @@ class MetricsAggregator(object):
         self._metrics = defaultdict(lambda: {})
         self._roll_up_interval = roll_up_interval
 
-    def add_point(self, metric, tags, timestamp, value, metric_class, sample_rate=1):
+    def add_point(self, metric, tags, timestamp, value, metric_class, sample_rate=1, host=None):
         # The sample rate is currently ignored for in process stuff
         interval = timestamp - timestamp % self._roll_up_interval
-        key = (metric, tuple(sorted(tags)) if tags else tags)
+        key = (metric, host, tuple(sorted(tags)) if tags else tags)
         if key not in self._metrics[interval]:
-            self._metrics[interval][key] = metric_class(metric, tags)
+            self._metrics[interval][key] = metric_class(metric, tags, host)
         self._metrics[interval][key].add_point(value)
 
     def flush(self, timestamp):

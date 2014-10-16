@@ -304,6 +304,57 @@ class TestUnitDogStatsAPI(object):
         for metric in reporter.metrics:
             assert metric['tags'] # this is enough
 
+    def test_host(self):
+        dog = DogStatsApi()
+        dog.start(roll_up_interval=10, flush_in_thread=False, host='default')
+        reporter = dog.reporter = MemoryReporter()
+
+        # Post the same metric with different tags.
+        dog.gauge('gauge', 10, timestamp=100.0)
+        dog.gauge('gauge', 15, timestamp=100.0, host='test')
+        dog.gauge('gauge', 15, timestamp=100.0, host='test')
+
+        dog.increment('counter', timestamp=100.0)
+        dog.increment('counter', timestamp=100.0)
+        dog.increment('counter', timestamp=100.0, host='test')
+        dog.increment('counter', timestamp=100.0, host='test', tags=['tag'])
+        dog.increment('counter', timestamp=100.0, host='test', tags=['tag'])
+
+        dog.flush(200.0)
+
+        metrics = self.sort_metrics(reporter.metrics)
+        nt.assert_equal(len(metrics), 5)
+
+        [c1, c2, c3, g1, g2] = metrics
+        (nt.assert_equal(c['metric'], 'counter') for c in [c1, c2, c3])
+        nt.assert_equal(c1['host'], 'default')
+        nt.assert_equal(c1['tags'], None)
+        nt.assert_equal(c1['points'][0][1], 2)
+        nt.assert_equal(c2['host'], 'test')
+        nt.assert_equal(c2['tags'], None)
+        nt.assert_equal(c2['points'][0][1], 1)
+        nt.assert_equal(c3['host'], 'test')
+        nt.assert_equal(c3['tags'], ['tag'])
+        nt.assert_equal(c3['points'][0][1], 2)
+
+
+        (nt.assert_equal(g['metric'], 'gauge')   for g in [g1, g2])
+        nt.assert_equal(g1['host'], 'test')
+        nt.assert_equal(g1['points'][0][1], 15)
+        nt.assert_equal(g2['host'], 'default')
+        nt.assert_equal(g2['points'][0][1], 10)
+
+        # Ensure histograms work as well.
+        @dog.timed('timed', host='test')
+        def test():
+            pass
+        test()
+        dog.histogram('timed', 20, timestamp=300.0, host='test')
+        reporter.metrics = []
+        dog.flush(400)
+        for metric in reporter.metrics:
+            assert metric['host'] == 'test'
+
     def test_disabled_mode(self):
         dog = DogStatsApi()
         reporter = dog.reporter = MemoryReporter()
