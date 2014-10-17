@@ -43,10 +43,9 @@ class TestUnitDogStatsAPI(object):
     def sort_metrics(self, metrics):
         """ Sort metrics by timestamp of first point and then name """
         def sort(metric):
-            if metric['tags'] is None:
-                return (metric['points'][0][0], metric['metric'], [])
-            else:
-                return (metric['points'][0][0], metric['metric'], metric['tags'])
+            tags = metric['tags'] or []
+            host = metric['host'] or ''
+            return (metric['points'][0][0], metric['metric'], tags, host)
         return sorted(metrics, key=sort)
 
     def test_timed_decorator(self):
@@ -337,12 +336,11 @@ class TestUnitDogStatsAPI(object):
         nt.assert_equal(c3['tags'], ['tag'])
         nt.assert_equal(c3['points'][0][1], 2)
 
-
         (nt.assert_equal(g['metric'], 'gauge')   for g in [g1, g2])
-        nt.assert_equal(g1['host'], 'test')
-        nt.assert_equal(g1['points'][0][1], 15)
-        nt.assert_equal(g2['host'], 'default')
-        nt.assert_equal(g2['points'][0][1], 10)
+        nt.assert_equal(g1['host'], 'default')
+        nt.assert_equal(g1['points'][0][1], 10)
+        nt.assert_equal(g2['host'], 'test')
+        nt.assert_equal(g2['points'][0][1], 15)
 
         # Ensure histograms work as well.
         @dog.timed('timed', host='test')
