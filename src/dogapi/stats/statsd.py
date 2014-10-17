@@ -18,9 +18,12 @@ class StatsdAggregator(object):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket_sendto = self.socket.sendto
 
-    def add_point(self, metric, tags, timestamp, value, metric_class, sample_rate=1):
+    def add_point(self, metric, tags, timestamp, value, metric_class, sample_rate=1, host=None):
         if sample_rate == 1 or random() < sample_rate:
             payload = '%s:%s|%s' % (metric, value, metric_class.stats_tag)
+            if host:
+                # TODO: Wait for Dogstatsd to support it
+                pass
             if sample_rate != 1:
                 payload += '|@%s' % sample_rate
             if tags:
