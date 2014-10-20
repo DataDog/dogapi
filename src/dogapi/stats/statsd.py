@@ -21,9 +21,10 @@ class StatsdAggregator(object):
     def add_point(self, metric, tags, timestamp, value, metric_class, sample_rate=1, host=None):
         if sample_rate == 1 or random() < sample_rate:
             payload = '%s:%s|%s' % (metric, value, metric_class.stats_tag)
-            if host:
-                # TODO: Wait for Dogstatsd to support it
-                pass
+            if host is not None:
+                if not tags:
+                    tags = []
+                tags.append('host:%s' % host)
             if sample_rate != 1:
                 payload += '|@%s' % sample_rate
             if tags:

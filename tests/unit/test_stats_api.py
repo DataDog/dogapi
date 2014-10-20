@@ -309,6 +309,7 @@ class TestUnitDogStatsAPI(object):
         reporter = dog.reporter = MemoryReporter()
 
         # Post the same metric with different tags.
+        dog.gauge('gauge', 12, timestamp=100.0, host='') # unset the host
         dog.gauge('gauge', 10, timestamp=100.0)
         dog.gauge('gauge', 15, timestamp=100.0, host='test')
         dog.gauge('gauge', 15, timestamp=100.0, host='test')
@@ -322,9 +323,9 @@ class TestUnitDogStatsAPI(object):
         dog.flush(200.0)
 
         metrics = self.sort_metrics(reporter.metrics)
-        nt.assert_equal(len(metrics), 5)
+        nt.assert_equal(len(metrics), 6)
 
-        [c1, c2, c3, g1, g2] = metrics
+        [c1, c2, c3, g1, g2, g3] = metrics
         (nt.assert_equal(c['metric'], 'counter') for c in [c1, c2, c3])
         nt.assert_equal(c1['host'], 'default')
         nt.assert_equal(c1['tags'], None)
@@ -336,11 +337,14 @@ class TestUnitDogStatsAPI(object):
         nt.assert_equal(c3['tags'], ['tag'])
         nt.assert_equal(c3['points'][0][1], 2)
 
-        (nt.assert_equal(g['metric'], 'gauge')   for g in [g1, g2])
-        nt.assert_equal(g1['host'], 'default')
-        nt.assert_equal(g1['points'][0][1], 10)
-        nt.assert_equal(g2['host'], 'test')
-        nt.assert_equal(g2['points'][0][1], 15)
+        (nt.assert_equal(g['metric'], 'gauge')   for g in [g1, g2, g3])
+        nt.assert_equal(g1['host'], '')
+        nt.assert_equal(g1['points'][0][1], 12)
+        nt.assert_equal(g2['host'], 'default')
+        nt.assert_equal(g2['points'][0][1], 10)
+        nt.assert_equal(g3['host'], 'test')
+        nt.assert_equal(g3['points'][0][1], 15)
+
 
         # Ensure histograms work as well.
         @dog.timed('timed', host='test')

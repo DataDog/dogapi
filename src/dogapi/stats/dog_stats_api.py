@@ -233,11 +233,13 @@ class DogStatsApi(object):
         # FIXME: emit a dictionary from the aggregator
         metrics = []
         for timestamp, value, name, tags, host in rolled_up_metrics:
+            if host is None:
+                host = self.host
             metric = {
                 'metric' : name,
                 'points' : [[timestamp, value]],
                 'type':    MetricType.Gauge,
-                'host':    host or self.host,
+                'host':    host,
                 'device':  self.device,
                 'tags'  :  tags
             }
