@@ -11,6 +11,14 @@ A Python client for the DataDog API.
 Change Log
 ----------
 
+- 1.9.0
+  - Release date: 2014.11.17
+  - Add Monitors API [#115](https://github.com/DataDog/dogapi/pull/115)
+  - Allow override of host from statsd [#116](https://github.com/DataDog/dogapi/pull/116)
+  - Fix ImportError when `ssl` module is missing [#114](https://github.com/DataDog/dogapi/pull/114)
+  - Change `repo_name` logic for bare git repos [#97](https://github.com/DataDog/dogapi/pull/97)
+  - Fixes for Python 3 [#105](https://github.com/DataDog/dogapi/pull/105)
+
 - 1.8.5
   - Release date: 2014.09.24
   - Improve dashboard API Validation [#25](https://github.com/DataDog/dogapi/issues/25) and [#26] (https://github.com/DataDog/dogapi/issues/26)
