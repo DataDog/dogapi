@@ -6,6 +6,7 @@ import unittest
 
 # 3p
 from nose.plugins.attrib import attr
+import nose.tools as nt
 from nose.tools import assert_equal as eq
 from nose.tools import assert_true as ok
 import simplejson as json
@@ -563,6 +564,134 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         delete_res = dog.delete_screenboard(update_res['id'])
         assert delete_res['id'] == update_res['id']
 
+    @attr('monitor')
+    def test_monitor_crud(self):
+        # Metric alerts
+        query = "avg(last_1h):sum:system.net.bytes_rcvd{host:host0} > 100"
+
+        options = {
+            'silenced': {'*': time.time() + 60 * 60},
+            'notify_no_data': False
+        }
+        monitor_id = dog.monitor('metric alert', query, options=options)
+        monitor = dog.get_monitor(monitor_id)
+
+        nt.assert_equal(monitor['query'], query)
+        nt.assert_equal(monitor['options']['notify_no_data'],
+            options['notify_no_data'])
+        nt.assert_equal(monitor['options']['silenced'], options['silenced'])
+
+        query2 = "avg(last_1h):sum:system.net.bytes_rcvd{host:host0} > 200"
+        updated_monitor_id = dog.update_monitor(monitor_id, query2, options=options)
+        monitor = dog.get_monitor(updated_monitor_id)
+        nt.assert_equal(monitor['query'], query2)
+
+        name = 'test_monitors'
+        monitor_id = dog.update_monitor(monitor_id, query2, name=name,
+            options={'notify_no_data': True})
+        monitor = dog.get_monitor(monitor_id)
+        nt.assert_equal(monitor['name'], name)
+        nt.assert_equal(monitor['options']['notify_no_data'], True)
+
+        dog.delete_monitor(monitor_id)
+        try:
+            dog.get_monitor(monitor_id)
+        except ApiError:
+            pass
+        else:
+            assert False, 'monitor not deleted'
+
+        query1 = "avg(last_1h):sum:system.net.bytes_rcvd{host:host0} > 100"
+        query2 = "avg(last_1h):sum:system.net.bytes_rcvd{host:host0} > 200"
+
+        monitor_id1 = dog.monitor('metric alert', query1)
+        monitor_id2 = dog.monitor('metric alert', query2)
+        monitors = dog.get_all_monitors(group_states=['alert', 'warn'])
+        monitor1 = [m for m in monitors if m['id'] == monitor_id1][0]
+        monitor2 = [m for m in monitors if m['id'] == monitor_id2][0]
+        assert monitor1['query'] == query1, monitor1
+        assert monitor2['query'] == query2, monitor2
+
+        # Service checks
+        query = '"ntp.in_sync".over("role:herc").last(3).count_by_status()'
+        options = {
+            'notify_no_data': False,
+            'thresholds': {
+                'ok': 3,
+                'warning': 2,
+                'critical': 1,
+                'no data': 3
+            }
+        }
+        monitor_id = dog.monitor('service check', query, options=options)
+        monitor = dog.get_monitor(monitor_id, group_states=['all'])
+
+        nt.assert_equal(monitor['query'], query)
+        nt.assert_equal(monitor['options']['notify_no_data'],
+            options['notify_no_data'])
+        nt.assert_equal(monitor['options']['thresholds'], options['thresholds'])
+
+        query2 = '"ntp.in_sync".over("role:sobotka").last(3).count_by_status()'
+        monitor_id = dog.update_monitor(monitor_id, query2)
+        monitor = dog.get_monitor(monitor_id)
+        nt.assert_equal(monitor['query'], query2)
+
+        dog.delete_monitor(monitor_id)
+        try:
+            dog.get_monitor(monitor_id)
+        except ApiError:
+            pass
+        else:
+            assert False, 'monitor not deleted'
+
+    @attr('monitor')
+    def test_monitor_muting(self):
+        query = "avg(last_1h):sum:system.net.bytes_rcvd{host:host0} > 100"
+        monitor_id = dog.monitor('metric alert', query)
+        monitor = dog.get_monitor(monitor_id)
+        nt.assert_equal(monitor['query'], query)
+
+        dt = dog.mute_monitors()
+        nt.assert_equal(dt['active'], True)
+        nt.assert_equal(dt['scope'], ['*'])
+
+        dt = dog.unmute_monitors()
+        nt.assert_equal(dt, None) # No response is expected.
+
+        # We shouldn't be able to mute a simple alert on a scope.
+        nt.assert_raises(ApiError, dog.mute_monitor, monitor_id, scope='env:staging')
+
+        query2 = "avg(last_1h):sum:system.net.bytes_rcvd{*} by {host} > 100"
+        monitor_id = dog.monitor('metric alert', query2)
+        monitor = dog.get_monitor(monitor_id)
+        nt.assert_equal(monitor['query'], query2)
+
+        dog.mute_monitor(monitor_id, scope='host:foo')
+        monitor = dog.get_monitor(monitor_id)
+        nt.assert_equal(monitor['options']['silenced'], {'host:foo': None})
+
+        dog.unmute_monitor(monitor_id, scope='host:foo')
+        monitor = dog.get_monitor(monitor_id)
+        nt.assert_equal(monitor['options']['silenced'], {})
+
+        dog.delete_monitor(monitor_id)
+
+    @attr('monitor')
+    def test_downtime(self):
+        start = int(time.time())
+        end = start + 1000
+        downtime_id = dog.schedule_downtime('env:staging', start, end)
+        dt = dog.get_downtime(downtime_id)
+        nt.assert_equal(dt['start'], start)
+        nt.assert_equal(dt['end'], end)
+        nt.assert_equal(dt['scope'], ['env:staging'])
+
+        dog.cancel_downtime(downtime_id)
+
+    @attr('monitor')
+    def test_service_check(self):
+        res = dog.service_check('check_pg', 'host0', 1,
+            message='PG is WARNING', tags=['db:prod_data'])
 
 if __name__ == '__main__':
     unittest.main()
