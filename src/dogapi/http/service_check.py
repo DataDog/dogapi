@@ -18,7 +18,7 @@ class ServiceCheckApi(object):
 
         body = {
             'check': check,
-            'host': host,
+            'host_name': host,
             'timestamp': timestamp or time.time(),
             'status': status
         }
