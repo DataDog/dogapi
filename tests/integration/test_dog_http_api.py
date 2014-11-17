@@ -690,7 +690,7 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
 
     @attr('monitor')
     def test_service_check(self):
-        res = dog.service_check('check_pg', 'host0', int(time.time()), 1,
+        res = dog.service_check('check_pg', 'host0', 1,
             message='PG is WARNING', tags=['db:prod_data'])
 
 if __name__ == '__main__':
