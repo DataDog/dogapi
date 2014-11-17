@@ -96,7 +96,7 @@ class DogStatsApi(object):
             return True
 
 
-    def gauge(self, metric_name, value, timestamp=None, tags=None, sample_rate=1):
+    def gauge(self, metric_name, value, timestamp=None, tags=None, sample_rate=1, host=None):
         """
         Record the current *value* of a metric. They most recent value in
         a given flush interval will be recorded. Optionally, specify a set of
@@ -108,9 +108,10 @@ class DogStatsApi(object):
         >>> dog_stats_api.gauge('cache.bytes.free', cache.get_free_bytes(), tags=['version:1.0'])
         """
         if not self._disabled:
-            self._aggregator.add_point(metric_name, tags, timestamp or time(), value, Gauge, sample_rate)
+            self._aggregator.add_point(metric_name, tags, timestamp or time(), value, Gauge,
+                sample_rate=sample_rate, host=host)
 
-    def increment(self, metric_name, value=1, timestamp=None, tags=None, sample_rate=1):
+    def increment(self, metric_name, value=1, timestamp=None, tags=None, sample_rate=1, host=None):
         """
         Increment the counter by the given *value*. Optionally, specify a list of
         *tags* to associate with the metric. This is useful for counting things
@@ -120,9 +121,10 @@ class DogStatsApi(object):
         >>> dog_stats_api.increment('bytes.processed', file.size())
         """
         if not self._disabled:
-            self._aggregator.add_point(metric_name, tags, timestamp or time(), value, Counter, sample_rate)
+            self._aggregator.add_point(metric_name, tags, timestamp or time(), value, Counter,
+                sample_rate=sample_rate, host=host)
 
-    def histogram(self, metric_name, value, timestamp=None, tags=None, sample_rate=1):
+    def histogram(self, metric_name, value, timestamp=None, tags=None, sample_rate=1, host=None):
         """
         Sample a histogram value. Histograms will produce metrics that
         describe the distribution of the recorded values, namely the minimum,
@@ -132,10 +134,11 @@ class DogStatsApi(object):
         >>> dog_stats_api.histogram('uploaded_file.size', uploaded_file.size())
         """
         if not self._disabled:
-            self._aggregator.add_point(metric_name, tags, timestamp or time(), value, Histogram, sample_rate)
+            self._aggregator.add_point(metric_name, tags, timestamp or time(), value, Histogram,
+                sample_rate=sample_rate, host=host)
 
     @contextmanager
-    def timer(self, metric_name, sample_rate=1, tags=None):
+    def timer(self, metric_name, sample_rate=1, tags=None, host=None):
         """
         A context manager that will track the distribution of the contained code's run time.
         Optionally specify a list of tags to associate with the metric.
@@ -160,9 +163,10 @@ class DogStatsApi(object):
             yield
         finally:
             end = time()
-            self.histogram(metric_name, end - start, end, tags=tags, sample_rate=sample_rate)
+            self.histogram(metric_name, end - start, end, tags=tags,
+                sample_rate=sample_rate, host=host)
 
-    def timed(self, metric_name, sample_rate=1, tags=None):
+    def timed(self, metric_name, sample_rate=1, tags=None, host=None):
         """
         A decorator that will track the distribution of a function's run time.
         Optionally specify a list of tags to associate with the metric.
@@ -183,7 +187,7 @@ class DogStatsApi(object):
         def wrapper(func):
             @wraps(func)
             def wrapped(*args, **kwargs):
-                with self.timer(metric_name, sample_rate, tags):
+                with self.timer(metric_name, sample_rate, tags, host):
                     result = func(*args, **kwargs)
                     return result
             return wrapped
@@ -228,12 +232,14 @@ class DogStatsApi(object):
 
         # FIXME: emit a dictionary from the aggregator
         metrics = []
-        for timestamp, value, name, tags in rolled_up_metrics:
+        for timestamp, value, name, tags, host in rolled_up_metrics:
+            if host is None:
+                host = self.host
             metric = {
                 'metric' : name,
                 'points' : [[timestamp, value]],
                 'type':    MetricType.Gauge,
-                'host':    self.host,
+                'host':    host,
                 'device':  self.device,
                 'tags'  :  tags
             }
