@@ -78,7 +78,7 @@ def notify(t):
                 output = '\n\n'.join(['%s\n%s\n%s' %
                     (res.command, res.stdout, res.stderr) for res in r]
                 )
-        except Exception, e:
+        except Exception as e:
             error = e
 
         end = time.time()
@@ -91,7 +91,7 @@ def notify(t):
                                priority="normal",
                                aggregation_key=_aggregation_key(t, args, kwargs, error),
                                tags=_tags(t, args, kwargs, error))
-        except Exception, e:
+        except Exception as e:
             logger.warn("Datadog notification on task {0} failed with {1}".format(t.__name__, e))
 
         if error:

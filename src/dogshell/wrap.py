@@ -74,7 +74,7 @@ def execute(cmd, cmd_timeout, sigterm_timeout, sigkill_timeout,
                 proc.kill()
                 poll_proc(proc, proc_poll_interval, sigkill_timeout)
                 returncode = Timeout
-        except OSError, e:
+        except OSError as e:
             # Ignore OSError 3: no process found.
             if e.errno != 3:
                 raise
