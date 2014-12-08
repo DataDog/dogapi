@@ -603,14 +603,22 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
 
         query1 = "avg(last_1h):sum:system.net.bytes_rcvd{host:host0} > 100"
         query2 = "avg(last_1h):sum:system.net.bytes_rcvd{host:host0} > 200"
+        query3 = "avg(last_1h):sum:system.net.bytes_rcvd{host:host1} > 200"
 
         monitor_id1 = dog.monitor('metric alert', query1)
         monitor_id2 = dog.monitor('metric alert', query2)
+        monitor_id3 = dog.monitor('metric alert', query3)
         monitors = dog.get_all_monitors(group_states=['alert', 'warn'])
         monitor1 = [m for m in monitors if m['id'] == monitor_id1][0]
         monitor2 = [m for m in monitors if m['id'] == monitor_id2][0]
         assert monitor1['query'] == query1, monitor1
         assert monitor2['query'] == query2, monitor2
+
+        monitors = dog.get_all_monitors(tags="host:host1")
+        monitor3 = [m for m in monitors if m['id'] == monitor_id3][0]
+        assert next((m for m in monitors if m['id'] == monitor_id1), None) is None
+        assert next((m for m in monitors if m['id'] == monitor_id2), None) is None
+        assert monitor3['query'] == query3, monitor3
 
         # Service checks
         query = '"ntp.in_sync".over("role:herc").last(3).count_by_status()'
