@@ -113,7 +113,11 @@ class MonitorApi(object):
         params = {}
 
         if group_states:
-            params['group_states'] = ','.join(group_states)
+            if isinstance(group_states, list):
+                 group_states = ','.join(group_states)
+            if not isinstance(group_states, basestring):
+                raise ApiError('Invalid type for `tags`, expected `string`.')
+            params['group_states'] = group_states
 
         if tags:
             if isinstance(tags, list):
