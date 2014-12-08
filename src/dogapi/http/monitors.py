@@ -94,7 +94,7 @@ class MonitorApi(object):
 
         return self.http_request('DELETE', '/monitor/%s' % monitor_id)
 
-    def get_all_monitors(self, group_states=None):
+    def get_all_monitors(self, group_states=None, tags=None):
         """
         Get the details for all monitors. If *include_state* is set to True then
         the response will include the state of each active group in the alert.
@@ -104,12 +104,27 @@ class MonitorApi(object):
         groups then you would set it to ['alert', 'warn']. If no value is given
         then no group states will be returned.
 
-        >>> dog_http_api.get_all_monitors(group_states=['alert'])
+        *tags* is optionally a list of scope tags that will be used to filter
+        the list of monitors returned. If no value is given, then all monitors,
+        regardless of scope, will be returned.
+
+        >>> dog_http_api.get_all_monitors(group_states=['alert'], tags=['host:myhost'])
         """
         params = {}
 
         if group_states:
-            params['group_states'] = ','.join(group_states)
+            if isinstance(group_states, list):
+                 group_states = ','.join(group_states)
+            if not isinstance(group_states, basestring):
+                raise ApiError('Invalid type for `tags`, expected `string`.')
+            params['group_states'] = group_states
+
+        if tags:
+            if isinstance(tags, list):
+                tags = ','.join(tags)
+            if not isinstance(tags, basestring):
+                raise ApiError('Invalid type for `tags`, expected `string`.')
+            params['tags'] = tags
 
         return self.http_request('GET', '/monitor', **params)
 
