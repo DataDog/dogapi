@@ -688,11 +688,19 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
     def test_downtime(self):
         start = int(time.time())
         end = start + 1000
-        downtime_id = dog.schedule_downtime('env:staging', start, end)
+        downtime_id = dog.schedule_downtime('env:staging', start, end, "Message!")
         dt = dog.get_downtime(downtime_id)
         nt.assert_equal(dt['start'], start)
         nt.assert_equal(dt['end'], end)
         nt.assert_equal(dt['scope'], ['env:staging'])
+        nt.assert_equal(dt['message'], "Message!")
+
+        dog.update_downtime('env:prod', start + 1, end + 1, 'New Message!')
+        dt = dog.get_downtime(downtime_id)
+        nt.assert_equal(dt['start'], start + 1)
+        nt.assert_equal(dt['end'], end + 1)
+        nt.assert_equal(dt['scope'], ['env:prod'])
+        nt.assert_equal(dt['message'], "New Message!")
 
         dog.cancel_downtime(downtime_id)
 

@@ -176,7 +176,7 @@ class MonitorApi(object):
 
 class DowntimeApi(object):
 
-    def schedule_downtime(self, scope, start, end=None):
+    def schedule_downtime(self, scope, start, end=None, message=None):
         """
         Schedule downtime over *scope* from *start* to *end*, where *start* and
         *end* are POSIX timestamps. If *end* is omitted then the downtime will
@@ -188,7 +188,26 @@ class DowntimeApi(object):
         }
         if end:
             body['end'] = end
+        if message:
+            body['message'] = message
         return self.http_request('POST', '/downtime', body,
+            response_formatter=lambda x: x['id'],
+        )
+
+    def update_downtime(self, downtime_id, scope=None, start=None, end=None, message=None):
+        """
+        Update downtime parameters.
+        """
+        body = {}
+        if scope:
+            body['scope'] = scope
+        if start:
+            body['start'] = start
+        if end:
+            body['end'] = end
+        if message:
+            body['message'] = message
+        return self.http_request('PUT', '/downtime/%s' % downtime_id, body,
             response_formatter=lambda x: x['id'],
         )
 
