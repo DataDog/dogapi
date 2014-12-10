@@ -11,6 +11,11 @@ A Python client for the DataDog API.
 Change Log
 ----------
 
+- 1.10.0
+  - Release date: 2014.12.10
+  - Add filtering by tag to get_all_monitors [#120](https://github.com/DataDog/dogapi/pull/120)
+  - Add downtime update method and downtime messages [#121](https://github.com/DataDog/dogapi/pull/121)
+
 - 1.9.0
   - Release date: 2014.11.17
   - Add Monitors API [#115](https://github.com/DataDog/dogapi/pull/115)
