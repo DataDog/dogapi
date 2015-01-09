@@ -11,6 +11,11 @@ A Python client for the DataDog API.
 Change Log
 ----------
 
+- 1.11.0
+  - Release date: 2015.01.09
+  - Add get_all_screenboards [#125](https://github.com/DataDog/dogapi/pull/125)
+  - Make `start` optional when scheduling downtime [#124](https://github.com/DataDog/dogapi/pull/124)
+
 - 1.10.0
   - Release date: 2014.12.10
   - Add filtering by tag to get_all_monitors [#120](https://github.com/DataDog/dogapi/pull/120)
