@@ -176,16 +176,15 @@ class MonitorApi(object):
 
 class DowntimeApi(object):
 
-    def schedule_downtime(self, scope, start, end=None, message=None):
+    def schedule_downtime(self, scope, start=None, end=None, message=None):
         """
         Schedule downtime over *scope* from *start* to *end*, where *start* and
-        *end* are POSIX timestamps. If *end* is omitted then the downtime will
-        continue until cancelled.
+        *end* are POSIX timestamps. If *start* is omitted, the downtime will begin
+        immediately. If *end* is omitted, the downtime will continue until cancelled.
         """
-        body = {
-            'scope': scope,
-            'start': start,
-        }
+        body = {'scope': scope}
+        if start:
+            body['start'] = start
         if end:
             body['end'] = end
         if message:
