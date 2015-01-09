@@ -22,6 +22,18 @@ class ScreenboardApi(object):
         """
         return self.http_request('GET', '/screen/' + str(board_id))
 
+
+    def get_all_screenboards(self):
+        """
+        Get the Screenboard with the given id.
+
+        See the `screenboard API documentation <http://docs.datadoghq.com/api/screenboard>`_
+        for the data format.
+        """
+        return self.http_request('GET', '/screen',
+            response_formatter=lambda x: x['screenboards'],
+        )
+
     def update_screenboard(self, board_id, description):
         """
         Update the Screenboard with the given id.

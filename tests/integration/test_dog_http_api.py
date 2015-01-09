@@ -554,6 +554,10 @@ $$$""", event_type="commit", source_type_name="git", event_object="0xdeadbeef")
         _compare_screenboard(get_res, create_res)
         assert get_res['id'] == create_res['id']
 
+        get_all_res = dog.get_all_screenboards()
+        created = [s for s in get_all_res if s['id'] == create_res['id']]
+        self.assertEquals(len(created), 1)
+
         update_res = dog.update_screenboard(get_res['id'], updated_board)
         _compare_screenboard(update_res, updated_board)
         assert get_res['id'] == update_res['id']
