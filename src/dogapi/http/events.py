@@ -35,8 +35,8 @@ class EventApi(object):
         }
         """
         params = {
-            'start': start,
-            'end': end,
+            'start': int(start),
+            'end': int(end),
         }
         if priority:
             params['priority'] = priority
