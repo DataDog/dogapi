@@ -24,7 +24,7 @@ class HttpMetricApi(object):
 
         >>> dog_http_api.metric('my.value', 123.4, host="my.custom.host")
         >>> dog_http_api.metric('my.pair', (1317652676, 15), device="eth0")
-        >>> dog_http_api.metric('my.series', [(1317652676, 15), (1317652800, 16))
+        >>> dog_http_api.metric('my.series', [(1317652676, 15), (1317652800, 16)])
         """
         if host is None:
             host = self._default_host
