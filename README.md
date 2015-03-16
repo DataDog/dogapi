@@ -1,3 +1,7 @@
+DEPRECATED
+==========
+**DogApi is deprecated and not actively developed anymore. Please head over to https://github.com/DataDog/datadogpy**
+
 DogApi
 ======
 
@@ -10,6 +14,9 @@ A Python client for the DataDog API.
 
 Change Log
 ----------
+- [DEPRECATED]
+  - Date: 2015.03.16
+
 - 1.11.1
   - Release date: 2015.02.23
   - Dogwrap: decode process output as UTF-8 [#127][]. Thanks [@pbitty][]
